@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Settings - DriveReady UK</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "on-tertiary-container": "#005a3c",
+              "surface-tint": "#5d5e61",
+              "primary-fixed-dim": "#d4d4d7",
+              "inverse-primary": "#f9f9fc",
+              "inverse-on-surface": "#9b9d9e",
+              "on-surface-variant": "#586064",
+              "on-surface": "#2b3437",
+              "on-tertiary": "#e6ffee",
+              "inverse-surface": "#0c0f10",
+              "on-tertiary-fixed": "#00452d",
+              "tertiary": "#006d4a",
+              "secondary-fixed-dim": "#cbd5e9",
+              "on-secondary": "#f8f8ff",
+              "tertiary-dim": "#005f40",
+              "on-primary": "#f7f7fa",
+              "tertiary-container": "#69f6b8",
+              "primary-container": "#e2e2e5",
+              "outline-variant": "#abb3b7",
+              "surface-dim": "#d1dce0",
+              "surface-container-highest": "#dbe4e7",
+              "error-dim": "#4e0309",
+              "error": "#9f403d",
+              "primary-fixed": "#e2e2e5",
+              "surface": "#f8f9fa",
+              "surface-container-lowest": "#ffffff",
+              "on-secondary-fixed": "#364050",
+              "surface-variant": "#dbe4e7",
+              "on-error-container": "#752121",
+              "on-error": "#fff7f6",
+              "on-primary-fixed-variant": "#5a5c5e",
+              "on-background": "#2b3437",
+              "secondary-dim": "#4a5464",
+              "primary-dim": "#515255",
+              "background": "#f8f9fa",
+              "secondary-container": "#d9e3f7",
+              "error-container": "#fe8983",
+              "secondary-fixed": "#d9e3f7",
+              "outline": "#737c7f",
+              "surface-container-low": "#f1f4f6",
+              "surface-container": "#eaeff1",
+              "surface-container-high": "#e2e9ec",
+              "on-primary-container": "#505254",
+              "secondary": "#556071",
+              "on-secondary-container": "#485263",
+              "on-primary-fixed": "#3e3f42",
+              "on-tertiary-fixed-variant": "#006544",
+              "surface-bright": "#f8f9fa",
+              "tertiary-fixed": "#69f6b8",
+              "primary": "#5d5e61",
+              "tertiary-fixed-dim": "#58e7ab",
+              "on-secondary-fixed-variant": "#525c6d"
+            },
+            fontFamily: {
+              "headline": ["Inter"],
+              "body": ["Inter"],
+              "label": ["Inter"]
+            },
+            borderRadius: {"DEFAULT": "1rem", "lg": "2rem", "xl": "3rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; -webkit-font-smoothing: antialiased; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; vertical-align: middle; }
+        .glass-header { backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface text-on-surface selection:bg-primary-container">
+<!-- TopAppBar -->
+<nav class="sticky top-0 w-full z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md flex items-center justify-between px-6 py-4 w-full">
+<div class="flex items-center gap-4">
+<button class="hover:opacity-70 transition-opacity Active: scale-95 duration-200 text-slate-900 dark:text-slate-50">
+<span class="material-symbols-outlined" data-icon="arrow_back">arrow_back</span>
+</button>
+<h1 class="font-['Inter'] text-xl font-bold tracking-tight text-slate-900 dark:text-slate-50">Settings</h1>
+</div>
+<div class="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center">
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="search">search</span>
+</div>
+</nav>
+<main class="max-w-2xl mx-auto px-6 pt-8 pb-32">
+<!-- Profile Section -->
+<section class="mb-12">
+<div class="flex items-center gap-6 p-6 rounded-lg bg-surface-container-lowest shadow-[0_10px_30px_-5px_rgba(43,52,55,0.06)]">
+<div class="relative">
+<img alt="User Avatar" class="w-20 h-20 rounded-full object-cover border-4 border-surface-container" data-alt="close-up portrait of a professional man with a friendly expression, soft studio lighting, neutral grey background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCtL7Xa1TbFAXud1zTRgelAguCPjTU9obYgaA2fjoGAo7iZ4SdZ7EDocMVVASjMrmDWShetY2wnotyrLWhrBpv_0wakW8EHyyYVoRk33Kvba9axUOI540SqVXog5uAOpWhFlMQf1N0OrIAbLpHrw1qVPafxbK_8ROALefOjoXJ1JtBy43Oe-cNOJ9da3oaYj-gWEtoepUfpekw0UQ81Z2U3W9cJVcRnBjltVNraeUu1MfyzgR3boTFPZaCaxrAu_wLD_R3gO8oDst4_"/>
+<div class="absolute bottom-0 right-0 w-6 h-6 bg-tertiary rounded-full border-2 border-white flex items-center justify-center">
+<span class="material-symbols-outlined text-[14px] text-white" data-icon="verified" style="font-variation-settings: 'FILL' 1;">verified</span>
+</div>
+</div>
+<div class="flex-1">
+<h2 class="text-xl font-bold tracking-tight text-on-surface">James Harrington</h2>
+<p class="text-sm text-on-surface-variant font-medium">james.h@drive-ready.co.uk</p>
+<div class="mt-2 inline-flex items-center gap-1 px-3 py-1 rounded-full bg-tertiary-container text-on-tertiary-container text-xs font-bold uppercase tracking-wider">
+                        Premium Member
+                    </div>
+</div>
+<button class="p-2 rounded-full hover:bg-surface-container transition-colors">
+<span class="material-symbols-outlined text-primary" data-icon="edit">edit</span>
+</button>
+</div>
+</section>
+<!-- Setting Groups -->
+<div class="space-y-10">
+<!-- Vehicle Management -->
+<section>
+<h3 class="font-['Inter'] text-sm font-bold text-on-surface-variant uppercase tracking-widest px-2 mb-4">Vehicle Management</h3>
+<div class="bg-surface-container-lowest rounded-lg shadow-[0_10px_30px_-5px_rgba(43,52,55,0.06)] overflow-hidden">
+<div class="p-4 flex items-center justify-between hover:bg-surface-container-low transition-colors cursor-pointer group">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-full bg-secondary-container/30 flex items-center justify-center text-secondary">
+<span class="material-symbols-outlined" data-icon="garage">garage</span>
+</div>
+<span class="font-semibold text-on-surface">Manage Garage</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="text-xs font-bold text-on-surface-variant bg-surface-container px-2 py-1 rounded">2 Vehicles</span>
+<span class="material-symbols-outlined text-outline-variant group-hover:translate-x-1 transition-transform" data-icon="chevron_right">chevron_right</span>
+</div>
+</div>
+<div class="p-4 flex items-center justify-between hover:bg-surface-container-low transition-colors cursor-pointer group">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-full bg-tertiary-container/30 flex items-center justify-center text-tertiary">
+<span class="material-symbols-outlined" data-icon="card_membership">card_membership</span>
+</div>
+<span class="font-semibold text-on-surface">Subscription Status</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="text-xs font-bold text-tertiary">Active</span>
+<span class="material-symbols-outlined text-outline-variant group-hover:translate-x-1 transition-transform" data-icon="chevron_right">chevron_right</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Notifications -->
+<section>
+<h3 class="font-['Inter'] text-sm font-bold text-on-surface-variant uppercase tracking-widest px-2 mb-4">Notifications</h3>
+<div class="bg-surface-container-lowest rounded-lg shadow-[0_10px_30px_-5px_rgba(43,52,55,0.06)] overflow-hidden">
+<div class="p-5 flex items-center justify-between">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-full bg-primary-container/30 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined" data-icon="notifications_active">notifications_active</span>
+</div>
+<div>
+<p class="font-semibold text-on-surface leading-none">MOT &amp; Service Alerts</p>
+<p class="text-xs text-on-surface-variant mt-1">Get reminded 30 days before</p>
+</div>
+</div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox"/>
+<div class="w-11 h-6 bg-surface-container rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-tertiary"></div>
+</label>
+</div>
+<div class="p-5 flex items-center justify-between border-t border-surface-container-low">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-full bg-primary-container/30 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined" data-icon="receipt_long">receipt_long</span>
+</div>
+<div>
+<p class="font-semibold text-on-surface leading-none">Tax Reminders</p>
+<p class="text-xs text-on-surface-variant mt-1">Direct debit and renewal dates</p>
+</div>
+</div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox"/>
+<div class="w-11 h-6 bg-surface-container rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-tertiary"></div>
+</label>
+</div>
+<div class="p-5 flex items-center justify-between border-t border-surface-container-low">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-full bg-primary-container/30 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined" data-icon="trending_down">trending_down</span>
+</div>
+<div>
+<p class="font-semibold text-on-surface leading-none">Fuel Price Drops</p>
+<p class="text-xs text-on-surface-variant mt-1">Alerts for local petrol stations</p>
+</div>
+</div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input class="sr-only peer" type="checkbox"/>
+<div class="w-11 h-6 bg-surface-container rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-tertiary"></div>
+</label>
+</div>
+</div>
+</section>
+<!-- Security & Privacy -->
+<section>
+<h3 class="font-['Inter'] text-sm font-bold text-on-surface-variant uppercase tracking-widest px-2 mb-4">Security &amp; Privacy</h3>
+<div class="bg-surface-container-lowest rounded-lg shadow-[0_10px_30px_-5px_rgba(43,52,55,0.06)] overflow-hidden">
+<div class="p-4 flex items-center justify-between hover:bg-surface-container-low transition-colors cursor-pointer group">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-full bg-error-container/20 flex items-center justify-center text-error">
+<span class="material-symbols-outlined" data-icon="lock">lock</span>
+</div>
+<span class="font-semibold text-on-surface">Update Password</span>
+</div>
+<span class="material-symbols-outlined text-outline-variant group-hover:translate-x-1 transition-transform" data-icon="chevron_right">chevron_right</span>
+</div>
+<div class="p-4 flex items-center justify-between hover:bg-surface-container-low transition-colors border-t border-surface-container-low">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-full bg-primary-container/30 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined" data-icon="fingerprint">fingerprint</span>
+</div>
+<span class="font-semibold text-on-surface">Biometric Login</span>
+</div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox"/>
+<div class="w-11 h-6 bg-surface-container rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-tertiary"></div>
+</label>
+</div>
+</div>
+</section>
+<!-- Support & Legal -->
+<section>
+<h3 class="font-['Inter'] text-sm font-bold text-on-surface-variant uppercase tracking-widest px-2 mb-4">Support &amp; Legal</h3>
+<div class="bg-surface-container-lowest rounded-lg shadow-[0_10px_30px_-5px_rgba(43,52,55,0.06)] overflow-hidden">
+<div class="p-4 flex items-center justify-between hover:bg-surface-container-low transition-colors cursor-pointer group">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-full bg-secondary-container/30 flex items-center justify-center text-secondary">
+<span class="material-symbols-outlined" data-icon="help">help</span>
+</div>
+<span class="font-semibold text-on-surface">Help Center</span>
+</div>
+<span class="material-symbols-outlined text-outline-variant group-hover:translate-x-1 transition-transform" data-icon="open_in_new">open_in_new</span>
+</div>
+<div class="p-4 flex items-center justify-between hover:bg-surface-container-low transition-colors cursor-pointer group border-t border-surface-container-low">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-full bg-secondary-container/30 flex items-center justify-center text-secondary">
+<span class="material-symbols-outlined" data-icon="mail">mail</span>
+</div>
+<span class="font-semibold text-on-surface">Contact Us</span>
+</div>
+<span class="material-symbols-outlined text-outline-variant group-hover:translate-x-1 transition-transform" data-icon="chevron_right">chevron_right</span>
+</div>
+<div class="p-4 flex items-center justify-between hover:bg-surface-container-low transition-colors cursor-pointer group border-t border-surface-container-low text-on-surface-variant">
+<span class="font-medium px-2">Terms of Service</span>
+<span class="material-symbols-outlined text-outline-variant" data-icon="chevron_right">chevron_right</span>
+</div>
+<div class="p-4 flex items-center justify-between hover:bg-surface-container-low transition-colors cursor-pointer group border-t border-surface-container-low text-on-surface-variant">
+<span class="font-medium px-2">Privacy Policy</span>
+<span class="material-symbols-outlined text-outline-variant" data-icon="chevron_right">chevron_right</span>
+</div>
+</div>
+</section>
+<!-- Sign Out -->
+<section class="pt-4">
+<button class="w-full py-5 rounded-full bg-error-container/10 text-error font-bold text-lg transition-transform active:scale-95 border border-error-container/20 flex items-center justify-center gap-3">
+<span class="material-symbols-outlined" data-icon="logout">logout</span>
+                    Sign Out
+                </button>
+<p class="text-center text-xs text-outline-variant mt-6 uppercase tracking-[0.2em] font-bold">DriveReady UK v4.12.0</p>
+</section>
+</div>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 pb-6 pt-2 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-t-[2rem] border-t border-slate-100/10 shadow-[0_-10px_30px_-5px_rgba(43,52,55,0.06)]">
+<div class="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 p-3 hover:text-slate-600 transition-opacity cursor-pointer">
+<span class="material-symbols-outlined mb-1" data-icon="dashboard">dashboard</span>
+<span class="font-['Inter'] text-[10px] font-semibold uppercase tracking-wider">Dashboard</span>
+</div>
+<div class="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 p-3 hover:text-slate-600 transition-opacity cursor-pointer">
+<span class="material-symbols-outlined mb-1" data-icon="directions_car">directions_car</span>
+<span class="font-['Inter'] text-[10px] font-semibold uppercase tracking-wider">Garage</span>
+</div>
+<div class="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 p-3 hover:text-slate-600 transition-opacity cursor-pointer">
+<span class="material-symbols-outlined mb-1" data-icon="verified_user">verified_user</span>
+<span class="font-['Inter'] text-[10px] font-semibold uppercase tracking-wider">Compliance</span>
+</div>
+<div class="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 p-3 hover:text-slate-600 transition-opacity cursor-pointer">
+<span class="material-symbols-outlined mb-1" data-icon="notifications">notifications</span>
+<span class="font-['Inter'] text-[10px] font-semibold uppercase tracking-wider">Alerts</span>
+</div>
+<div class="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 p-3 hover:text-slate-600 transition-opacity cursor-pointer">
+<span class="material-symbols-outlined mb-1" data-icon="description">description</span>
+<span class="font-['Inter'] text-[10px] font-semibold uppercase tracking-wider">Docs</span>
+</div>
+</nav>
+</body></html>

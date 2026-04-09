@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>DriveReady UK - My Garage</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "outline-variant": "#abb3b7",
+              "on-primary-container": "#505254",
+              "surface-container-low": "#f1f4f6",
+              "inverse-surface": "#0c0f10",
+              "primary-fixed": "#e2e2e5",
+              "surface-container": "#eaeff1",
+              "error": "#9f403d",
+              "outline": "#737c7f",
+              "tertiary-fixed-dim": "#58e7ab",
+              "secondary-container": "#d9e3f7",
+              "on-tertiary-fixed-variant": "#006544",
+              "error-dim": "#4e0309",
+              "on-surface-variant": "#586064",
+              "on-primary-fixed-variant": "#5a5c5e",
+              "inverse-on-surface": "#9b9d9e",
+              "on-tertiary": "#e6ffee",
+              "tertiary-container": "#69f6b8",
+              "surface-variant": "#dbe4e7",
+              "on-background": "#2b3437",
+              "tertiary-dim": "#005f40",
+              "on-primary": "#f7f7fa",
+              "secondary-fixed": "#d9e3f7",
+              "on-primary-fixed": "#3e3f42",
+              "on-error": "#fff7f6",
+              "on-error-container": "#752121",
+              "surface-container-high": "#e2e9ec",
+              "primary": "#5d5e61",
+              "on-tertiary-fixed": "#00452d",
+              "primary-fixed-dim": "#d4d4d7",
+              "on-surface": "#2b3437",
+              "surface-dim": "#d1dce0",
+              "on-secondary-fixed": "#364050",
+              "secondary-fixed-dim": "#cbd5e9",
+              "secondary-dim": "#4a5464",
+              "on-secondary": "#f8f8ff",
+              "inverse-primary": "#f9f9fc",
+              "on-tertiary-container": "#005a3c",
+              "secondary": "#556071",
+              "surface": "#f8f9fa",
+              "tertiary": "#006d4a",
+              "primary-container": "#e2e2e5",
+              "error-container": "#fe8983",
+              "surface-bright": "#f8f9fa",
+              "tertiary-fixed": "#69f6b8",
+              "surface-container-highest": "#dbe4e7",
+              "on-secondary-container": "#485263",
+              "primary-dim": "#515255",
+              "background": "#f8f9fa",
+              "surface-tint": "#5d5e61",
+              "on-secondary-fixed-variant": "#525c6d",
+              "surface-container-lowest": "#ffffff"
+            },
+            fontFamily: {
+              "headline": ["Inter"],
+              "body": ["Inter"],
+              "label": ["Inter"]
+            },
+            borderRadius: {"DEFAULT": "1rem", "lg": "2rem", "xl": "3rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body { font-family: 'Inter', sans-serif; }
+        .glass-header {
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface text-on-surface min-h-screen pb-32">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl flex justify-between items-center px-6 py-4 w-full">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-surface-container overflow-hidden">
+<img alt="User Profile" class="w-full h-full object-cover" data-alt="close-up portrait of a professional man in his 30s with a clean haircut and neutral expression, soft natural indoor lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBvdhm8IfX9jO0u3qHg8yXTgd9SFqcRSPx3rjv8VJ_nYDd9a6E9BOtV7LJv6nZ5LHmtVJ9SnBeNg1XHzoTg_d40ITPpAD71stmuDJKLXqvbYQgqbGLfTbHz4qVdOEGce0T8U0Iz9hQMOtV9FY0_i30HECBGOxETYpCR1rjA_eQ7PFl9FVKNjEqiq41Lm39IWY-pkIlvlW8IDUWImV5CI-sG6qW4kEc_hHIpFgiYwSUTAd5dJPzCDyIpsMbusqOwyr0GzQFZFZ5nHfvU"/>
+</div>
+<span class="font-['Inter'] font-semibold text-lg tracking-tight text-slate-900">DriveReady UK</span>
+</div>
+<button class="material-symbols-outlined text-slate-900 hover:opacity-80 transition-opacity active:scale-95 duration-200" data-icon="settings">settings</button>
+</header>
+<main class="pt-24 px-6 max-w-2xl mx-auto">
+<!-- Editorial Moment Header -->
+<div class="mb-12">
+<h1 class="text-[3.5rem] font-extrabold tracking-tight leading-none text-on-surface mb-2">My Garage</h1>
+<p class="text-on-surface-variant font-medium">3 vehicles under management</p>
+</div>
+<!-- Vehicle List Container (Asymmetric Layout) -->
+<div class="space-y-8">
+<!-- Vehicle 1: The Family SUV (Green) -->
+<div class="group relative bg-surface-container-lowest rounded-lg p-6 shadow-[0_10px_30px_-5px_rgba(43,52,55,0.06)] border border-outline-variant/5 transition-transform active:scale-[0.98]">
+<div class="flex justify-between items-start mb-6">
+<div>
+<h2 class="text-xl font-bold tracking-tight text-on-surface">The Family SUV</h2>
+<div class="mt-2 inline-block bg-tertiary-fixed rounded-sm px-3 py-1 border border-on-surface/10">
+<span class="text-on-tertiary-fixed font-black tracking-widest text-sm">LR19 ABC</span>
+</div>
+</div>
+<div class="bg-tertiary/10 text-tertiary px-4 py-1.5 rounded-full text-xs font-bold flex items-center gap-1.5">
+<span class="material-symbols-outlined text-sm" data-weight="fill" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+                        ALL CLEAR
+                    </div>
+</div>
+<div class="flex items-center justify-between">
+<div class="w-32 h-20 relative overflow-visible">
+<img alt="SUV" class="absolute -left-4 top-0 w-40 max-w-none drop-shadow-2xl" data-alt="Modern dark green luxury SUV parked on a clean studio background with soft overhead lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCBjk_i0aOOc5-0sh27lFCy6y1p7Q9q2uYGQTEqJ4ys-2E828SZpmERoWZp2ozqLdMGw7NnWAZ_NhuHX49wEYHuoXeFfUgxGB3vMZkhWkEZe0Jy_UpOhNaJOnTiuKv03fU3FhUzAvy47Q_Kp2lx0N7UXmP6DQN0p9vevdB-_jtOnq3d8fWZ0V8_Zm9JgDJ2ko7FZxvtv1gJF30cLWUctF2lCMfUpZx3zEGqQnsaNLRSBlgawdKiaK6cCJ739NxD5l5StpW1noHQgcFi"/>
+</div>
+<div class="flex flex-col items-end gap-1">
+<span class="text-[10px] uppercase tracking-widest text-on-surface-variant font-semibold">Next Service</span>
+<span class="text-on-surface font-bold">Sept 2024</span>
+</div>
+</div>
+</div>
+<!-- Vehicle 2: The Work Van (Red/Critical) -->
+<div class="group relative bg-surface-container-lowest rounded-lg p-6 shadow-[0_10px_30px_-5px_rgba(43,52,55,0.06)] border-l-4 border-error transition-transform active:scale-[0.98]">
+<div class="flex justify-between items-start mb-6">
+<div>
+<h2 class="text-xl font-bold tracking-tight text-on-surface">The Work Van</h2>
+<div class="mt-2 inline-block bg-tertiary-fixed rounded-sm px-3 py-1 border border-on-surface/10">
+<span class="text-on-tertiary-fixed font-black tracking-widest text-sm">VO18 XYZ</span>
+</div>
+</div>
+<div class="bg-error-container text-on-error-container px-4 py-1.5 rounded-full text-xs font-black flex items-center gap-1.5 animate-pulse">
+<span class="material-symbols-outlined text-sm" data-weight="fill" style="font-variation-settings: 'FILL' 1;">warning</span>
+                        MOT OVERDUE
+                    </div>
+</div>
+<div class="flex items-center justify-between">
+<div class="w-32 h-20 relative overflow-visible">
+<img alt="Van" class="absolute -left-4 top-0 w-40 max-w-none drop-shadow-2xl grayscale" data-alt="Professional white delivery van in a minimalist warehouse setting with high contrast lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB9ZauhA25voqftQ0HsCcUZJVpNaO2oNThhLD2w1cQjWaZckBtf9JDPFF3FSV0LsoOt42yKQNOuu5p9qoLvzRZsonZ8ePa7hktAiu0eTLNb77pGD4xZJmDcMR8hADWkXbjL39vdUFZyeJTxMWo4-yIg_nuwWU5DADgMnBeJGKF6xuN8J7ptU5TEhW9Rb_3h1I5P3q-74rsfQ37pRygZzh4h4Xb76Omx2XK2PLNKZdwiOsQeor9x2S-faf0KSvzq-KV7faDmdokr8Yl4"/>
+</div>
+<div class="bg-error-container/20 p-3 rounded-xl border border-error-container/30">
+<p class="text-error font-bold text-sm">Action Required</p>
+<p class="text-[10px] text-error/80 uppercase tracking-tighter">Book MOT Today</p>
+</div>
+</div>
+</div>
+<!-- Vehicle 3: The Commuter Car (Amber/Warning) -->
+<div class="group relative bg-surface-container-lowest rounded-lg p-6 shadow-[0_10px_30px_-5px_rgba(43,52,55,0.06)] border border-outline-variant/5 transition-transform active:scale-[0.98]">
+<div class="flex justify-between items-start mb-6">
+<div>
+<h2 class="text-xl font-bold tracking-tight text-on-surface">The Commuter Car</h2>
+<div class="mt-2 inline-block bg-tertiary-fixed rounded-sm px-3 py-1 border border-on-surface/10">
+<span class="text-on-tertiary-fixed font-black tracking-widest text-sm">HJ67 LMN</span>
+</div>
+</div>
+<div class="bg-secondary-container text-on-secondary-container px-4 py-1.5 rounded-full text-xs font-bold flex items-center gap-1.5">
+<span class="material-symbols-outlined text-sm" data-weight="fill" style="font-variation-settings: 'FILL' 1;">schedule</span>
+                        TAX DUE: 15D
+                    </div>
+</div>
+<div class="flex items-center justify-between">
+<div class="w-32 h-20 relative overflow-visible">
+<img alt="Sedan" class="absolute -left-4 top-0 w-40 max-w-none drop-shadow-2xl" data-alt="Sleek silver compact executive car on a wet asphalt road at dusk with moody blue lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBh65NPJZWRgzk7jWCjaGYdRw4oKeuoihD9l_eiqp8FvnPC15BeoVDZBzXDhJ9z1P5tathd0aUa7ixXtCrrPodgUTbEAo_KuNvT4gTf5Xp_hd-zG2HRZJ42IqNbY_TeE5Qcb6LbaATkHdphIdDebrlwtj9S5yLlPjiXUvPzvvDYzgRYzQCIPaPBVEha1QCWnYrOXQkOcR2Z1qZSpXjY8_H__JlzyFgRdcWn1gWxRDZFYglbOKuG3DyqLoW6V5KjtnHOATqSuJR_LqnI"/>
+</div>
+<button class="bg-secondary text-on-secondary px-6 py-2.5 rounded-full text-sm font-bold shadow-sm active:scale-95 transition-transform">
+                        Renew Now
+                    </button>
+</div>
+</div>
+<!-- Add Vehicle Slot (Recessed Depth) -->
+<div class="border-2 border-dashed border-outline-variant/20 rounded-lg p-8 flex flex-col items-center justify-center text-on-surface-variant hover:bg-surface-container-low transition-colors cursor-pointer">
+<span class="material-symbols-outlined text-3xl mb-2" data-icon="add_circle">add_circle</span>
+<span class="font-bold">Add Another Vehicle</span>
+</div>
+</div>
+<!-- Quick Stats (Bento-ish) -->
+<div class="mt-12 grid grid-cols-2 gap-4">
+<div class="bg-surface-container-low p-6 rounded-lg">
+<span class="block text-2xl font-black text-on-surface mb-1">£420</span>
+<span class="text-[10px] uppercase font-bold text-on-surface-variant tracking-widest">Est. Tax Total</span>
+</div>
+<div class="bg-surface-container-low p-6 rounded-lg">
+<span class="block text-2xl font-black text-error mb-1">1</span>
+<span class="text-[10px] uppercase font-bold text-on-surface-variant tracking-widest">Critical Alert</span>
+</div>
+</div>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 w-full z-50 rounded-t-[2rem] bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl shadow-[0_-10px_30px_-5px_rgba(43,52,55,0.06)] flex justify-around items-center px-4 pt-3 pb-8 w-full border-t border-slate-100 dark:border-slate-800">
+<a class="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 px-3 py-2 hover:text-slate-600 dark:hover:text-slate-300" href="#">
+<span class="material-symbols-outlined mb-1" data-icon="dashboard">dashboard</span>
+<span class="font-['Inter'] text-[10px] font-medium tracking-wide uppercase">Dashboard</span>
+</a>
+<!-- ACTIVE: Garage -->
+<a class="flex flex-col items-center justify-center text-slate-900 dark:text-slate-50 bg-slate-100/50 dark:bg-slate-800/50 rounded-2xl px-3 py-2 transition-transform duration-150 active:scale-90" href="#">
+<span class="material-symbols-outlined mb-1" data-icon="directions_car">directions_car</span>
+<span class="font-['Inter'] text-[10px] font-medium tracking-wide uppercase">Garage</span>
+</a>
+<a class="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 px-3 py-2 hover:text-slate-600 dark:hover:text-slate-300 relative" href="#">
+<span class="material-symbols-outlined mb-1" data-icon="notifications">notifications</span>
+<span class="font-['Inter'] text-[10px] font-medium tracking-wide uppercase">Alerts</span>
+<span class="absolute top-2 right-4 w-2 h-2 bg-error rounded-full"></span>
+</a>
+<a class="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 px-3 py-2 hover:text-slate-600 dark:hover:text-slate-300" href="#">
+<span class="material-symbols-outlined mb-1" data-icon="description">description</span>
+<span class="font-['Inter'] text-[10px] font-medium tracking-wide uppercase">Docs</span>
+</a>
+<a class="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 px-3 py-2 hover:text-slate-600 dark:hover:text-slate-300" href="#">
+<span class="material-symbols-outlined mb-1" data-icon="settings">settings</span>
+<span class="font-['Inter'] text-[10px] font-medium tracking-wide uppercase">Settings</span>
+</a>
+</nav>
+</body></html>

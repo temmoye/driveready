@@ -1,0 +1,36 @@
+# dependencies
+node_modules/
+backend/node_modules/
+mobile/node_modules/
+
+# local secrets
+.env
+.env.*
+!.env.example
+backend/.env
+mobile/.env.local
+
+# generated output
+dist/
+backend/dist/
+mobile/dist/
+mobile/web-build/
+mobile/.expo/
+
+# runtime data
+backend/.data/
+backend/uploads/
+
+# native generated folders
+mobile/ios/
+mobile/android/
+
+# logs and OS files
+*.log
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+.DS_Store
+
+# TypeScript
+*.tsbuildinfo

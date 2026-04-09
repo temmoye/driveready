@@ -1,0 +1,2319 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>DriveReady UK Prototype</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Material+Symbols+Outlined:wght@300;400;500&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --background: #f8f9fa;
+        --surface: #ffffff;
+        --surface-low: #f1f4f6;
+        --surface-mid: #eaeff1;
+        --surface-high: #e2e9ec;
+        --surface-dim: #d1dce0;
+        --text: #2b3437;
+        --text-muted: #586064;
+        --outline: #abb3b7;
+        --primary: #5d5e61;
+        --primary-dim: #515255;
+        --secondary: #556071;
+        --secondary-container: #d9e3f7;
+        --tertiary: #006d4a;
+        --tertiary-container: #69f6b8;
+        --error: #9f403d;
+        --error-container: #fe8983;
+        --plate: #ffd300;
+        --ios-blue: #007aff;
+        --shadow: 0 18px 40px -18px rgba(43, 52, 55, 0.16);
+        --shadow-soft: 0 12px 28px -18px rgba(43, 52, 55, 0.12);
+        --radius-sm: 14px;
+        --radius-md: 22px;
+        --radius-lg: 30px;
+        --radius-xl: 42px;
+        --radius-full: 999px;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        margin: 0;
+        min-height: 100%;
+        background:
+          radial-gradient(circle at top right, rgba(217, 227, 247, 0.9), transparent 28%),
+          radial-gradient(circle at bottom left, rgba(105, 246, 184, 0.16), transparent 24%),
+          var(--background);
+        color: var(--text);
+        font-family: "Inter", sans-serif;
+      }
+
+      button,
+      input {
+        font: inherit;
+      }
+
+      button {
+        border: 0;
+        cursor: pointer;
+      }
+
+      .material-symbols-outlined {
+        font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24;
+        line-height: 1;
+      }
+
+      .page-shell {
+        display: grid;
+        grid-template-columns: 360px minmax(0, 1fr);
+        min-height: 100vh;
+      }
+
+      .sidebar {
+        padding: 40px 28px 32px;
+        border-right: 1px solid rgba(171, 179, 183, 0.16);
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.74), rgba(255, 255, 255, 0.4));
+        backdrop-filter: blur(20px);
+      }
+
+      .sidebar h1 {
+        margin: 0 0 8px;
+        font-size: 38px;
+        line-height: 0.95;
+        letter-spacing: -0.08em;
+      }
+
+      .sidebar p {
+        margin: 0;
+        color: var(--text-muted);
+        line-height: 1.6;
+      }
+
+      .sidebar-card {
+        margin-top: 22px;
+        padding: 18px;
+        border-radius: 24px;
+        background: rgba(255, 255, 255, 0.88);
+        box-shadow: var(--shadow-soft);
+      }
+
+      .sidebar-label {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 12px;
+        padding: 8px 12px;
+        border-radius: var(--radius-full);
+        background: rgba(105, 246, 184, 0.16);
+        color: var(--tertiary);
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+
+      .screen-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      .screen-chip {
+        padding: 12px 14px;
+        border-radius: var(--radius-full);
+        background: var(--surface-low);
+        color: var(--text);
+        font-size: 13px;
+        font-weight: 700;
+      }
+
+      .screen-chip.active {
+        background: var(--primary);
+        color: #fff;
+      }
+
+      .preview {
+        display: grid;
+        place-items: center;
+        padding: 32px;
+      }
+
+      .device {
+        position: relative;
+        width: min(420px, calc(100vw - 40px));
+        height: min(860px, calc(100vh - 48px));
+        border-radius: 46px;
+        padding: 16px;
+        background: #111516;
+        box-shadow: 0 40px 90px -30px rgba(12, 15, 16, 0.45);
+      }
+
+      .device-inner {
+        position: relative;
+        height: 100%;
+        overflow: hidden;
+        border-radius: 34px;
+        background: var(--background);
+      }
+
+      .dynamic-island {
+        position: absolute;
+        top: 12px;
+        left: 50%;
+        z-index: 20;
+        width: 132px;
+        height: 34px;
+        margin-left: -66px;
+        border-radius: 999px;
+        background: #000;
+      }
+
+      .status-bar {
+        position: absolute;
+        top: 14px;
+        left: 20px;
+        right: 20px;
+        z-index: 18;
+        display: flex;
+        justify-content: space-between;
+        font-size: 13px;
+        font-weight: 700;
+      }
+
+      .status-right {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+      }
+
+      .phone-screen {
+        position: relative;
+        height: 100%;
+        overflow: auto;
+        padding: 54px 0 0;
+      }
+
+      .screen-root {
+        min-height: 100%;
+      }
+
+      .screen-body {
+        padding: 26px 22px 112px;
+      }
+
+      .screen-body.focused {
+        padding-bottom: 28px;
+      }
+
+      .screen-body.no-tabbar {
+        padding-bottom: 36px;
+      }
+
+      .hero-badge,
+      .chip,
+      .tag,
+      .mini-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        border-radius: var(--radius-full);
+      }
+
+      .hero-badge {
+        padding: 8px 12px;
+        background: rgba(105, 246, 184, 0.18);
+        color: var(--tertiary);
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+
+      .card {
+        background: rgba(255, 255, 255, 0.94);
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow);
+      }
+
+      .glass-bar {
+        position: sticky;
+        top: 0;
+        z-index: 15;
+        margin: 0 16px;
+        padding: 10px 14px;
+        border-radius: 28px;
+        background: rgba(255, 255, 255, 0.74);
+        border: 1px solid rgba(171, 179, 183, 0.12);
+        backdrop-filter: blur(22px);
+      }
+
+      .top-bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+      }
+
+      .brand-wrap,
+      .top-action-row,
+      .inline {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .avatar,
+      .icon-circle,
+      .mini-icon {
+        display: grid;
+        place-items: center;
+        border-radius: 999px;
+      }
+
+      .avatar {
+        width: 40px;
+        height: 40px;
+        overflow: hidden;
+        background: var(--surface-mid);
+      }
+
+      .avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .icon-circle {
+        width: 42px;
+        height: 42px;
+        background: var(--surface-low);
+        color: var(--text);
+      }
+
+      .mini-icon {
+        width: 46px;
+        height: 46px;
+        background: rgba(105, 246, 184, 0.14);
+        color: var(--tertiary);
+      }
+
+      h2,
+      h3,
+      h4 {
+        margin: 0;
+      }
+
+      .eyebrow {
+        color: var(--text-muted);
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+      }
+
+      .headline {
+        font-size: 40px;
+        font-weight: 900;
+        line-height: 0.96;
+        letter-spacing: -0.08em;
+      }
+
+      .display {
+        font-size: 54px;
+        font-weight: 900;
+        line-height: 0.92;
+        letter-spacing: -0.1em;
+      }
+
+      .body-muted {
+        color: var(--text-muted);
+        line-height: 1.6;
+      }
+
+      .primary-button,
+      .secondary-button,
+      .ghost-button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        width: 100%;
+        min-height: 56px;
+        border-radius: var(--radius-full);
+        font-size: 16px;
+        font-weight: 800;
+      }
+
+      .primary-button {
+        color: #fff;
+        background: linear-gradient(135deg, var(--primary), var(--primary-dim));
+        box-shadow: 0 16px 36px -18px rgba(43, 52, 55, 0.35);
+      }
+
+      .secondary-button {
+        color: var(--text);
+        background: var(--surface-low);
+      }
+
+      .ghost-button {
+        min-height: 44px;
+        color: var(--text-muted);
+        background: transparent;
+      }
+
+      .welcome-stack,
+      .form-stack,
+      .section-stack {
+        display: grid;
+        gap: 18px;
+      }
+
+      .welcome-brand {
+        padding-top: 26px;
+        text-align: center;
+      }
+
+      .welcome-badge {
+        display: grid;
+        place-items: center;
+        width: 84px;
+        height: 84px;
+        margin: 0 auto 20px;
+        border-radius: 24px;
+        background: var(--surface);
+        box-shadow: var(--shadow);
+        color: var(--primary);
+      }
+
+      .hero-card {
+        position: relative;
+        min-height: 320px;
+        overflow: hidden;
+      }
+
+      .hero-card img,
+      .media-card img,
+      .zone-image img,
+      .vehicle-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .hero-card img {
+        position: absolute;
+        inset: 0;
+      }
+
+      .hero-card::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0), rgba(241, 244, 246, 0.38));
+      }
+
+      .trusted-pill {
+        position: absolute;
+        top: 18px;
+        right: 18px;
+        z-index: 2;
+        padding: 10px 14px;
+        border-radius: var(--radius-full);
+        background: rgba(255, 255, 255, 0.72);
+        backdrop-filter: blur(20px);
+        color: var(--tertiary);
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+
+      .dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 999px;
+        background: var(--tertiary);
+      }
+
+      .progress {
+        display: flex;
+        justify-content: center;
+        gap: 8px;
+      }
+
+      .progress span {
+        height: 6px;
+        border-radius: 999px;
+        background: rgba(171, 179, 183, 0.28);
+      }
+
+      .progress span.active {
+        width: 34px;
+        background: var(--primary);
+      }
+
+      .progress span.dot {
+        width: 6px;
+        background: rgba(171, 179, 183, 0.4);
+      }
+
+      .bento {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+      }
+
+      .bento .wide {
+        grid-column: 1 / -1;
+      }
+
+      .feature-card {
+        padding: 18px;
+        background: var(--surface-low);
+        border-radius: var(--radius-lg);
+      }
+
+      .feature-card h4 {
+        margin-top: 14px;
+        font-size: 16px;
+      }
+
+      .feature-card p {
+        margin: 8px 0 0;
+        color: var(--text-muted);
+        font-size: 13px;
+        line-height: 1.5;
+      }
+
+      .ios-alert {
+        overflow: hidden;
+        border-radius: 22px;
+        background: rgba(255, 255, 255, 0.9);
+        border: 1px solid rgba(171, 179, 183, 0.26);
+      }
+
+      .ios-alert-copy {
+        padding: 18px 18px 14px;
+        text-align: center;
+        color: #000;
+      }
+
+      .ios-alert-actions {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        border-top: 1px solid rgba(171, 179, 183, 0.5);
+      }
+
+      .ios-alert-actions button {
+        min-height: 48px;
+        background: transparent;
+        color: var(--ios-blue);
+        font-size: 17px;
+      }
+
+      .ios-alert-actions button:last-child {
+        border-left: 1px solid rgba(171, 179, 183, 0.5);
+        font-weight: 700;
+      }
+
+      .form-card,
+      .detail-card,
+      .profile-card,
+      .compliance-card,
+      .doc-card,
+      .vehicle-card {
+        padding: 22px;
+      }
+
+      .form-field {
+        display: grid;
+        gap: 10px;
+      }
+
+      .form-label-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .text-input,
+      .search-input,
+      .plate-input {
+        width: 100%;
+        border: 0;
+        outline: 0;
+      }
+
+      .text-input,
+      .search-input {
+        min-height: 56px;
+        padding: 0 18px;
+        border-radius: 18px;
+        background: var(--surface-low);
+        color: var(--text);
+      }
+
+      .search-shell {
+        position: relative;
+      }
+
+      .search-shell .material-symbols-outlined {
+        position: absolute;
+        top: 17px;
+        left: 16px;
+        color: rgba(88, 96, 100, 0.66);
+      }
+
+      .search-input {
+        padding-left: 48px;
+      }
+
+      .divider {
+        position: relative;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin: 4px 0;
+      }
+
+      .divider::before {
+        content: "";
+        position: absolute;
+        inset: 50% 0 auto;
+        height: 1px;
+        background: rgba(171, 179, 183, 0.18);
+      }
+
+      .divider span {
+        position: relative;
+        padding: 0 12px;
+        background: #fff;
+        color: var(--text-muted);
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+
+      .plate-badge,
+      .plate-shell {
+        background: var(--plate);
+        color: #000;
+        box-shadow: inset 0 -2px 0 rgba(0, 0, 0, 0.08);
+      }
+
+      .plate-badge {
+        display: inline-flex;
+        padding: 8px 14px;
+        border-radius: 10px;
+        font-size: 18px;
+        font-weight: 900;
+        letter-spacing: 0.14em;
+      }
+
+      .plate-shell {
+        position: relative;
+        display: grid;
+        grid-template-columns: 34px 1fr;
+        min-height: 110px;
+        border-radius: 12px;
+        overflow: hidden;
+      }
+
+      .plate-strip {
+        display: grid;
+        place-items: center;
+        background: #003399;
+        color: #fff;
+        font-size: 10px;
+        font-weight: 800;
+      }
+
+      .plate-input {
+        background: transparent;
+        text-align: center;
+        color: #000;
+        font-size: 38px;
+        font-weight: 900;
+        letter-spacing: 0.18em;
+      }
+
+      .status-card,
+      .tax-card,
+      .zone-card,
+      .doc-card,
+      .vehicle-card,
+      .quick-link {
+        transition: transform 0.18s ease, background 0.18s ease;
+      }
+
+      .status-card:active,
+      .tax-card:active,
+      .zone-card:active,
+      .doc-card:active,
+      .vehicle-card:active,
+      .quick-link:active,
+      .screen-chip:active,
+      .screen-destination:active,
+      .fab:active,
+      .prototype-toggle:active {
+        transform: scale(0.98);
+      }
+
+      .status-card {
+        display: grid;
+        grid-template-columns: 54px 1fr;
+        gap: 14px;
+      }
+
+      .status-icon {
+        width: 54px;
+        height: 54px;
+        border-radius: 999px;
+        display: grid;
+        place-items: center;
+        background: rgba(0, 109, 74, 0.12);
+        color: var(--tertiary);
+      }
+
+      .status-icon.warning {
+        background: rgba(159, 64, 61, 0.12);
+        color: var(--error);
+      }
+
+      .chip {
+        padding: 8px 12px;
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+
+      .chip.good {
+        background: rgba(105, 246, 184, 0.2);
+        color: var(--tertiary);
+      }
+
+      .chip.warning {
+        background: rgba(254, 137, 131, 0.2);
+        color: var(--error);
+      }
+
+      .chip.neutral {
+        background: rgba(85, 96, 113, 0.12);
+        color: var(--secondary);
+      }
+
+      .split-actions,
+      .quick-links,
+      .stats-grid,
+      .tab-bar,
+      .destination-grid {
+        display: grid;
+        gap: 12px;
+      }
+
+      .split-actions {
+        grid-template-columns: 1fr auto;
+      }
+
+      .quick-links {
+        grid-template-columns: repeat(3, 1fr);
+      }
+
+      .quick-link {
+        padding: 16px 10px;
+        border-radius: 20px;
+        background: rgba(255, 255, 255, 0.94);
+        box-shadow: var(--shadow-soft);
+        text-align: center;
+      }
+
+      .quick-link .material-symbols-outlined {
+        display: block;
+        margin-bottom: 8px;
+        color: var(--primary);
+      }
+
+      .media-card {
+        position: relative;
+        min-height: 250px;
+        overflow: hidden;
+      }
+
+      .media-overlay {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(180deg, transparent, rgba(0, 0, 0, 0.5));
+      }
+
+      .media-copy {
+        position: absolute;
+        left: 20px;
+        right: 20px;
+        bottom: 20px;
+        color: #fff;
+      }
+
+      .section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: end;
+        gap: 12px;
+      }
+
+      .vehicle-card {
+        display: grid;
+        gap: 18px;
+      }
+
+      .vehicle-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: start;
+        gap: 12px;
+      }
+
+      .vehicle-footer {
+        display: grid;
+        grid-template-columns: 120px 1fr;
+        gap: 14px;
+        align-items: center;
+      }
+
+      .vehicle-image {
+        height: 78px;
+        border-radius: 18px;
+        overflow: hidden;
+      }
+
+      .vehicle-card.selected {
+        outline: 2px solid rgba(0, 109, 74, 0.18);
+      }
+
+      .add-card {
+        padding: 26px 20px;
+        border: 2px dashed rgba(171, 179, 183, 0.28);
+        border-radius: var(--radius-lg);
+        text-align: center;
+        background: rgba(241, 244, 246, 0.74);
+      }
+
+      .stats-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .stat-card {
+        padding: 18px;
+        border-radius: var(--radius-lg);
+        background: var(--surface-low);
+      }
+
+      .stat-card strong {
+        display: block;
+        font-size: 30px;
+        font-weight: 900;
+      }
+
+      .zone-card {
+        display: grid;
+        grid-template-columns: 90px 1fr;
+        gap: 14px;
+        padding: 16px;
+        border-radius: var(--radius-lg);
+        background: var(--surface-low);
+      }
+
+      .zone-image {
+        height: 90px;
+        border-radius: 18px;
+        overflow: hidden;
+      }
+
+      .zone-card.selected {
+        background: rgba(255, 255, 255, 0.96);
+        box-shadow: var(--shadow-soft);
+      }
+
+      .doc-card {
+        display: grid;
+        grid-template-columns: 50px 1fr auto;
+        gap: 14px;
+        align-items: start;
+      }
+
+      .doc-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 16px;
+        display: grid;
+        place-items: center;
+        background: var(--surface-low);
+      }
+
+      .tag,
+      .mini-tag {
+        padding: 7px 10px;
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .tag {
+        background: var(--surface-low);
+        color: var(--text-muted);
+      }
+
+      .mini-tag {
+        width: 28px;
+        height: 28px;
+        justify-content: center;
+        background: var(--surface-low);
+        color: var(--text);
+      }
+
+      .utility-card {
+        padding: 22px;
+        text-align: center;
+        background: rgba(226, 226, 229, 0.3);
+      }
+
+      .profile-card {
+        display: grid;
+        grid-template-columns: auto 1fr auto;
+        gap: 16px;
+        align-items: center;
+      }
+
+      .profile-photo {
+        position: relative;
+        width: 76px;
+        height: 76px;
+        border-radius: 999px;
+        overflow: hidden;
+      }
+
+      .profile-photo img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .profile-check {
+        position: absolute;
+        right: 0;
+        bottom: 0;
+        width: 24px;
+        height: 24px;
+        border-radius: 999px;
+        display: grid;
+        place-items: center;
+        background: var(--tertiary);
+        color: #fff;
+      }
+
+      .settings-section {
+        display: grid;
+        gap: 12px;
+      }
+
+      .settings-card {
+        overflow: hidden;
+      }
+
+      .setting-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        padding: 18px 20px;
+      }
+
+      .setting-row + .setting-row {
+        border-top: 1px solid rgba(171, 179, 183, 0.14);
+      }
+
+      .setting-left {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+      }
+
+      .setting-icon {
+        width: 42px;
+        height: 42px;
+        border-radius: 999px;
+        display: grid;
+        place-items: center;
+        background: rgba(217, 227, 247, 0.34);
+        color: var(--secondary);
+      }
+
+      .switch {
+        position: relative;
+        width: 48px;
+        height: 30px;
+      }
+
+      .switch input {
+        position: absolute;
+        inset: 0;
+        opacity: 0;
+      }
+
+      .switch span {
+        position: absolute;
+        inset: 0;
+        border-radius: 999px;
+        background: var(--surface-mid);
+      }
+
+      .switch span::after {
+        content: "";
+        position: absolute;
+        top: 3px;
+        left: 3px;
+        width: 24px;
+        height: 24px;
+        border-radius: 999px;
+        background: #fff;
+        transition: transform 0.18s ease;
+      }
+
+      .switch input:checked + span {
+        background: var(--tertiary);
+      }
+
+      .switch input:checked + span::after {
+        transform: translateX(18px);
+      }
+
+      .signout {
+        color: var(--error);
+        background: rgba(254, 137, 131, 0.12);
+        border: 1px solid rgba(254, 137, 131, 0.24);
+      }
+
+      .tab-wrap {
+        position: sticky;
+        bottom: 0;
+        z-index: 10;
+        margin: -88px 12px 0;
+        padding-bottom: 14px;
+      }
+
+      .tab-bar {
+        grid-template-columns: repeat(5, 1fr);
+        padding: 10px 8px;
+        border-radius: 30px;
+        background: rgba(255, 255, 255, 0.78);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(171, 179, 183, 0.14);
+        box-shadow: var(--shadow-soft);
+      }
+
+      .tab-button {
+        position: relative;
+        padding: 10px 4px 8px;
+        border-radius: 18px;
+        background: transparent;
+        color: rgba(88, 96, 100, 0.8);
+        text-align: center;
+      }
+
+      .tab-button.active {
+        background: rgba(255, 255, 255, 0.66);
+        color: var(--text);
+      }
+
+      .tab-button .material-symbols-outlined {
+        display: block;
+        margin-bottom: 4px;
+      }
+
+      .tab-button small {
+        font-size: 10px;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .tab-alert-dot {
+        position: absolute;
+        top: 8px;
+        right: 18px;
+        width: 8px;
+        height: 8px;
+        border-radius: 999px;
+        background: var(--error);
+      }
+
+      .prototype-toggle,
+      .fab {
+        position: fixed;
+        right: 26px;
+        z-index: 25;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        border-radius: var(--radius-full);
+        box-shadow: 0 18px 36px -18px rgba(43, 52, 55, 0.34);
+      }
+
+      .prototype-toggle {
+        bottom: 26px;
+        padding: 12px 16px;
+        background: var(--text);
+        color: #fff;
+        font-size: 12px;
+        font-weight: 800;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+
+      .fab {
+        bottom: 82px;
+        width: 62px;
+        height: 62px;
+        background: linear-gradient(135deg, var(--primary), var(--primary-dim));
+        color: #fff;
+      }
+
+      .overlay {
+        position: fixed;
+        inset: 0;
+        z-index: 30;
+        display: grid;
+        place-items: end center;
+        padding: 24px 16px;
+        background: rgba(43, 52, 55, 0.22);
+      }
+
+      .overlay-card {
+        width: min(420px, calc(100vw - 32px));
+        padding: 20px;
+        border-radius: 32px;
+        background: rgba(255, 255, 255, 0.86);
+        backdrop-filter: blur(22px);
+        box-shadow: var(--shadow);
+      }
+
+      .overlay-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: start;
+        gap: 12px;
+      }
+
+      .destination-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        margin-top: 16px;
+      }
+
+      .screen-destination {
+        padding: 12px 10px;
+        border-radius: var(--radius-full);
+        background: var(--surface-low);
+        color: var(--text);
+        font-size: 13px;
+        font-weight: 700;
+        text-align: center;
+      }
+
+      .screen-destination.active {
+        background: var(--primary);
+        color: #fff;
+      }
+
+      .doc-preview-copy {
+        margin-top: 14px;
+        color: var(--text-muted);
+        line-height: 1.6;
+      }
+
+      .top-space {
+        margin-top: 18px;
+      }
+
+      @media (max-width: 980px) {
+        .page-shell {
+          grid-template-columns: 1fr;
+        }
+
+        .sidebar {
+          border-right: 0;
+          border-bottom: 1px solid rgba(171, 179, 183, 0.16);
+        }
+      }
+
+      @media (max-width: 560px) {
+        .sidebar {
+          padding: 22px 18px;
+        }
+
+        .preview {
+          padding: 16px;
+        }
+
+        .device {
+          width: 100%;
+          height: calc(100vh - 24px);
+          border-radius: 34px;
+          padding: 10px;
+        }
+
+        .device-inner {
+          border-radius: 26px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page-shell">
+      <aside class="sidebar">
+        <div class="sidebar-label">
+          <span class="material-symbols-outlined">dashboard</span>
+          HTML Prototype
+        </div>
+        <h1>DriveReady UK</h1>
+        <p>
+          Working browser prototype based on the Stitch export and the iOS-first native flow.
+          Every main screen is reachable from the in-app Screens menu.
+        </p>
+
+        <div class="sidebar-card">
+          <div class="eyebrow">Current view</div>
+          <h3 id="sidebar-current" class="top-space">Dashboard</h3>
+          <p id="sidebar-description" class="top-space body-muted">
+            Richer main dashboard view with tappable cards, docs, alerts, and settings.
+          </p>
+        </div>
+
+        <div class="sidebar-card">
+          <div class="eyebrow">Jump To</div>
+          <div id="sidebar-screen-list" class="screen-list top-space"></div>
+        </div>
+
+        <div class="sidebar-card">
+          <div class="eyebrow">What Works</div>
+          <p class="top-space body-muted">
+            Onboarding, sign-in, bottom tabs, screen switching, add vehicle, docs modal, settings
+            toggles, and direct navigation to each prototype screen.
+          </p>
+        </div>
+      </aside>
+
+      <main class="preview">
+        <div class="device">
+          <div class="device-inner">
+            <div class="dynamic-island"></div>
+            <div class="status-bar">
+              <span>9:41</span>
+              <div class="status-right">
+                <span>LTE</span>
+                <span class="material-symbols-outlined" style="font-size: 18px">battery-full</span>
+              </div>
+            </div>
+            <div id="phone-screen" class="phone-screen"></div>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <script>
+      const prototypeDestinations = [
+        { label: "Welcome", screen: "welcome" },
+        { label: "Features", screen: "features" },
+        { label: "Sign In", screen: "signIn" },
+        { label: "Dashboard", screen: "main", tab: "dashboard" },
+        { label: "Garage", screen: "main", tab: "garage" },
+        { label: "Alerts", screen: "main", tab: "alerts" },
+        { label: "Docs", screen: "main", tab: "docs" },
+        { label: "Settings", screen: "main", tab: "settings" },
+        { label: "Add Vehicle", screen: "addVehicle" },
+      ];
+
+      const state = {
+        route: "main",
+        tab: "dashboard",
+        screenPickerOpen: false,
+        selectedVehicleId: "family-suv",
+        selectedZoneId: "london",
+        selectedDocumentId: null,
+        biometricEnabled: true,
+        searchQuery: "Audi A4",
+        email: "james.h@drive-ready.co.uk",
+        password: "password123",
+        registrationInput: "LS12 ABC",
+        notificationSettings: {
+          mot: true,
+          tax: true,
+          fuel: false,
+        },
+        vehicles: [
+          {
+            id: "family-suv",
+            name: "The Family SUV",
+            plate: "LR19 ABC",
+            subtitle: "Last updated just now",
+            status: "good",
+            statusLabel: "All clear",
+            serviceLabel: "Next service Sept 2024",
+            detailLabel: "Insurance expires in 12 days",
+            complianceLabel: "ULEZ compliant",
+            image:
+              "https://images.unsplash.com/photo-1494976388531-d1058494cdd8?auto=format&fit=crop&w=1200&q=80",
+          },
+          {
+            id: "work-van",
+            name: "The Work Van",
+            plate: "VO18 XYZ",
+            subtitle: "Attention needed",
+            status: "warning",
+            statusLabel: "MOT overdue",
+            serviceLabel: "Book MOT today",
+            detailLabel: "Roadworthiness certificate expired",
+            complianceLabel: "CAZ checked",
+            image:
+              "https://images.unsplash.com/photo-1519643381401-22c77e60520e?auto=format&fit=crop&w=1200&q=80",
+          },
+          {
+            id: "commuter",
+            name: "The Commuter Car",
+            plate: "HJ67 LMN",
+            subtitle: "Tax due soon",
+            status: "neutral",
+            statusLabel: "Tax due in 15 days",
+            serviceLabel: "Renew now",
+            detailLabel: "Vehicle tax renews this month",
+            complianceLabel: "Bristol ready",
+            image:
+              "https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=1200&q=80",
+          },
+        ],
+        documents: [
+          {
+            id: "mot",
+            title: "MOT Certificate",
+            uploadedLabel: "Last uploaded 14 May 2023",
+            metaLabel: "PDF · 1.2MB",
+            status: "good",
+            statusLabel: "Current",
+            icon: "fact-check",
+            preview:
+              "Annual MOT certificate with a pass result and advisory notes captured in your secure document vault.",
+          },
+          {
+            id: "insurance",
+            title: "Insurance Policy",
+            uploadedLabel: "Last uploaded 02 Jan 2024",
+            metaLabel: "JPEG · 450KB",
+            status: "good",
+            statusLabel: "Verified",
+            icon: "shield",
+            preview:
+              "Current insurance confirmation including policy number, renewal date, and named drivers.",
+          },
+          {
+            id: "logbook",
+            title: "V5C Logbook",
+            uploadedLabel: "Last uploaded 12 Aug 2022",
+            metaLabel: "PDF · 3.4MB",
+            status: "warning",
+            statusLabel: "Update required",
+            icon: "description",
+            preview:
+              "V5C registration document stored for ownership reference. Address details should be refreshed after your move.",
+          },
+        ],
+        zones: [
+          {
+            id: "london",
+            name: "London ULEZ",
+            charge: "GBP 12.50 daily charge",
+            route: "Morning school route",
+            image:
+              "https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?auto=format&fit=crop&w=1200&q=80",
+          },
+          {
+            id: "birmingham",
+            name: "Birmingham CAZ",
+            charge: "GBP 8.00 daily charge",
+            route: "Client visits",
+            image:
+              "https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?auto=format&fit=crop&w=1200&q=80",
+          },
+          {
+            id: "bristol",
+            name: "Bristol CAZ",
+            charge: "GBP 9.00 daily charge",
+            route: "Weekend trips",
+            image:
+              "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1200&q=80",
+          },
+        ],
+      };
+
+      const phoneScreen = document.getElementById("phone-screen");
+      const sidebarCurrent = document.getElementById("sidebar-current");
+      const sidebarDescription = document.getElementById("sidebar-description");
+      const sidebarScreenList = document.getElementById("sidebar-screen-list");
+
+      function escapeHtml(value) {
+        return String(value)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#39;");
+      }
+
+      function currentVehicle() {
+        return (
+          state.vehicles.find((vehicle) => vehicle.id === state.selectedVehicleId) ||
+          state.vehicles[0]
+        );
+      }
+
+      function currentDocument() {
+        return state.documents.find((document) => document.id === state.selectedDocumentId) || null;
+      }
+
+      function currentDescriptor() {
+        if (state.route === "main") {
+          return {
+            title: capitalize(state.tab),
+            description:
+              {
+                dashboard:
+                  "Main vehicle overview with readiness cards, alerts, tax, and rich hero media.",
+                garage:
+                  "Vehicle list, add-vehicle flow, and quick garage-wide stats.",
+                alerts:
+                  "Compliance checker with search, saved zones, and transport-charge summaries.",
+                docs:
+                  "Document vault with preview modal, upload placeholder, and security callout.",
+                settings:
+                  "Settings, toggles, profile, support links, and sign-out affordance.",
+              }[state.tab] || "",
+          };
+        }
+
+        return {
+          title: capitalize(
+            {
+              welcome: "welcome",
+              features: "features",
+              signIn: "sign in",
+              addVehicle: "add vehicle",
+            }[state.route]
+          ),
+          description:
+            {
+              welcome: "Onboarding welcome screen with editorial hero and clear primary CTA.",
+              features: "Feature tour with bento cards and iOS notification prompt styling.",
+              signIn: "Sign-in screen with email, password, and biometric CTA.",
+              addVehicle: "Registration entry screen with the UK plate treatment.",
+            }[state.route] || "",
+        };
+      }
+
+      function capitalize(value) {
+        return value.charAt(0).toUpperCase() + value.slice(1);
+      }
+
+      function setRoute(route, tab) {
+        state.route = route;
+        if (tab) state.tab = tab;
+        if (route !== "main") {
+          state.selectedDocumentId = null;
+        }
+        render();
+      }
+
+      function jumpTo(destination) {
+        if (destination.screen === "main") {
+          state.route = "main";
+          state.tab = destination.tab;
+        } else {
+          state.route = destination.screen;
+        }
+        state.screenPickerOpen = false;
+        state.selectedDocumentId = null;
+        render();
+      }
+
+      function statusChip(label, tone = "good") {
+        return `<span class="chip ${tone}">${escapeHtml(label)}</span>`;
+      }
+
+      function topBar(title, rightAction, backAction) {
+        return `
+          <div class="glass-bar">
+            <div class="top-bar">
+              ${
+                backAction
+                  ? `<button class="icon-circle" data-action="${escapeHtml(backAction)}"><span class="material-symbols-outlined">arrow_back</span></button>`
+                  : `<div class="brand-wrap">
+                      <div class="avatar">
+                        <img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=300&q=80" alt="" />
+                      </div>
+                      <strong>${escapeHtml(title)}</strong>
+                    </div>`
+              }
+              ${
+                backAction
+                  ? `<strong>${escapeHtml(title)}</strong><div style="width:42px"></div>`
+                  : `<button class="icon-circle" data-action="${escapeHtml(rightAction || "")}">
+                      <span class="material-symbols-outlined">${rightAction === "noop-search" ? "search" : "settings"}</span>
+                    </button>`
+              }
+            </div>
+          </div>
+        `;
+      }
+
+      function welcomeScreen() {
+        return `
+          ${topBar("DriveReady UK", "noop-settings")}
+          <div class="screen-body no-tabbar">
+            <div class="welcome-stack">
+              <section class="welcome-brand">
+                <div class="welcome-badge">
+                  <span class="material-symbols-outlined" style="font-size:42px">shield</span>
+                </div>
+                <div class="headline">Welcome to<br />DriveReady UK</div>
+                <p class="body-muted top-space">Never miss an MOT, tax, insurance or zone charge again.</p>
+              </section>
+
+              <section class="card hero-card">
+                <img src="https://images.unsplash.com/photo-1542362567-b07e54358753?auto=format&fit=crop&w=1200&q=80" alt="" />
+                <div class="trusted-pill">
+                  <span class="dot"></span>
+                  Trusted by 50k+
+                </div>
+              </section>
+
+              <button class="primary-button" data-action="goto-features">Get Started</button>
+              <button class="ghost-button" data-action="goto-sign-in">Already have an account? Sign in</button>
+
+              <div class="progress">
+                <span class="active"></span>
+                <span class="dot"></span>
+                <span class="dot"></span>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      function featuresScreen() {
+        return `
+          ${topBar("DriveReady UK", "noop-settings")}
+          <div class="screen-body no-tabbar">
+            <div class="section-stack">
+              <div class="progress" style="justify-content:flex-start">
+                <span class="active" style="width:48px;opacity:.22"></span>
+                <span class="active" style="width:48px;background:var(--tertiary)"></span>
+                <span class="active" style="width:48px;opacity:.1"></span>
+              </div>
+
+              <div class="headline">Stay ahead of the game</div>
+              <p class="body-muted">Your high-end digital concierge for total vehicle peace of mind.</p>
+
+              <div class="bento">
+                <div class="feature-card wide">
+                  <div class="mini-icon"><span class="material-symbols-outlined">notifications_active</span></div>
+                  <h4>Smart reminders</h4>
+                  <p>Surgical MOT and tax alerts before they expire.</p>
+                </div>
+                <div class="feature-card">
+                  <div class="mini-icon" style="background:rgba(217,227,247,.55);color:var(--secondary)"><span class="material-symbols-outlined">description</span></div>
+                  <h4>Document storage</h4>
+                  <p>Encrypted V5C and insurance vault.</p>
+                </div>
+                <div class="feature-card">
+                  <div class="mini-icon" style="background:rgba(226,226,229,.65);color:var(--primary)"><span class="material-symbols-outlined">directions_car</span></div>
+                  <h4>Multi-vehicle support</h4>
+                  <p>Manage your full garage in one place.</p>
+                </div>
+              </div>
+
+              <div class="card form-card">
+                <div class="ios-alert">
+                  <div class="ios-alert-copy">
+                    <strong>"DriveReady" Would Like to Send You Notifications</strong>
+                    <p style="margin:10px 0 0;font-size:13px;line-height:1.5">
+                      Notifications may include alerts, sounds and icon badges. These can be configured in Settings.
+                    </p>
+                  </div>
+                  <div class="ios-alert-actions">
+                    <button type="button">Don't Allow</button>
+                    <button type="button">Allow</button>
+                  </div>
+                </div>
+                <h4 style="text-align:center">Enable Notifications</h4>
+                <p class="body-muted" style="text-align:center;margin:0">Do not miss critical compliance dates for your vehicles.</p>
+              </div>
+
+              <button class="primary-button" data-action="goto-sign-in">
+                Continue
+                <span class="material-symbols-outlined">arrow_forward</span>
+              </button>
+              <button class="ghost-button" data-action="goto-sign-in">Maybe later</button>
+            </div>
+          </div>
+        `;
+      }
+
+      function signInScreen() {
+        return `
+          ${topBar("DriveReady UK", "noop-settings")}
+          <div class="screen-body no-tabbar">
+            <div class="section-stack">
+              <section style="text-align:center;padding-top:22px">
+                <div class="welcome-badge" style="width:64px;height:64px;border-radius:18px;margin-bottom:16px">
+                  <span class="material-symbols-outlined" style="font-size:34px">directions_car</span>
+                </div>
+                <div class="headline" style="font-size:36px">Welcome back</div>
+                <p class="body-muted top-space">Sign in to manage your vehicle concierge.</p>
+              </section>
+
+              <section class="card form-card">
+                <div class="form-stack">
+                  <label class="form-field">
+                    <div class="eyebrow">Email address</div>
+                    <input class="text-input" data-field="email" value="${escapeHtml(state.email)}" />
+                  </label>
+                  <label class="form-field">
+                    <div class="form-label-row">
+                      <span class="eyebrow">Password</span>
+                      <button type="button" class="ghost-button" style="width:auto;min-height:auto;padding:0;color:var(--primary);font-size:12px" data-action="noop-forgot">Forgot Password?</button>
+                    </div>
+                    <input class="text-input" data-field="password" type="password" value="${escapeHtml(state.password)}" />
+                  </label>
+                  <button class="primary-button" data-action="sign-in">Sign In</button>
+                  <div class="divider"><span>Or continue with</span></div>
+                  <button class="secondary-button" data-action="sign-in">
+                    <span class="material-symbols-outlined">fingerprint</span>
+                    Face ID / Touch ID
+                  </button>
+                </div>
+              </section>
+
+              <div style="text-align:center" class="body-muted">
+                Do not have an account?
+                <button type="button" class="ghost-button" style="display:inline-flex;width:auto;min-height:auto;padding:0;color:var(--primary)" data-action="goto-welcome">Create account</button>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      function addVehicleScreen() {
+        return `
+          ${topBar("DriveReady UK", "", "back-to-garage")}
+          <div class="screen-body focused">
+            <div class="section-stack" style="min-height:calc(100vh - 180px)">
+              <div style="padding-top:30px">
+                <div class="headline">Add Your Vehicle</div>
+                <p class="body-muted top-space">Enter your registration number to get started.</p>
+              </div>
+
+              <div class="plate-shell">
+                <div class="plate-strip">UK</div>
+                <input class="plate-input" data-field="registrationInput" value="${escapeHtml(
+                  state.registrationInput
+                )}" maxlength="8" />
+              </div>
+
+              <button class="ghost-button" data-action="noop-manual">I do not have my registration number</button>
+
+              <div style="margin-top:auto" class="section-stack">
+                <button class="primary-button" data-action="confirm-add-vehicle">
+                  Continue
+                  <span class="material-symbols-outlined">arrow_forward</span>
+                </button>
+                <div style="display:flex;align-items:center;gap:12px">
+                  <div style="flex:1;height:1px;background:rgba(171,179,183,.28)"></div>
+                  <span class="eyebrow">DVLA secure data</span>
+                  <div style="flex:1;height:1px;background:rgba(171,179,183,.28)"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      function dashboardScreen() {
+        const vehicle = currentVehicle();
+        const warning = vehicle.status === "warning";
+        const chipTone = vehicle.status === "good" ? "good" : vehicle.status === "warning" ? "warning" : "neutral";
+
+        return `
+          ${topBar("DriveReady UK", "goto-settings")}
+          <div class="screen-body">
+            <div class="section-stack">
+              <section style="text-align:center">
+                <div class="plate-badge">${escapeHtml(vehicle.plate)}</div>
+                <div class="headline top-space">${escapeHtml(vehicle.name)}</div>
+                <p class="body-muted" style="margin:8px 0 0">${escapeHtml(vehicle.subtitle)}</p>
+              </section>
+
+              <button class="card status-card" data-action="goto-garage" type="button">
+                <div class="status-icon ${warning ? "warning" : ""}">
+                  <span class="material-symbols-outlined">${warning ? "warning" : "check_circle"}</span>
+                </div>
+                <div style="text-align:left">
+                  <h4>${warning ? "Action required before the next trip" : "Your vehicle is ready for the road"}</h4>
+                  <p class="body-muted" style="margin:6px 0 0">${escapeHtml(vehicle.detailLabel)}</p>
+                </div>
+              </button>
+
+              <div style="display:flex;justify-content:flex-end">${statusChip(vehicle.complianceLabel, chipTone)}</div>
+
+              <section class="card detail-card section-stack">
+                <div class="section-header">
+                  <div>
+                    <div class="eyebrow">Insurance</div>
+                    <h3 style="font-size:28px;margin-top:6px">${warning ? "Expires soon" : "Expires in 12 days"}</h3>
+                  </div>
+                  <span class="material-symbols-outlined" style="color:${warning ? "var(--error)" : "var(--text-muted)"}">priority_high</span>
+                </div>
+                <button class="primary-button" data-action="goto-docs">Renew now</button>
+              </section>
+
+              <section class="card detail-card section-stack">
+                <div class="section-header">
+                  <div>
+                    <div class="eyebrow">MOT</div>
+                    <h3 style="font-size:28px;margin-top:6px">${warning ? "Due in 15 days" : "Due in 24 days"}</h3>
+                  </div>
+                  ${statusChip("Action required", warning ? "warning" : "neutral")}
+                </div>
+                <div class="split-actions">
+                  <button class="secondary-button" data-action="goto-alerts">Book MOT</button>
+                  <button class="icon-circle" data-action="goto-alerts"><span class="material-symbols-outlined">calendar_today</span></button>
+                </div>
+              </section>
+
+              <button class="tax-card card detail-card" data-action="goto-alerts" type="button">
+                <div class="section-header">
+                  <div>
+                    <div class="eyebrow">Vehicle Tax</div>
+                    <h3 style="font-size:22px;margin-top:6px">${warning ? "Renew in 15 days" : "Paid until Oct 2024"}</h3>
+                  </div>
+                  <div class="mini-icon" style="background:rgba(105,246,184,.2);color:var(--text)"><span class="material-symbols-outlined">receipt_long</span></div>
+                </div>
+              </button>
+
+              <div class="quick-links">
+                <button class="quick-link" data-action="goto-garage">
+                  <span class="material-symbols-outlined">directions_car</span>
+                  Garage
+                </button>
+                <button class="quick-link" data-action="goto-alerts">
+                  <span class="material-symbols-outlined">notifications_active</span>
+                  Alerts
+                </button>
+                <button class="quick-link" data-action="goto-docs">
+                  <span class="material-symbols-outlined">description</span>
+                  Docs
+                </button>
+              </div>
+
+              <section class="card media-card">
+                <img src="${escapeHtml(vehicle.image)}" alt="" />
+                <div class="media-overlay"></div>
+                <div class="media-copy">
+                  <div class="eyebrow" style="color:rgba(255,255,255,.72)">Connected via</div>
+                  <h3 style="margin-top:8px">DriveReady Cloud</h3>
+                </div>
+              </section>
+            </div>
+          </div>
+        `;
+      }
+
+      function garageScreen() {
+        const criticalAlerts = state.vehicles.filter((vehicle) => vehicle.status === "warning").length;
+
+        return `
+          ${topBar("DriveReady UK", "goto-settings")}
+          <div class="screen-body">
+            <div class="section-stack">
+              <div class="display">My Garage</div>
+              <p class="body-muted">${state.vehicles.length} vehicles under management</p>
+
+              ${state.vehicles
+                .map((vehicle) => {
+                  const selected = vehicle.id === state.selectedVehicleId;
+                  const tone = vehicle.status === "good" ? "good" : vehicle.status === "warning" ? "warning" : "neutral";
+                  return `
+                    <button class="card vehicle-card ${selected ? "selected" : ""}" data-select-vehicle="${escapeHtml(vehicle.id)}" type="button">
+                      <div class="vehicle-header">
+                        <div style="text-align:left">
+                          <h3>${escapeHtml(vehicle.name)}</h3>
+                          <div class="top-space plate-badge" style="font-size:13px;padding:6px 10px">${escapeHtml(vehicle.plate)}</div>
+                        </div>
+                        ${statusChip(vehicle.statusLabel, tone)}
+                      </div>
+                      <div class="vehicle-footer">
+                        <div class="vehicle-image"><img src="${escapeHtml(vehicle.image)}" alt="" /></div>
+                        <div style="text-align:left">
+                          <div style="font-weight:700">${escapeHtml(vehicle.serviceLabel)}</div>
+                          <div class="eyebrow top-space">${selected ? "Selected for dashboard" : "Tap to inspect"}</div>
+                        </div>
+                      </div>
+                    </button>
+                  `;
+                })
+                .join("")}
+
+              <button class="add-card" data-action="goto-add-vehicle" type="button">
+                <span class="material-symbols-outlined" style="font-size:30px;color:var(--text-muted)">add_circle</span>
+                <h4 style="margin-top:8px">Add Another Vehicle</h4>
+                <p class="body-muted" style="margin:8px 0 0">Keep the same premium flow as the rest of the experience.</p>
+              </button>
+
+              <div class="stats-grid">
+                <div class="stat-card">
+                  <strong>GBP 420</strong>
+                  <span class="eyebrow">Est. tax total</span>
+                </div>
+                <div class="stat-card">
+                  <strong style="color:var(--error)">${criticalAlerts}</strong>
+                  <span class="eyebrow">Critical alert</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      function alertsScreen() {
+        const vehicle = currentVehicle();
+        return `
+          ${topBar("DriveReady", "noop-settings")}
+          <div class="screen-body">
+            <div class="section-stack">
+              <label class="search-shell">
+                <span class="material-symbols-outlined">search</span>
+                <input class="search-input" data-field="searchQuery" value="${escapeHtml(state.searchQuery)}" />
+              </label>
+
+              <section class="card compliance-card section-stack">
+                <div class="section-header" style="align-items:start">
+                  <div>
+                    ${statusChip("Compliant", "good")}
+                    <div class="headline top-space">${escapeHtml(vehicle.name)}</div>
+                    <div class="top-space plate-badge" style="font-size:15px;padding:6px 10px">${escapeHtml(vehicle.plate)}</div>
+                  </div>
+                  <div style="text-align:right">
+                    <div class="body-muted">Euro 6 Diesel</div>
+                    <div class="eyebrow top-space">Exempt from daily charges</div>
+                  </div>
+                </div>
+
+                <div class="section-header" style="padding-top:12px;border-top:1px solid rgba(171,179,183,.18)">
+                  <div class="inline">
+                    <span class="mini-tag"><span class="material-symbols-outlined" style="font-size:14px">bolt</span></span>
+                    <span class="mini-tag">U</span>
+                    <span class="mini-tag">C</span>
+                  </div>
+                  <button class="ghost-button" style="width:auto;min-height:auto;padding:0;color:var(--primary)" data-open-doc="mot">View certificate</button>
+                </div>
+              </section>
+
+              <div class="section-header">
+                <div>
+                  <div style="font-size:28px;font-weight:900;letter-spacing:-.05em">Saved Zones</div>
+                  <div class="body-muted top-space" style="font-size:13px">Active monitoring for your routes</div>
+                </div>
+                <button class="ghost-button" style="width:auto;min-height:auto;padding:0;color:var(--primary)">Manage</button>
+              </div>
+
+              ${state.zones
+                .map(
+                  (zone) => `
+                    <button class="zone-card ${zone.id === state.selectedZoneId ? "selected" : ""}" data-select-zone="${escapeHtml(zone.id)}" type="button">
+                      <div class="zone-image"><img src="${escapeHtml(zone.image)}" alt="" /></div>
+                      <div style="text-align:left">
+                        <div class="section-header">
+                          <h4>${escapeHtml(zone.name)}</h4>
+                          ${statusChip("Free", "good")}
+                        </div>
+                        <div style="margin-top:8px;font-weight:700">${escapeHtml(zone.charge)}</div>
+                        <div class="body-muted" style="margin-top:6px;font-size:13px">${escapeHtml(zone.route)}</div>
+                      </div>
+                    </button>
+                  `
+                )
+                .join("")}
+
+              <section class="card utility-card section-stack">
+                <div class="mini-icon" style="margin:0 auto;background:rgba(226,226,229,.65);color:var(--primary)">
+                  <span class="material-symbols-outlined">info</span>
+                </div>
+                <h3>Moving home?</h3>
+                <p class="body-muted" style="margin:0">
+                  Remember to update your V5C address with the DVLA so your compliance data stays accurate.
+                </p>
+                <button class="primary-button" data-action="goto-settings">Update DVLA</button>
+              </section>
+            </div>
+          </div>
+        `;
+      }
+
+      function docsScreen() {
+        return `
+          ${topBar("DriveReady", "goto-settings")}
+          <div class="screen-body">
+            <div class="section-stack">
+              <div class="hero-badge"><span class="material-symbols-outlined">verified_user</span> Secure Vault</div>
+              <div class="display">Docs.</div>
+              <p class="body-muted">Your encrypted digital glovebox for UK compliance and ownership records.</p>
+
+              ${state.documents
+                .map(
+                  (document) => `
+                    <button class="card doc-card" data-open-doc="${escapeHtml(document.id)}" type="button">
+                      <div class="doc-icon"><span class="material-symbols-outlined">${escapeHtml(document.icon)}</span></div>
+                      <div style="text-align:left">
+                        <h4>${escapeHtml(document.title)}</h4>
+                        <div class="body-muted" style="margin-top:6px;font-size:13px">${escapeHtml(document.uploadedLabel)}</div>
+                        <div class="inline top-space" style="flex-wrap:wrap">
+                          <span class="tag">${escapeHtml(document.metaLabel)}</span>
+                          ${statusChip(document.statusLabel, document.status)}
+                        </div>
+                      </div>
+                      <div class="icon-circle"><span class="material-symbols-outlined">visibility</span></div>
+                    </button>
+                  `
+                )
+                .join("")}
+
+              <button class="add-card" data-action="add-document" type="button">
+                <span class="material-symbols-outlined" style="font-size:30px;color:var(--primary)">add</span>
+                <h4 style="margin-top:8px">Add New Document</h4>
+                <p class="body-muted" style="margin:8px 0 0">Scan or upload service history, tax receipts, or permits.</p>
+              </button>
+
+              <section class="card utility-card" style="text-align:left">
+                <div class="inline">
+                  <span class="material-symbols-outlined" style="color:var(--primary)">lock</span>
+                  <strong>End-to-end encryption</strong>
+                </div>
+                <p class="body-muted" style="margin:10px 0 0">
+                  DriveReady uses secure storage patterns for all prototype documents. Your file layout is ready for real backend integration.
+                </p>
+              </section>
+            </div>
+          </div>
+          <button class="fab" data-action="add-document"><span class="material-symbols-outlined">add_a_photo</span></button>
+        `;
+      }
+
+      function settingsScreen() {
+        return `
+          ${topBar("Settings", "noop-search", "noop-back")}
+          <div class="screen-body">
+            <div class="section-stack">
+              <section class="card profile-card">
+                <div class="profile-photo">
+                  <img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=300&q=80" alt="" />
+                  <div class="profile-check"><span class="material-symbols-outlined" style="font-size:15px">verified</span></div>
+                </div>
+                <div>
+                  <h3>James Harrington</h3>
+                  <div class="body-muted top-space" style="font-size:13px">${escapeHtml(state.email)}</div>
+                  <div class="top-space">${statusChip("Premium Member", "good")}</div>
+                </div>
+                <div class="icon-circle"><span class="material-symbols-outlined">edit</span></div>
+              </section>
+
+              <section class="settings-section">
+                <div class="eyebrow">Vehicle Management</div>
+                <div class="card settings-card">
+                  <button class="setting-row" data-action="goto-garage" type="button">
+                    <div class="setting-left">
+                      <div class="setting-icon"><span class="material-symbols-outlined">garage</span></div>
+                      <strong>Manage Garage</strong>
+                    </div>
+                    <div class="inline"><span class="tag">2 vehicles</span><span class="material-symbols-outlined">chevron_right</span></div>
+                  </button>
+                  <div class="setting-row">
+                    <div class="setting-left">
+                      <div class="setting-icon"><span class="material-symbols-outlined">card_membership</span></div>
+                      <strong>Subscription Status</strong>
+                    </div>
+                    <div class="inline"><span class="chip good">Active</span><span class="material-symbols-outlined">chevron_right</span></div>
+                  </div>
+                </div>
+              </section>
+
+              <section class="settings-section">
+                <div class="eyebrow">Notifications</div>
+                <div class="card settings-card">
+                  ${toggleRow("mot", "notifications_active", "MOT & Service Alerts", "Get reminded 30 days before")}
+                  ${toggleRow("tax", "receipt_long", "Tax Reminders", "Direct debit and renewal dates")}
+                  ${toggleRow("fuel", "trending_down", "Fuel Price Drops", "Alerts for local petrol stations")}
+                </div>
+              </section>
+
+              <section class="settings-section">
+                <div class="eyebrow">Security & Privacy</div>
+                <div class="card settings-card">
+                  <div class="setting-row">
+                    <div class="setting-left">
+                      <div class="setting-icon"><span class="material-symbols-outlined">lock</span></div>
+                      <strong>Update Password</strong>
+                    </div>
+                    <span class="material-symbols-outlined">chevron_right</span>
+                  </div>
+                  <div class="setting-row">
+                    <div class="setting-left">
+                      <div class="setting-icon"><span class="material-symbols-outlined">fingerprint</span></div>
+                      <div>
+                        <strong>Biometric Login</strong>
+                        <div class="body-muted top-space" style="font-size:13px">Unlock with Face ID or Touch ID</div>
+                      </div>
+                    </div>
+                    <label class="switch">
+                      <input type="checkbox" data-toggle="biometricEnabled" ${state.biometricEnabled ? "checked" : ""} />
+                      <span></span>
+                    </label>
+                  </div>
+                </div>
+              </section>
+
+              <button class="secondary-button signout" data-action="goto-sign-in">
+                <span class="material-symbols-outlined">logout</span>
+                Sign Out
+              </button>
+              <div class="eyebrow" style="text-align:center">DriveReady UK v4.12.0</div>
+            </div>
+          </div>
+        `;
+      }
+
+      function toggleRow(key, icon, title, description) {
+        return `
+          <div class="setting-row">
+            <div class="setting-left">
+              <div class="setting-icon"><span class="material-symbols-outlined">${escapeHtml(icon)}</span></div>
+              <div>
+                <strong>${escapeHtml(title)}</strong>
+                <div class="body-muted top-space" style="font-size:13px">${escapeHtml(description)}</div>
+              </div>
+            </div>
+            <label class="switch">
+              <input type="checkbox" data-toggle="notification-${escapeHtml(key)}" ${state.notificationSettings[key] ? "checked" : ""} />
+              <span></span>
+            </label>
+          </div>
+        `;
+      }
+
+      function mainTabBar() {
+        const tabs = [
+          ["dashboard", "dashboard", "Dashboard"],
+          ["garage", "directions_car", "Garage"],
+          ["alerts", "notifications_active", "Alerts"],
+          ["docs", "description", "Docs"],
+          ["settings", "settings", "Settings"],
+        ];
+
+        return `
+          <div class="tab-wrap">
+            <div class="tab-bar">
+              ${tabs
+                .map(
+                  ([tab, icon, label]) => `
+                    <button class="tab-button ${state.tab === tab ? "active" : ""}" data-tab="${tab}">
+                      <span class="material-symbols-outlined">${icon}</span>
+                      ${tab === "alerts" ? '<span class="tab-alert-dot"></span>' : ""}
+                      <small>${label}</small>
+                    </button>
+                  `
+                )
+                .join("")}
+            </div>
+          </div>
+        `;
+      }
+
+      function screenPicker() {
+        return `
+          <button class="prototype-toggle" data-action="toggle-screen-picker">
+            <span class="material-symbols-outlined">widgets</span>
+            Screens
+          </button>
+          ${
+            state.screenPickerOpen
+              ? `
+                <div class="overlay" data-action="close-screen-picker">
+                  <div class="overlay-card" data-stop-click="true">
+                    <div class="overlay-head">
+                      <div>
+                        <h3>Prototype Screens</h3>
+                        <p class="body-muted" style="margin:8px 0 0">Jump directly to any screen in the flow.</p>
+                      </div>
+                      <button class="icon-circle" data-action="close-screen-picker"><span class="material-symbols-outlined">close</span></button>
+                    </div>
+                    <div class="destination-grid">
+                      ${prototypeDestinations
+                        .map((destination) => {
+                          const active =
+                            destination.screen === "main"
+                              ? state.route === "main" && state.tab === destination.tab
+                              : state.route === destination.screen;
+                          return `
+                            <button class="screen-destination ${active ? "active" : ""}" data-destination="${escapeHtml(destination.label)}">
+                              ${escapeHtml(destination.label)}
+                            </button>
+                          `;
+                        })
+                        .join("")}
+                    </div>
+                  </div>
+                </div>
+              `
+              : ""
+          }
+        `;
+      }
+
+      function documentOverlay() {
+        const document = currentDocument();
+        if (!document) return "";
+
+        return `
+          <div class="overlay" data-action="close-document">
+            <div class="overlay-card" data-stop-click="true">
+              <div class="overlay-head">
+                <div class="inline">
+                  <div class="doc-icon"><span class="material-symbols-outlined">${escapeHtml(document.icon)}</span></div>
+                  <div>
+                    <h3>${escapeHtml(document.title)}</h3>
+                    <div class="body-muted top-space" style="font-size:13px">${escapeHtml(document.metaLabel)}</div>
+                  </div>
+                </div>
+                <button class="icon-circle" data-action="close-document"><span class="material-symbols-outlined">close</span></button>
+              </div>
+              <p class="doc-preview-copy">${escapeHtml(document.preview)}</p>
+              <div class="inline" style="flex-wrap:wrap;margin-top:14px">
+                <span class="tag">${escapeHtml(document.uploadedLabel)}</span>
+                ${statusChip(document.statusLabel, document.status)}
+              </div>
+              <div class="split-actions top-space">
+                <button class="secondary-button" data-action="close-document">Close</button>
+                <button class="primary-button" data-action="close-document">Simulate Share</button>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      function renderMainScreen() {
+        const screens = {
+          dashboard: dashboardScreen,
+          garage: garageScreen,
+          alerts: alertsScreen,
+          docs: docsScreen,
+          settings: settingsScreen,
+        };
+
+        return `
+          <div class="screen-root">
+            ${screens[state.tab]()}
+            ${mainTabBar()}
+          </div>
+        `;
+      }
+
+      function renderSidebar() {
+        const descriptor = currentDescriptor();
+        sidebarCurrent.textContent = descriptor.title;
+        sidebarDescription.textContent = descriptor.description;
+        sidebarScreenList.innerHTML = prototypeDestinations
+          .map((destination) => {
+            const active =
+              destination.screen === "main"
+                ? state.route === "main" && state.tab === destination.tab
+                : state.route === destination.screen;
+            return `<button class="screen-chip ${active ? "active" : ""}" data-destination="${escapeHtml(
+              destination.label
+            )}">${escapeHtml(destination.label)}</button>`;
+          })
+          .join("");
+      }
+
+      function render() {
+        const screens = {
+          welcome: welcomeScreen,
+          features: featuresScreen,
+          signIn: signInScreen,
+          addVehicle: addVehicleScreen,
+          main: renderMainScreen,
+        };
+
+        phoneScreen.innerHTML = `
+          ${screens[state.route]()}
+          ${screenPicker()}
+          ${documentOverlay()}
+        `;
+        renderSidebar();
+      }
+
+      document.addEventListener("click", (event) => {
+        const stopNode = event.target.closest("[data-stop-click='true']");
+        if (stopNode) return;
+
+        const actionNode = event.target.closest("[data-action]");
+        if (actionNode) {
+          const action = actionNode.dataset.action;
+          if (action === "goto-features") setRoute("features");
+          if (action === "goto-sign-in") setRoute("signIn");
+          if (action === "goto-welcome") setRoute("welcome");
+          if (action === "goto-garage") setRoute("main", "garage");
+          if (action === "goto-alerts") setRoute("main", "alerts");
+          if (action === "goto-docs") setRoute("main", "docs");
+          if (action === "goto-settings") setRoute("main", "settings");
+          if (action === "goto-add-vehicle") setRoute("addVehicle");
+          if (action === "back-to-garage") setRoute("main", "garage");
+          if (action === "sign-in") setRoute("main", "dashboard");
+          if (action === "toggle-screen-picker") {
+            state.screenPickerOpen = !state.screenPickerOpen;
+            render();
+          }
+          if (action === "close-screen-picker") {
+            state.screenPickerOpen = false;
+            render();
+          }
+          if (action === "close-document") {
+            state.selectedDocumentId = null;
+            render();
+          }
+          if (action === "add-document") {
+            state.documents.unshift({
+              id: `service-${Date.now()}`,
+              title: "Service Invoice",
+              uploadedLabel: "Added just now",
+              metaLabel: "PDF · 0.8MB",
+              status: "neutral",
+              statusLabel: "Stored",
+              icon: "receipt_long",
+              preview:
+                "Prototype upload complete. This slot is ready for a real scanning or storage integration.",
+            });
+            state.selectedDocumentId = state.documents[0].id;
+            state.route = "main";
+            state.tab = "docs";
+            render();
+          }
+          if (action === "confirm-add-vehicle") {
+            const plate = state.registrationInput.trim().toUpperCase();
+            if (!plate) return;
+            state.vehicles.push({
+              id: `vehicle-${Date.now()}`,
+              name: `Vehicle ${state.vehicles.length + 1}`,
+              plate,
+              subtitle: "Added just now",
+              status: "good",
+              statusLabel: "Monitoring started",
+              serviceLabel: "First reminder in 30 days",
+              detailLabel: "Insurance and MOT syncing next",
+              complianceLabel: "Zone checks enabled",
+              image:
+                "https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=1200&q=80",
+            });
+            state.selectedVehicleId = state.vehicles[state.vehicles.length - 1].id;
+            state.route = "main";
+            state.tab = "garage";
+            render();
+          }
+          render();
+          return;
+        }
+
+        const destinationNode = event.target.closest("[data-destination]");
+        if (destinationNode) {
+          const destination = prototypeDestinations.find(
+            (item) => item.label === destinationNode.dataset.destination
+          );
+          if (destination) jumpTo(destination);
+          return;
+        }
+
+        const tabNode = event.target.closest("[data-tab]");
+        if (tabNode) {
+          state.route = "main";
+          state.tab = tabNode.dataset.tab;
+          state.selectedDocumentId = null;
+          render();
+          return;
+        }
+
+        const docNode = event.target.closest("[data-open-doc]");
+        if (docNode) {
+          state.selectedDocumentId = docNode.dataset.openDoc;
+          render();
+          return;
+        }
+
+        const vehicleNode = event.target.closest("[data-select-vehicle]");
+        if (vehicleNode) {
+          state.selectedVehicleId = vehicleNode.dataset.selectVehicle;
+          state.route = "main";
+          state.tab = "dashboard";
+          render();
+          return;
+        }
+
+        const zoneNode = event.target.closest("[data-select-zone]");
+        if (zoneNode) {
+          state.selectedZoneId = zoneNode.dataset.selectZone;
+          render();
+        }
+      });
+
+      document.addEventListener("input", (event) => {
+        const field = event.target.dataset.field;
+        if (!field) return;
+        state[field] = event.target.value.toUpperCase && field === "registrationInput"
+          ? event.target.value.toUpperCase()
+          : event.target.value;
+      });
+
+      document.addEventListener("change", (event) => {
+        const toggle = event.target.dataset.toggle;
+        if (!toggle) return;
+
+        if (toggle === "biometricEnabled") {
+          state.biometricEnabled = event.target.checked;
+        }
+
+        if (toggle.startsWith("notification-")) {
+          const key = toggle.replace("notification-", "");
+          state.notificationSettings[key] = event.target.checked;
+        }
+
+        render();
+      });
+
+      render();
+    </script>
+  </body>
+</html>

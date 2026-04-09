@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>DriveReady UK - Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "outline-variant": "#abb3b7",
+              "on-primary-container": "#505254",
+              "surface-container-low": "#f1f4f6",
+              "inverse-surface": "#0c0f10",
+              "primary-fixed": "#e2e2e5",
+              "surface-container": "#eaeff1",
+              "error": "#9f403d",
+              "outline": "#737c7f",
+              "tertiary-fixed-dim": "#58e7ab",
+              "secondary-container": "#d9e3f7",
+              "on-tertiary-fixed-variant": "#006544",
+              "error-dim": "#4e0309",
+              "on-surface-variant": "#586064",
+              "on-primary-fixed-variant": "#5a5c5e",
+              "inverse-on-surface": "#9b9d9e",
+              "on-tertiary": "#e6ffee",
+              "tertiary-container": "#69f6b8",
+              "surface-variant": "#dbe4e7",
+              "on-background": "#2b3437",
+              "tertiary-dim": "#005f40",
+              "on-primary": "#f7f7fa",
+              "secondary-fixed": "#d9e3f7",
+              "on-primary-fixed": "#3e3f42",
+              "on-error": "#fff7f6",
+              "on-error-container": "#752121",
+              "surface-container-high": "#e2e9ec",
+              "primary": "#5d5e61",
+              "on-tertiary-fixed": "#00452d",
+              "primary-fixed-dim": "#d4d4d7",
+              "on-surface": "#2b3437",
+              "surface-dim": "#d1dce0",
+              "on-secondary-fixed": "#364050",
+              "secondary-fixed-dim": "#cbd5e9",
+              "secondary-dim": "#4a5464",
+              "on-secondary": "#f8f8ff",
+              "inverse-primary": "#f9f9fc",
+              "on-tertiary-container": "#005a3c",
+              "secondary": "#556071",
+              "surface": "#f8f9fa",
+              "tertiary": "#006d4a",
+              "primary-container": "#e2e2e5",
+              "error-container": "#fe8983",
+              "surface-bright": "#f8f9fa",
+              "tertiary-fixed": "#69f6b8",
+              "surface-container-highest": "#dbe4e7",
+              "on-secondary-container": "#485263",
+              "primary-dim": "#515255",
+              "background": "#f8f9fa",
+              "surface-tint": "#5d5e61",
+              "on-secondary-fixed-variant": "#525c6d",
+              "surface-container-lowest": "#ffffff"
+            },
+            fontFamily: {
+              "headline": ["Inter"],
+              "body": ["Inter"],
+              "label": ["Inter"]
+            },
+            borderRadius: {"DEFAULT": "1rem", "lg": "2rem", "xl": "3rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .registration-plate {
+            background: linear-gradient(180deg, #ffd900 0%, #ffcc00 100%);
+            box-shadow: inset 0 -2px 0 rgba(0,0,0,0.1), 0 4px 12px rgba(0,0,0,0.05);
+        }
+        .glass-header {
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface text-on-surface font-body selection:bg-tertiary/20">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl flex justify-between items-center px-6 py-4 w-full">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full overflow-hidden bg-surface-container">
+<img alt="User Profile" class="w-full h-full object-cover" data-alt="close-up portrait of a professional man in a neutral setting with soft natural window lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuASo-pK5mnSJ4usj33qOywU2Z4dQ3gcFeXIQB8V3JNCeq2FvUb9FyeyWANTzpUkp3SBXqFbT5KXwY6uMoYB6yJjPiJjrKd-QDapmRuvxaioP3a7P0A2-HOz3HACSXKEVEMAClmHfL9ewHkja142gPBHX6ayyd8n87TmfNTAwjAPDY5j9zTYQPL594ZZ7LMsQF4tjh6YDxzKdsTzV3cnmERYMHU7LWkDTjajAWMtrbYV7ivxzH_PbhwG9oIK72vOiu-9ttDnzgv3zWrI"/>
+</div>
+<h1 class="font-['Inter'] font-semibold text-lg tracking-tight text-slate-900 dark:text-slate-50">DriveReady UK</h1>
+</div>
+<button class="material-symbols-outlined text-slate-900 dark:text-slate-50 hover:opacity-80 transition-opacity active:scale-95 duration-200" data-icon="settings">settings</button>
+</header>
+<main class="pt-24 pb-32 px-6 max-w-2xl mx-auto">
+<!-- Hero Section: Registration & Nickname -->
+<section class="mb-10 text-center">
+<div class="inline-block registration-plate px-6 py-2 rounded-sm border-2 border-on-surface/5 mb-4">
+<span class="text-3xl font-extrabold tracking-widest text-black uppercase font-mono">LR19 ABC</span>
+</div>
+<h2 class="text-display-lg font-bold text-on-surface tracking-tight mb-1">The Family SUV</h2>
+<p class="text-on-surface-variant body-md">Last updated: Just now</p>
+</section>
+<!-- Status Summary Card -->
+<div class="mb-8 bg-surface-container-lowest p-6 rounded-lg shadow-[0_10px_30px_-5px_rgba(43,52,55,0.06)] flex items-center gap-4 transition-transform active:scale-[0.98]">
+<div class="w-12 h-12 rounded-full bg-tertiary/10 flex items-center justify-center text-tertiary">
+<span class="material-symbols-outlined" data-icon="check_circle" data-weight="fill" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+<div>
+<h3 class="font-bold text-on-surface text-lg">Your vehicle is ready for the road</h3>
+<p class="text-on-surface-variant text-sm">All essential checks are currently valid.</p>
+</div>
+</div>
+<!-- ULEZ Compliance Badge (Asymmetric Placement) -->
+<div class="flex justify-end mb-6">
+<div class="bg-tertiary-container/30 px-4 py-2 rounded-full flex items-center gap-2 border border-tertiary/10">
+<span class="material-symbols-outlined text-tertiary text-sm" data-icon="eco">eco</span>
+<span class="text-tertiary font-bold text-xs uppercase tracking-wider">ULEZ: Compliant</span>
+</div>
+</div>
+<!-- Bento Grid / Stacked Cards Layout -->
+<div class="space-y-6">
+<!-- Insurance Card (Critical/Warning) -->
+<section class="bg-surface-container-lowest p-8 rounded-lg shadow-[0_10px_30px_-5px_rgba(43,52,55,0.06)] relative overflow-hidden group">
+<div class="absolute top-0 right-0 w-32 h-32 bg-error-container/10 rounded-bl-full -mr-16 -mt-16 transition-transform group-hover:scale-110"></div>
+<div class="relative z-10">
+<div class="flex justify-between items-start mb-6">
+<div>
+<p class="text-on-surface-variant font-medium text-xs uppercase tracking-widest mb-1">Insurance</p>
+<h3 class="text-2xl font-bold text-on-surface">Expires in 12 days</h3>
+</div>
+<span class="material-symbols-outlined text-error" data-icon="priority_high">priority_high</span>
+</div>
+<button class="w-full py-4 bg-primary text-on-primary rounded-full font-bold text-sm tracking-wide transition-all active:scale-95 shadow-lg shadow-primary/20">
+                        Renew Now
+                    </button>
+</div>
+</section>
+<!-- MOT Card (Amber/Warning) -->
+<section class="bg-surface-container-lowest p-8 rounded-lg shadow-[0_10px_30px_-5px_rgba(43,52,55,0.06)] relative overflow-hidden">
+<div class="flex justify-between items-start mb-6">
+<div>
+<p class="text-on-surface-variant font-medium text-xs uppercase tracking-widest mb-1">MOT</p>
+<h3 class="text-2xl font-bold text-on-surface">Due in 24 days</h3>
+</div>
+<div class="bg-error-container/20 text-on-error-container px-3 py-1 rounded-full text-xs font-bold">Action Required</div>
+</div>
+<div class="flex gap-3">
+<button class="flex-1 py-4 bg-secondary-container text-on-secondary-container rounded-full font-bold text-sm transition-all active:scale-95">
+                        Book MOT
+                    </button>
+<button class="w-14 h-14 flex items-center justify-center bg-surface-container rounded-full text-on-surface-variant active:scale-90">
+<span class="material-symbols-outlined" data-icon="calendar_today">calendar_today</span>
+</button>
+</div>
+</section>
+<!-- Vehicle Tax (Success) -->
+<section class="bg-surface-container-low p-8 rounded-lg flex justify-between items-center transition-colors hover:bg-surface-container-high cursor-pointer">
+<div>
+<p class="text-on-surface-variant font-medium text-xs uppercase tracking-widest mb-1">Vehicle Tax</p>
+<h3 class="text-xl font-bold text-on-surface">Paid until Oct 2024</h3>
+</div>
+<div class="w-12 h-12 bg-tertiary-container flex items-center justify-center rounded-2xl">
+<span class="material-symbols-outlined text-on-tertiary-container" data-icon="receipt_long">receipt_long</span>
+</div>
+</section>
+<!-- Visual Asset: Vehicle Image (Bleed Design) -->
+<div class="relative mt-12 mb-8 -mx-6 h-64 overflow-hidden rounded-xl shadow-2xl">
+<img alt="SUV Vehicle" class="w-full h-full object-cover" data-alt="Modern premium grey SUV driving on a clean British suburban road with soft morning lighting and architectural background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBOuM3j79uRpxQ8VlLDSdgRpNisTSdncZyqGeePDJHmu_uRMaL2RQm_R1ZdVHCmZ1Xe0BU6wQcBiv2SYLM5WIApXKfWSaZ97uMOrVTEhOFcPO-jQ4eH9Hd8HlLq1tgu89Q53x2IGGNh6GINxXXUevV-ZFDVrouXH1RqEoTmpPMUpjRByl_8Up1D_onjuYzq7VjsojKD78QJc5wUy3hXubQBUuP8smnAnG4wYrjEODw-3khc0XxnezTzJ1wP9ZIm8z1100P0CcrX4yRi"/>
+<div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+<div class="absolute bottom-6 left-6 text-white">
+<p class="text-xs font-medium uppercase tracking-[0.2em] opacity-80">Connected via</p>
+<p class="text-lg font-bold">DriveReady Cloud</p>
+</div>
+</div>
+</div>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 w-full z-50 rounded-t-[2rem] bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl shadow-[0_-10px_30px_-5px_rgba(43,52,55,0.06)]">
+<div class="flex justify-around items-center px-4 pt-3 pb-8 w-full">
+<a class="flex flex-col items-center justify-center text-slate-900 dark:text-slate-50 bg-slate-100/50 dark:bg-slate-800/50 rounded-2xl px-3 py-2 Active: scale-90 transition-transform duration-150" href="#">
+<span class="material-symbols-outlined mb-1" data-icon="dashboard" data-weight="fill" style="font-variation-settings: 'FILL' 1;">dashboard</span>
+<span class="font-['Inter'] text-[10px] font-medium tracking-wide uppercase">Dashboard</span>
+</a>
+<a class="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 px-3 py-2 hover:text-slate-600 dark:hover:text-slate-300 Active: scale-90 transition-transform duration-150" href="#">
+<span class="material-symbols-outlined mb-1" data-icon="directions_car">directions_car</span>
+<span class="font-['Inter'] text-[10px] font-medium tracking-wide uppercase">Garage</span>
+</a>
+<a class="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 px-3 py-2 hover:text-slate-600 dark:hover:text-slate-300 Active: scale-90 transition-transform duration-150" href="#">
+<span class="material-symbols-outlined mb-1" data-icon="notifications">notifications</span>
+<span class="font-['Inter'] text-[10px] font-medium tracking-wide uppercase">Alerts</span>
+</a>
+<a class="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 px-3 py-2 hover:text-slate-600 dark:hover:text-slate-300 Active: scale-90 transition-transform duration-150" href="#">
+<span class="material-symbols-outlined mb-1" data-icon="description">description</span>
+<span class="font-['Inter'] text-[10px] font-medium tracking-wide uppercase">Docs</span>
+</a>
+<a class="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 px-3 py-2 hover:text-slate-600 dark:hover:text-slate-300 Active: scale-90 transition-transform duration-150" href="#">
+<span class="material-symbols-outlined mb-1" data-icon="settings">settings</span>
+<span class="font-['Inter'] text-[10px] font-medium tracking-wide uppercase">Settings</span>
+</a>
+</div>
+</nav>
+</body></html>

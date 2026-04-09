@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Welcome to DriveReady UK</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              colors: {
+                "outline-variant": "#abb3b7",
+                "on-primary-container": "#505254",
+                "surface-container-low": "#f1f4f6",
+                "inverse-surface": "#0c0f10",
+                "primary-fixed": "#e2e2e5",
+                "surface-container": "#eaeff1",
+                "error": "#9f403d",
+                "outline": "#737c7f",
+                "tertiary-fixed-dim": "#58e7ab",
+                "secondary-container": "#d9e3f7",
+                "on-tertiary-fixed-variant": "#006544",
+                "error-dim": "#4e0309",
+                "on-surface-variant": "#586064",
+                "on-primary-fixed-variant": "#5a5c5e",
+                "inverse-on-surface": "#9b9d9e",
+                "on-tertiary": "#e6ffee",
+                "tertiary-container": "#69f6b8",
+                "surface-variant": "#dbe4e7",
+                "on-background": "#2b3437",
+                "tertiary-dim": "#005f40",
+                "on-primary": "#f7f7fa",
+                "secondary-fixed": "#d9e3f7",
+                "on-primary-fixed": "#3e3f42",
+                "on-error": "#fff7f6",
+                "on-error-container": "#752121",
+                "surface-container-high": "#e2e9ec",
+                "primary": "#5d5e61",
+                "on-tertiary-fixed": "#00452d",
+                "primary-fixed-dim": "#d4d4d7",
+                "on-surface": "#2b3437",
+                "surface-dim": "#d1dce0",
+                "on-secondary-fixed": "#364050",
+                "secondary-fixed-dim": "#cbd5e9",
+                "secondary-dim": "#4a5464",
+                "on-secondary": "#f8f8ff",
+                "inverse-primary": "#f9f9fc",
+                "on-tertiary-container": "#005a3c",
+                "secondary": "#556071",
+                "surface": "#f8f9fa",
+                "tertiary": "#006d4a",
+                "primary-container": "#e2e2e5",
+                "error-container": "#fe8983",
+                "surface-bright": "#f8f9fa",
+                "tertiary-fixed": "#69f6b8",
+                "surface-container-highest": "#dbe4e7",
+                "on-secondary-container": "#485263",
+                "primary-dim": "#515255",
+                "background": "#f8f9fa",
+                "surface-tint": "#5d5e61",
+                "on-secondary-fixed-variant": "#525c6d",
+                "surface-container-lowest": "#ffffff"
+              },
+              fontFamily: {
+                "headline": ["Inter"],
+                "body": ["Inter"],
+                "label": ["Inter"]
+              },
+              borderRadius: {"DEFAULT": "1rem", "lg": "2rem", "xl": "3rem", "full": "9999px"},
+            },
+          },
+        }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; background-color: #f8f9fa; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+        }
+        .editorial-gradient {
+            background: linear-gradient(180deg, rgba(255,255,255,0) 0%, rgba(241,244,246,1) 100%);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface text-on-surface antialiased flex flex-col min-h-screen">
+<!-- Top Navigation Suppression: As per "Semantic Shell" Mandate, shell is hidden for Linear/Transactional Onboarding -->
+<main class="flex-grow flex flex-col px-8 pt-20 pb-12 max-w-md mx-auto w-full relative overflow-hidden">
+<!-- Decorative Background Element -->
+<div class="absolute top-[-10%] right-[-20%] w-96 h-96 bg-surface-container-low rounded-full blur-3xl opacity-50 z-0"></div>
+<!-- Brand Identity Section -->
+<div class="z-10 flex flex-col items-center mb-16">
+<div class="w-20 h-20 bg-surface-container-lowest rounded-xl flex items-center justify-center shadow-[0_10px_30px_-5px_rgba(43,52,55,0.06)] mb-8">
+<span class="material-symbols-outlined text-primary text-5xl" data-icon="shield_car">shield</span>
+</div>
+<div class="text-center space-y-4">
+<h1 class="text-4xl font-extrabold tracking-tight text-on-surface leading-tight">
+                    Welcome to <br/>DriveReady UK
+                </h1>
+<p class="text-on-surface-variant text-lg leading-relaxed px-4">
+                    Never miss an MOT, tax, insurance or zone charge again.
+                </p>
+</div>
+</div>
+<!-- Featured Visual Element (Bento-style Card) -->
+<div class="z-10 flex-grow flex items-center justify-center mb-12">
+<div class="relative w-full aspect-square bg-surface-container-lowest rounded-lg p-8 shadow-[0_10px_30px_-5px_rgba(43,52,55,0.04)] overflow-hidden">
+<div class="absolute inset-0 editorial-gradient opacity-30"></div>
+<img alt="Modern vehicle silhouette" class="w-full h-full object-contain mix-blend-multiply opacity-80" data-alt="Minimalist high-angle shot of a silver modern luxury car in a bright, clean architectural space with soft shadows and premium editorial lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAoNn8fWo0hlwOCr3zUmOQ0v8m9j4WXeqC67z_6ehjXd4HQlKvzq2NLM5pVFM6s8mwWnBukUPoNK9ZyH_YHbxJjjq4nQqHHyAvm2Qg-TW3q5G_ZKwKqCbroqmKcSZzjevAcE1l-JPztszsokzcqpdBML7mg5E_rMefytkvWmTivXGrV1Fc3GCIYHM9oM9HQNAsV5pgjU1X6Tc7GRofpOMQM-pFgShs7MImiduIxfTAlftwPX0-TwsLR20J9U_JneFqhh6S1kpPCkOew"/>
+<!-- Contextual Status Pill -->
+<div class="absolute top-6 right-6 bg-tertiary-container/30 backdrop-blur-md px-4 py-1.5 rounded-full">
+<span class="text-on-tertiary-container text-xs font-bold uppercase tracking-widest flex items-center gap-2">
+<span class="w-1.5 h-1.5 bg-tertiary rounded-full"></span>
+                        Trusted by 50k+
+                    </span>
+</div>
+</div>
+</div>
+<!-- Action Section -->
+<div class="z-10 mt-auto flex flex-col gap-6">
+<!-- Primary CTA -->
+<button class="w-full bg-primary hover:bg-primary-dim text-on-primary font-bold py-5 rounded-full text-lg shadow-[0_10px_30px_-5px_rgba(43,52,55,0.1)] transition-all active:scale-95 duration-200">
+                Get Started
+            </button>
+<!-- Secondary Action -->
+<a class="w-full text-center py-2 text-on-surface-variant font-medium hover:text-on-surface transition-colors flex items-center justify-center gap-2" href="#">
+                Already have an account? <span class="text-primary font-bold">Sign in</span>
+</a>
+</div>
+<!-- Progress Indicator -->
+<div class="z-10 flex justify-center gap-2 mt-12">
+<div class="w-8 h-1.5 bg-primary rounded-full"></div>
+<div class="w-1.5 h-1.5 bg-outline-variant/30 rounded-full"></div>
+<div class="w-1.5 h-1.5 bg-outline-variant/30 rounded-full"></div>
+</div>
+</main>
+<!-- Bottom Navigation Suppression: As per "Semantic Shell" Mandate, shell is hidden for focused onboarding journeys -->
+</body></html>

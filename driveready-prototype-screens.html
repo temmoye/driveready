@@ -1,0 +1,2996 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>DriveReady Screen Prototype</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,500,0,0"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg: #edf2f5;
+        --surface: #f7f9fb;
+        --card: #ffffff;
+        --surface-muted: #edf2f5;
+        --text: #223038;
+        --text-muted: #68767d;
+        --line: rgba(34, 48, 56, 0.08);
+        --primary: #204d77;
+        --primary-strong: #153651;
+        --primary-soft: rgba(32, 77, 119, 0.12);
+        --good: #0d7b52;
+        --good-soft: rgba(13, 123, 82, 0.12);
+        --warn: #9b5a0e;
+        --warn-soft: rgba(155, 90, 14, 0.12);
+        --danger: #a13636;
+        --danger-soft: rgba(161, 54, 54, 0.12);
+        --plate: #ffd300;
+        --shadow: 0 30px 70px -34px rgba(17, 24, 29, 0.5);
+        --card-shadow: 0 18px 36px -28px rgba(17, 24, 29, 0.28);
+        --radius-xl: 30px;
+        --radius-lg: 24px;
+        --radius-md: 18px;
+        --radius-sm: 14px;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        margin: 0;
+        min-height: 100%;
+        font-family: "Inter", sans-serif;
+        background:
+          radial-gradient(circle at top left, rgba(32, 77, 119, 0.12), transparent 30%),
+          radial-gradient(circle at bottom right, rgba(13, 123, 82, 0.1), transparent 24%),
+          linear-gradient(180deg, #f4f7f9 0%, #e9eff3 100%);
+        color: var(--text);
+      }
+
+      button,
+      input,
+      select,
+      textarea {
+        font: inherit;
+      }
+
+      button {
+        border: 0;
+        background: none;
+        color: inherit;
+        cursor: pointer;
+      }
+
+      .material-symbols-outlined {
+        font-variation-settings: "FILL" 0, "wght" 500, "GRAD" 0, "opsz" 24;
+        vertical-align: middle;
+      }
+
+      .page {
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        padding: 24px;
+      }
+
+      .device {
+        width: min(430px, 100%);
+        background: #171a1d;
+        border-radius: 42px;
+        padding: 12px;
+        box-shadow: 0 40px 90px -36px rgba(0, 0, 0, 0.56);
+      }
+
+      .phone {
+        background: var(--surface);
+        border-radius: 32px;
+        min-height: 860px;
+        overflow: hidden;
+        position: relative;
+      }
+
+      .statusbar {
+        height: 34px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 8px 22px 0;
+        font-size: 13px;
+        font-weight: 700;
+      }
+
+      .dynamic-island {
+        width: 132px;
+        height: 30px;
+        border-radius: 999px;
+        background: #0b0d0f;
+      }
+
+      .screen {
+        min-height: 826px;
+        position: relative;
+      }
+
+      .topbar {
+        position: sticky;
+        top: 0;
+        z-index: 12;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 14px 18px;
+        background: rgba(247, 249, 251, 0.86);
+        backdrop-filter: blur(18px);
+      }
+
+      .brand,
+      .row,
+      .inline,
+      .field-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .field-row {
+        align-items: start;
+      }
+
+      .avatar,
+      .icon-button,
+      .icon-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 14px;
+        overflow: hidden;
+        background: var(--surface-muted);
+      }
+
+      .avatar img,
+      .hero-media img,
+      .vehicle-thumb img,
+      .zone-thumb img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .topcopy strong {
+        display: block;
+        font-size: 17px;
+      }
+
+      .topcopy span {
+        display: block;
+        margin-top: 4px;
+        color: var(--text-muted);
+        font-size: 12px;
+      }
+
+      .icon-button {
+        width: 42px;
+        height: 42px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.94);
+        box-shadow: inset 0 0 0 1px rgba(34, 48, 56, 0.08);
+        flex-shrink: 0;
+      }
+
+      .body {
+        padding: 8px 18px 118px;
+      }
+
+      .body.no-nav {
+        padding-bottom: 28px;
+      }
+
+      .stack-xl,
+      .stack-lg,
+      .stack-md,
+      .stack-sm,
+      .list,
+      .timeline {
+        display: grid;
+      }
+
+      .stack-xl {
+        gap: 24px;
+      }
+
+      .stack-lg {
+        gap: 18px;
+      }
+
+      .stack-md,
+      .list,
+      .timeline {
+        gap: 14px;
+      }
+
+      .stack-sm {
+        gap: 10px;
+      }
+
+      .eyebrow {
+        margin: 0;
+        color: var(--text-muted);
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+
+      .display {
+        margin: 0;
+        font-size: 34px;
+        line-height: 0.96;
+        letter-spacing: -0.06em;
+        font-weight: 900;
+      }
+
+      .headline {
+        margin: 0;
+        font-size: 24px;
+        line-height: 1.02;
+        letter-spacing: -0.05em;
+        font-weight: 800;
+      }
+
+      .muted {
+        margin: 0;
+        color: var(--text-muted);
+        line-height: 1.58;
+      }
+
+      .card,
+      .hero,
+      .list-item,
+      .compact-item,
+      .auth-panel,
+      .empty-state {
+        background: var(--card);
+        border-radius: var(--radius-lg);
+        box-shadow: var(--card-shadow);
+      }
+
+      .card,
+      .auth-panel,
+      .empty-state {
+        padding: 18px;
+      }
+
+      .hero {
+        position: relative;
+        overflow: hidden;
+        min-height: 214px;
+      }
+
+      .hero-media {
+        position: absolute;
+        inset: 0;
+      }
+
+      .hero-media::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(180deg, rgba(13, 18, 22, 0.06), rgba(13, 18, 22, 0.74));
+      }
+
+      .hero-copy {
+        position: relative;
+        z-index: 1;
+        height: 100%;
+        padding: 18px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        color: #ffffff;
+      }
+
+      .plate {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 40px;
+        padding: 0 14px;
+        border-radius: 12px;
+        background: var(--plate);
+        color: #111214;
+        box-shadow: inset 0 0 0 2px rgba(34, 48, 56, 0.06);
+        font-size: 17px;
+        font-weight: 900;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+      }
+
+      .pill-row,
+      .segmented {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      .pill,
+      .segment,
+      .tag {
+        min-height: 32px;
+        padding: 0 12px;
+        border-radius: 999px;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .pill.good {
+        background: var(--good-soft);
+        color: var(--good);
+      }
+
+      .pill.warn {
+        background: var(--warn-soft);
+        color: var(--warn);
+      }
+
+      .pill.danger {
+        background: var(--danger-soft);
+        color: var(--danger);
+      }
+
+      .pill.neutral,
+      .tag {
+        background: var(--primary-soft);
+        color: var(--primary);
+      }
+
+      .segment {
+        background: var(--surface-muted);
+        color: var(--text-muted);
+      }
+
+      .segment.active {
+        background: var(--primary-soft);
+        color: var(--primary);
+      }
+
+      .grid-3,
+      .grid-2 {
+        display: grid;
+        gap: 10px;
+      }
+
+      .grid-3 {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .grid-2 {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .stat {
+        padding: 14px;
+        border-radius: var(--radius-md);
+        background: var(--card);
+        box-shadow: var(--card-shadow);
+      }
+
+      .stat strong {
+        display: block;
+        font-size: 22px;
+        letter-spacing: -0.05em;
+      }
+
+      .stat span {
+        display: block;
+        margin-top: 6px;
+        color: var(--text-muted);
+        font-size: 12px;
+        line-height: 1.5;
+      }
+
+      .section-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .section-head h3 {
+        margin: 0;
+        font-size: 19px;
+        letter-spacing: -0.04em;
+      }
+
+      .text-button,
+      .mini-button {
+        color: var(--primary);
+        font-weight: 800;
+      }
+
+      .list-item,
+      .compact-item {
+        padding: 16px;
+      }
+
+      .list-item {
+        display: grid;
+        gap: 12px;
+      }
+
+      .compact-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .item-copy,
+      .compact-main {
+        min-width: 0;
+      }
+
+      .item-copy strong,
+      .compact-main strong {
+        display: block;
+        font-size: 15px;
+      }
+
+      .item-copy span,
+      .compact-main span,
+      .meta {
+        display: block;
+        margin-top: 5px;
+        color: var(--text-muted);
+        font-size: 12px;
+        line-height: 1.5;
+      }
+
+      .vehicle-thumb,
+      .zone-thumb {
+        width: 74px;
+        height: 74px;
+        border-radius: 18px;
+        overflow: hidden;
+        flex-shrink: 0;
+      }
+
+      .vehicle-thumb.large,
+      .zone-thumb.large {
+        width: 100%;
+        height: 170px;
+        border-radius: 20px;
+      }
+
+      .quick-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      .quick-button {
+        min-height: 84px;
+        padding: 14px;
+        border-radius: var(--radius-md);
+        background: var(--card);
+        box-shadow: var(--card-shadow);
+        display: grid;
+        justify-items: start;
+        align-content: space-between;
+      }
+
+      .quick-button strong {
+        text-align: left;
+        font-size: 13px;
+        line-height: 1.3;
+      }
+
+      .icon-badge {
+        width: 40px;
+        height: 40px;
+        border-radius: 14px;
+        background: var(--surface-muted);
+        color: var(--primary);
+      }
+
+      .primary-button,
+      .secondary-button,
+      .danger-button {
+        min-height: 50px;
+        width: 100%;
+        border-radius: 999px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        font-weight: 800;
+      }
+
+      .primary-button {
+        background: linear-gradient(180deg, var(--primary), var(--primary-strong));
+        color: #ffffff;
+        box-shadow: 0 16px 30px -20px rgba(32, 77, 119, 0.68);
+      }
+
+      .secondary-button {
+        background: var(--surface-muted);
+        color: var(--text);
+      }
+
+      .danger-button {
+        background: var(--danger-soft);
+        color: var(--danger);
+      }
+
+      .search {
+        min-height: 50px;
+        border-radius: 16px;
+        background: var(--card);
+        box-shadow: var(--card-shadow);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 0 14px;
+      }
+
+      .search input {
+        flex: 1;
+        border: 0;
+        background: transparent;
+        min-height: 46px;
+        color: var(--text);
+      }
+
+      .search input:focus {
+        outline: none;
+      }
+
+      .setting-row,
+      .toggle-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 14px 16px;
+        border-radius: var(--radius-md);
+        background: var(--card);
+        box-shadow: var(--card-shadow);
+      }
+
+      .toggle {
+        position: relative;
+        width: 52px;
+        height: 30px;
+        border-radius: 999px;
+        background: rgba(34, 48, 56, 0.14);
+        flex-shrink: 0;
+      }
+
+      .toggle::after {
+        content: "";
+        position: absolute;
+        top: 3px;
+        left: 3px;
+        width: 24px;
+        height: 24px;
+        border-radius: 999px;
+        background: #ffffff;
+        box-shadow: 0 4px 10px rgba(34, 48, 56, 0.12);
+        transition: transform 160ms ease;
+      }
+
+      .toggle.on {
+        background: rgba(13, 123, 82, 0.28);
+      }
+
+      .toggle.on::after {
+        transform: translateX(22px);
+      }
+
+      .field {
+        display: grid;
+        gap: 6px;
+        flex: 1;
+      }
+
+      .field label {
+        color: var(--text-muted);
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .field input,
+      .field select,
+      .field textarea {
+        width: 100%;
+        min-height: 50px;
+        border-radius: 16px;
+        border: 1px solid var(--line);
+        background: var(--surface-muted);
+        padding: 0 14px;
+        color: var(--text);
+      }
+
+      .field textarea {
+        min-height: 100px;
+        padding-top: 12px;
+        resize: vertical;
+      }
+
+      .field input:focus,
+      .field select:focus,
+      .field textarea:focus {
+        outline: 2px solid rgba(32, 77, 119, 0.14);
+      }
+
+      .field.error input,
+      .field.error select,
+      .field.error textarea {
+        border-color: rgba(161, 54, 54, 0.28);
+        background: rgba(161, 54, 54, 0.05);
+      }
+
+      .error-copy {
+        color: var(--danger);
+        font-size: 12px;
+      }
+
+      .plate-input-wrap {
+        background: var(--plate);
+        border-radius: 16px;
+        min-height: 90px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: inset 0 0 0 2px rgba(34, 48, 56, 0.06);
+      }
+
+      .plate-input {
+        width: 100%;
+        border: 0;
+        background: transparent;
+        text-align: center;
+        color: #111214;
+        font-size: 34px;
+        font-weight: 900;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+      }
+
+      .plate-input:focus {
+        outline: none;
+      }
+
+      .timeline-item {
+        padding: 14px 14px 14px 18px;
+        border-radius: var(--radius-md);
+        background: var(--card);
+        box-shadow: var(--card-shadow);
+        border-left: 4px solid rgba(13, 123, 82, 0.3);
+      }
+
+      .timeline-item strong {
+        display: block;
+        font-size: 14px;
+      }
+
+      .timeline-item span {
+        display: block;
+        margin-top: 5px;
+        color: var(--text-muted);
+        font-size: 12px;
+        line-height: 1.55;
+      }
+
+      .bottom-nav {
+        position: absolute;
+        left: 14px;
+        right: 14px;
+        bottom: 12px;
+        background: rgba(255, 255, 255, 0.9);
+        backdrop-filter: blur(18px);
+        border-radius: 28px;
+        padding: 8px;
+        box-shadow: 0 -12px 26px -18px rgba(17, 24, 29, 0.24);
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: 4px;
+        z-index: 10;
+      }
+
+      .tab {
+        min-height: 58px;
+        border-radius: 20px;
+        display: grid;
+        place-items: center;
+        gap: 4px;
+        color: var(--text-muted);
+        font-size: 10px;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        position: relative;
+      }
+
+      .tab.active {
+        background: var(--primary-soft);
+        color: var(--primary);
+      }
+
+      .tab-dot {
+        position: absolute;
+        top: 12px;
+        right: calc(50% - 18px);
+        width: 7px;
+        height: 7px;
+        border-radius: 999px;
+        background: var(--danger);
+      }
+
+      .toast {
+        position: absolute;
+        left: 18px;
+        right: 18px;
+        bottom: 96px;
+        min-height: 48px;
+        border-radius: 16px;
+        background: rgba(14, 19, 23, 0.92);
+        color: #ffffff;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 12px 14px;
+        z-index: 16;
+      }
+
+      .modal-scrim {
+        position: absolute;
+        inset: 0;
+        background: rgba(14, 19, 23, 0.28);
+        backdrop-filter: blur(8px);
+        display: grid;
+        place-items: center;
+        padding: 22px;
+        z-index: 20;
+      }
+
+      .modal {
+        width: 100%;
+        background: rgba(255, 255, 255, 0.98);
+        border-radius: 24px;
+        box-shadow: var(--shadow);
+        padding: 18px;
+      }
+
+      .progress {
+        display: flex;
+        gap: 10px;
+      }
+
+      .progress span {
+        display: block;
+        width: 38px;
+        height: 6px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.26);
+      }
+
+      .progress span.active {
+        background: #ffffff;
+      }
+
+      .auth-shell {
+        padding: 18px 18px 26px;
+        min-height: 826px;
+        display: grid;
+        align-content: space-between;
+      }
+
+      .auth-panel {
+        display: grid;
+        gap: 16px;
+      }
+
+      @media (max-width: 520px) {
+        .page {
+          padding: 0;
+        }
+
+        .device {
+          width: 100%;
+          border-radius: 0;
+          padding: 0;
+          background: transparent;
+          box-shadow: none;
+        }
+
+        .phone {
+          border-radius: 0;
+          min-height: 100vh;
+        }
+
+        .screen,
+        .auth-shell {
+          min-height: calc(100vh - 34px);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <div class="device">
+        <div class="phone">
+          <div class="statusbar">
+            <span>09:41</span>
+            <div class="dynamic-island"></div>
+            <span>5G</span>
+          </div>
+          <div id="app"></div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const STORAGE_KEY = "driveready-screen-prototype";
+      const VERSION = 1;
+      const app = document.getElementById("app");
+
+      const ui = {
+        toast: "",
+        toastTimer: null,
+      };
+
+      function addDays(days) {
+        const date = new Date();
+        date.setHours(12, 0, 0, 0);
+        date.setDate(date.getDate() + days);
+        return date.toISOString().slice(0, 10);
+      }
+
+      function baseState() {
+        return {
+          version: VERSION,
+          route: "onboardingWelcome",
+          history: [],
+          modal: null,
+          searchAlerts: "",
+          filters: {
+            alerts: "open",
+            docs: "all",
+          },
+          selectedVehicleId: "veh-1",
+          selectedDocumentId: "doc-1",
+          selectedAlertId: null,
+          user: {
+            firstName: "James",
+            lastName: "Harrington",
+            email: "james@driveready.uk",
+            phone: "07700 900123",
+            address: "14 Camden Mews, London NW1",
+            plan: "Premium Concierge",
+          },
+          permissions: {
+            notifications: "prompt",
+            camera: "prompt",
+            files: "granted",
+            biometrics: "granted",
+          },
+          notificationSettings: {
+            mot: true,
+            tax: true,
+            insurance: true,
+            docs: true,
+            zones: true,
+          },
+          alertOverrides: {},
+          forms: {
+            signIn: {
+              email: "james@driveready.uk",
+              password: "demo1234",
+            },
+            signUp: {
+              firstName: "James",
+              lastName: "Harrington",
+              email: "james@driveready.uk",
+              password: "demo1234",
+              confirmPassword: "demo1234",
+            },
+            reset: {
+              email: "james@driveready.uk",
+            },
+            addVehicle: {
+              plate: "",
+              nickname: "",
+              makeModel: "",
+              fuelType: "Petrol",
+            },
+            vehicleEdit: {
+              nickname: "",
+              makeModel: "",
+              mileage: "",
+              motDue: "",
+              taxDue: "",
+              insuranceDue: "",
+              notes: "",
+            },
+            upload: {
+              vehicleId: "veh-1",
+              title: "",
+              type: "Insurance Policy",
+              source: "files",
+              expiresAt: addDays(30),
+            },
+            documentEdit: {
+              title: "",
+              type: "",
+              expiresAt: "",
+            },
+            alertEdit: {
+              leadDays: "14",
+              muted: false,
+              resolved: false,
+            },
+            profile: {
+              firstName: "James",
+              lastName: "Harrington",
+              email: "james@driveready.uk",
+              phone: "07700 900123",
+              address: "14 Camden Mews, London NW1",
+            },
+            zoneAdd: {
+              name: "",
+              charge: "£10.00",
+              route: "",
+            },
+          },
+          errors: {},
+          vehicles: [
+            {
+              id: "veh-1",
+              nickname: "City Saloon",
+              makeModel: "Audi A4 Avant",
+              plate: "LM21 KPR",
+              fuelType: "Euro 6 Diesel",
+              mileage: 48210,
+              motDue: addDays(24),
+              taxDue: addDays(37),
+              insuranceDue: addDays(12),
+              notes: "Primary work vehicle for central London travel.",
+              image:
+                "https://images.unsplash.com/photo-1553440569-bcc63803a83d?auto=format&fit=crop&w=1200&q=80",
+              history: [
+                { date: addDays(-40), title: "Interim service", note: "Oil, filters and safety check complete." },
+                { date: addDays(-163), title: "Brake inspection", note: "Front brake pads replaced." },
+              ],
+              zoneIds: ["zone-1", "zone-2"],
+            },
+            {
+              id: "veh-2",
+              nickname: "Family SUV",
+              makeModel: "Range Rover Evoque",
+              plate: "LR19 ABC",
+              fuelType: "Petrol Hybrid",
+              mileage: 61104,
+              motDue: addDays(-4),
+              taxDue: addDays(18),
+              insuranceDue: addDays(32),
+              notes: "Weekend trips and airport runs.",
+              image:
+                "https://images.unsplash.com/photo-1494976388531-d1058494cdd8?auto=format&fit=crop&w=1200&q=80",
+              history: [
+                { date: addDays(-31), title: "Tyre advisory", note: "Rear tyre wear flagged during inspection." },
+                { date: addDays(-117), title: "Annual service", note: "Fluids, filters and diagnostics checked." },
+              ],
+              zoneIds: ["zone-2", "zone-3"],
+            },
+            {
+              id: "veh-3",
+              nickname: "Compact Runabout",
+              makeModel: "Mini Cooper S",
+              plate: "MK22 TYA",
+              fuelType: "Petrol",
+              mileage: 21054,
+              motDue: addDays(91),
+              taxDue: addDays(74),
+              insuranceDue: addDays(62),
+              notes: "Local use only.",
+              image:
+                "https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=1200&q=80",
+              history: [
+                { date: addDays(-21), title: "Valet and inspection", note: "No defects reported." },
+                { date: addDays(-149), title: "Service record uploaded", note: "Dealer PDF filed in the vault." },
+              ],
+              zoneIds: ["zone-1"],
+            },
+          ],
+          documents: [
+            {
+              id: "doc-1",
+              vehicleId: "veh-1",
+              title: "MOT Certificate",
+              type: "MOT Certificate",
+              format: "PDF",
+              uploadedAt: addDays(-71),
+              expiresAt: addDays(24),
+              source: "files",
+              preview: "Issued by London Test Centre. Minor advisory: tyre wear even and within tolerance.",
+            },
+            {
+              id: "doc-2",
+              vehicleId: "veh-1",
+              title: "Insurance Policy",
+              type: "Insurance Policy",
+              format: "PDF",
+              uploadedAt: addDays(-22),
+              expiresAt: addDays(12),
+              source: "files",
+              preview: "Comprehensive cover with roadside assistance and named drivers.",
+            },
+            {
+              id: "doc-3",
+              vehicleId: "veh-1",
+              title: "V5C Logbook",
+              type: "V5C Logbook",
+              format: "PDF",
+              uploadedAt: addDays(-321),
+              expiresAt: addDays(5),
+              source: "files",
+              preview: "Keeper address needs review before the next DVLA sync.",
+            },
+            {
+              id: "doc-4",
+              vehicleId: "veh-2",
+              title: "MOT Certificate",
+              type: "MOT Certificate",
+              format: "PDF",
+              uploadedAt: addDays(-410),
+              expiresAt: addDays(-4),
+              source: "files",
+              preview: "Certificate has expired. Vehicle needs a new MOT immediately.",
+            },
+          ],
+          zones: [
+            {
+              id: "zone-1",
+              name: "London ULEZ",
+              charge: "£12.50",
+              route: "Morning school route",
+              monitored: true,
+              compliant: true,
+              image:
+                "https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?auto=format&fit=crop&w=900&q=80",
+            },
+            {
+              id: "zone-2",
+              name: "Birmingham CAZ",
+              charge: "£8.00",
+              route: "Client visits",
+              monitored: true,
+              compliant: true,
+              image:
+                "https://images.unsplash.com/photo-1494526585095-c41746248156?auto=format&fit=crop&w=900&q=80",
+            },
+            {
+              id: "zone-3",
+              name: "Bristol CAZ",
+              charge: "£9.00",
+              route: "Weekend family trips",
+              monitored: true,
+              compliant: false,
+              image:
+                "https://images.unsplash.com/photo-1470004914212-05527e49370b?auto=format&fit=crop&w=900&q=80",
+            },
+          ],
+        };
+      }
+
+      function loadState() {
+        try {
+          const raw = localStorage.getItem(STORAGE_KEY);
+          if (!raw) return baseState();
+          const parsed = JSON.parse(raw);
+          if (!parsed || parsed.version !== VERSION) return baseState();
+          return parsed;
+        } catch {
+          return baseState();
+        }
+      }
+
+      let state = loadState();
+
+      function persist() {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      }
+
+      function escapeHtml(value) {
+        return String(value ?? "")
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#39;");
+      }
+
+      function formatDate(value) {
+        return new Intl.DateTimeFormat("en-GB", {
+          day: "numeric",
+          month: "short",
+          year: "numeric",
+        }).format(new Date(`${value}T12:00:00`));
+      }
+
+      function daysUntil(value) {
+        const now = new Date();
+        now.setHours(12, 0, 0, 0);
+        const target = new Date(`${value}T12:00:00`);
+        return Math.round((target - now) / 86400000);
+      }
+
+      function toneForDays(days) {
+        if (days < 0) return "danger";
+        if (days <= 14) return "warn";
+        return "good";
+      }
+
+      function selectedVehicle() {
+        return state.vehicles.find((vehicle) => vehicle.id === state.selectedVehicleId) || state.vehicles[0];
+      }
+
+      function getVehicle(vehicleId) {
+        return state.vehicles.find((vehicle) => vehicle.id === vehicleId);
+      }
+
+      function getDocument(documentId) {
+        return state.documents.find((document) => document.id === documentId);
+      }
+
+      function getZone(zoneId) {
+        return state.zones.find((zone) => zone.id === zoneId);
+      }
+
+      function vehicleHealth(vehicle) {
+        const insurance = daysUntil(vehicle.insuranceDue);
+        const mot = daysUntil(vehicle.motDue);
+        const tax = daysUntil(vehicle.taxDue);
+        const lowest = Math.min(insurance, mot, tax);
+        const tone = toneForDays(lowest);
+        const label = lowest < 0 ? "Immediate action" : lowest <= 14 ? "Needs attention" : "Ready";
+        return { insurance, mot, tax, tone, label };
+      }
+
+      function documentStatus(document) {
+        const days = daysUntil(document.expiresAt);
+        return {
+          days,
+          tone: toneForDays(days),
+          label: days < 0 ? "Expired" : days <= 14 ? "Needs review" : "Current",
+        };
+      }
+
+      function alertDefaults(kind) {
+        const defaults = {
+          mot: { leadDays: 30, muted: false },
+          tax: { leadDays: 21, muted: false },
+          insurance: { leadDays: 14, muted: false },
+          document: { leadDays: 21, muted: false },
+          zone: { leadDays: 0, muted: false },
+        };
+        return defaults[kind] || { leadDays: 14, muted: false };
+      }
+
+      function buildAlerts() {
+        const alerts = [];
+
+        state.vehicles.forEach((vehicle) => {
+          [
+            ["insurance", vehicle.insuranceDue, "Insurance renewal", "Review policy and renew cover"],
+            ["mot", vehicle.motDue, "MOT check", "Book a garage slot or upload a new certificate"],
+            ["tax", vehicle.taxDue, "Vehicle tax", "Confirm payment or direct debit status"],
+          ].forEach(([kind, dueDate, title, detail]) => {
+            const days = daysUntil(dueDate);
+            const defaults = alertDefaults(kind);
+            const override = state.alertOverrides[`${vehicle.id}:${kind}`] || {};
+            const alert = {
+              id: `${vehicle.id}:${kind}`,
+              kind,
+              title,
+              subtitle: `${vehicle.nickname} · ${vehicle.plate}`,
+              detail,
+              dueDate,
+              days,
+              tone: toneForDays(days),
+              leadDays: override.leadDays ?? defaults.leadDays,
+              muted: override.muted ?? defaults.muted,
+              resolved: override.resolved ?? false,
+              vehicleId: vehicle.id,
+              documentId: null,
+              zoneId: null,
+            };
+
+            if (days <= alert.leadDays || days < 0 || alert.resolved) {
+              alerts.push(alert);
+            }
+          });
+        });
+
+        state.documents.forEach((document) => {
+          const days = daysUntil(document.expiresAt);
+          const defaults = alertDefaults("document");
+          const override = state.alertOverrides[`${document.id}:document`] || {};
+          const alert = {
+            id: `${document.id}:document`,
+            kind: "document",
+            title: `${document.title} review`,
+            subtitle: `${getVehicle(document.vehicleId)?.nickname || "Vehicle"} · ${document.format}`,
+            detail: "Check the expiry date and replace the file if needed",
+            dueDate: document.expiresAt,
+            days,
+            tone: toneForDays(days),
+            leadDays: override.leadDays ?? defaults.leadDays,
+            muted: override.muted ?? defaults.muted,
+            resolved: override.resolved ?? false,
+            vehicleId: document.vehicleId,
+            documentId: document.id,
+            zoneId: null,
+          };
+
+          if (days <= alert.leadDays || days < 0 || alert.resolved) {
+            alerts.push(alert);
+          }
+        });
+
+        state.zones
+          .filter((zone) => zone.monitored && !zone.compliant)
+          .forEach((zone) => {
+            const defaults = alertDefaults("zone");
+            const override = state.alertOverrides[`${zone.id}:zone`] || {};
+            alerts.push({
+              id: `${zone.id}:zone`,
+              kind: "zone",
+              title: `${zone.name} charge risk`,
+              subtitle: `${zone.charge} daily charge`,
+              detail: "Use a compliant vehicle or plan payment before travelling this route",
+              dueDate: addDays(0),
+              days: 0,
+              tone: "danger",
+              leadDays: override.leadDays ?? defaults.leadDays,
+              muted: override.muted ?? defaults.muted,
+              resolved: override.resolved ?? false,
+              vehicleId: state.selectedVehicleId,
+              documentId: null,
+              zoneId: zone.id,
+            });
+          });
+
+        return alerts.sort((a, b) => {
+          if (a.resolved !== b.resolved) return a.resolved ? 1 : -1;
+          return a.days - b.days;
+        });
+      }
+
+      function selectedAlert() {
+        return buildAlerts().find((alert) => alert.id === state.selectedAlertId) || buildAlerts()[0] || null;
+      }
+
+      function currentTab() {
+        const map = {
+          dashboard: "dashboard",
+          garage: "garage",
+          addVehicle: "garage",
+          vehicleDetail: "garage",
+          vehicleEdit: "garage",
+          alerts: "alerts",
+          alertDetail: "alerts",
+          docs: "docs",
+          uploadDocument: "docs",
+          documentDetail: "docs",
+          settings: "settings",
+          profile: "settings",
+          zones: "settings",
+          support: "settings",
+        };
+        return map[state.route] || null;
+      }
+
+      function isAppRoute() {
+        return Boolean(currentTab());
+      }
+
+      function normalizeSelections() {
+        if (!getVehicle(state.selectedVehicleId)) state.selectedVehicleId = state.vehicles[0]?.id || null;
+        if (!getDocument(state.selectedDocumentId)) state.selectedDocumentId = state.documents[0]?.id || null;
+        if (!selectedAlert()) state.selectedAlertId = buildAlerts()[0]?.id || null;
+      }
+
+      function prepareVehicleEdit() {
+        const vehicle = selectedVehicle();
+        if (!vehicle) return;
+        state.forms.vehicleEdit = {
+          nickname: vehicle.nickname,
+          makeModel: vehicle.makeModel,
+          mileage: String(vehicle.mileage),
+          motDue: vehicle.motDue,
+          taxDue: vehicle.taxDue,
+          insuranceDue: vehicle.insuranceDue,
+          notes: vehicle.notes,
+        };
+      }
+
+      function prepareDocumentEdit() {
+        const document = getDocument(state.selectedDocumentId);
+        if (!document) return;
+        state.forms.documentEdit = {
+          title: document.title,
+          type: document.type,
+          expiresAt: document.expiresAt,
+        };
+      }
+
+      function prepareAlertEdit() {
+        const alert = selectedAlert();
+        if (!alert) return;
+        state.forms.alertEdit = {
+          leadDays: String(alert.leadDays),
+          muted: Boolean(alert.muted),
+          resolved: Boolean(alert.resolved),
+        };
+      }
+
+      function prepareProfileForm() {
+        state.forms.profile = {
+          firstName: state.user.firstName,
+          lastName: state.user.lastName,
+          email: state.user.email,
+          phone: state.user.phone,
+          address: state.user.address,
+        };
+      }
+
+      function navigate(route, options = {}) {
+        const { replace = false, reset = false } = options;
+        if (!replace) {
+          state.history = reset ? [] : [...state.history, state.route];
+        } else if (reset) {
+          state.history = [];
+        }
+        state.route = route;
+        state.errors = {};
+        normalizeSelections();
+
+        if (route === "vehicleEdit") prepareVehicleEdit();
+        if (route === "documentDetail") prepareDocumentEdit();
+        if (route === "alertDetail") prepareAlertEdit();
+        if (route === "profile") prepareProfileForm();
+
+        persist();
+        render();
+      }
+
+      function goBack(fallback = "dashboard") {
+        const previous = state.history.pop();
+        state.route = previous || fallback;
+        state.errors = {};
+        persist();
+        render();
+      }
+
+      function showToast(message) {
+        ui.toast = message;
+        if (ui.toastTimer) clearTimeout(ui.toastTimer);
+        ui.toastTimer = setTimeout(() => {
+          ui.toast = "";
+          render();
+        }, 2200);
+        render();
+      }
+
+      function badge(tone, label) {
+        return `<span class="pill ${escapeHtml(tone)}">${escapeHtml(label)}</span>`;
+      }
+
+      function statCard(value, label) {
+        return `<div class="stat"><strong>${escapeHtml(value)}</strong><span>${escapeHtml(label)}</span></div>`;
+      }
+
+      function renderTopBar(config) {
+        return `
+          <div class="topbar">
+            ${
+              config.back
+                ? `
+                  <div class="brand">
+                    <button class="icon-button" data-action="back">
+                      <span class="material-symbols-outlined">arrow_back</span>
+                    </button>
+                    <div class="topcopy">
+                      <strong>${escapeHtml(config.title)}</strong>
+                      ${config.subtitle ? `<span>${escapeHtml(config.subtitle)}</span>` : ""}
+                    </div>
+                  </div>
+                `
+                : `
+                  <div class="brand">
+                    <div class="avatar">
+                      <img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=300&q=80" alt="" />
+                    </div>
+                    <div class="topcopy">
+                      <strong>${escapeHtml(config.title)}</strong>
+                      ${config.subtitle ? `<span>${escapeHtml(config.subtitle)}</span>` : ""}
+                    </div>
+                  </div>
+                `
+            }
+            ${
+              config.action
+                ? `
+                  <button class="icon-button" data-action="${escapeHtml(config.action)}">
+                    <span class="material-symbols-outlined">${escapeHtml(config.icon)}</span>
+                  </button>
+                `
+                : '<div style="width:42px;height:42px"></div>'
+            }
+          </div>
+        `;
+      }
+
+      function inputField(scope, field, label, type, value) {
+        const error = state.errors[scope]?.[field] || "";
+        return `
+          <div class="field ${error ? "error" : ""}">
+            <label>${escapeHtml(label)}</label>
+            <input type="${escapeHtml(type)}" data-scope="${escapeHtml(scope)}" data-form-field="${escapeHtml(field)}" value="${escapeHtml(value)}" />
+            ${error ? `<div class="error-copy">${escapeHtml(error)}</div>` : ""}
+          </div>
+        `;
+      }
+
+      function selectField(scope, field, label, options, value) {
+        const error = state.errors[scope]?.[field] || "";
+        const normalized = options.map((option) => (Array.isArray(option) ? option : [option, option]));
+        return `
+          <div class="field ${error ? "error" : ""}">
+            <label>${escapeHtml(label)}</label>
+            <select data-scope="${escapeHtml(scope)}" data-form-field="${escapeHtml(field)}">
+              ${normalized
+                .map(
+                  ([optionValue, optionLabel]) =>
+                    `<option value="${escapeHtml(optionValue)}" ${optionValue === value ? "selected" : ""}>${escapeHtml(optionLabel)}</option>`
+                )
+                .join("")}
+            </select>
+            ${error ? `<div class="error-copy">${escapeHtml(error)}</div>` : ""}
+          </div>
+        `;
+      }
+
+      function textareaField(scope, field, label, value) {
+        const error = state.errors[scope]?.[field] || "";
+        return `
+          <div class="field ${error ? "error" : ""}">
+            <label>${escapeHtml(label)}</label>
+            <textarea data-scope="${escapeHtml(scope)}" data-form-field="${escapeHtml(field)}">${escapeHtml(value)}</textarea>
+            ${error ? `<div class="error-copy">${escapeHtml(error)}</div>` : ""}
+          </div>
+        `;
+      }
+
+      function validateEmail(value) {
+        return /\S+@\S+\.\S+/.test(value);
+      }
+
+      function validatePlate(value) {
+        return /^[A-Z0-9 ]{5,8}$/.test(value.trim().toUpperCase());
+      }
+
+      function clearErrors() {
+        state.errors = {};
+      }
+
+      function validateSignIn() {
+        const errors = {};
+        if (!validateEmail(state.forms.signIn.email)) errors.email = "Enter a valid email.";
+        if (!state.forms.signIn.password || state.forms.signIn.password.length < 6) errors.password = "Use at least 6 characters.";
+        state.errors.signIn = errors;
+        return Object.keys(errors).length === 0;
+      }
+
+      function validateSignUp() {
+        const form = state.forms.signUp;
+        const errors = {};
+        if (!form.firstName.trim()) errors.firstName = "Required.";
+        if (!form.lastName.trim()) errors.lastName = "Required.";
+        if (!validateEmail(form.email)) errors.email = "Enter a valid email.";
+        if (!form.password || form.password.length < 6) errors.password = "Use at least 6 characters.";
+        if (form.password !== form.confirmPassword) errors.confirmPassword = "Passwords must match.";
+        state.errors.signUp = errors;
+        return Object.keys(errors).length === 0;
+      }
+
+      function validateReset() {
+        const errors = {};
+        if (!validateEmail(state.forms.reset.email)) errors.email = "Enter a valid email.";
+        state.errors.reset = errors;
+        return Object.keys(errors).length === 0;
+      }
+
+      function validateAddVehicle() {
+        const form = state.forms.addVehicle;
+        const errors = {};
+        if (!validatePlate(form.plate)) errors.plate = "Enter a valid UK plate.";
+        if (!form.nickname.trim()) errors.nickname = "Required.";
+        if (!form.makeModel.trim()) errors.makeModel = "Required.";
+        state.errors.addVehicle = errors;
+        return Object.keys(errors).length === 0;
+      }
+
+      function validateVehicleEdit() {
+        const form = state.forms.vehicleEdit;
+        const errors = {};
+        if (!form.nickname.trim()) errors.nickname = "Required.";
+        if (!form.makeModel.trim()) errors.makeModel = "Required.";
+        if (!form.mileage || Number(form.mileage) < 0) errors.mileage = "Enter a valid mileage.";
+        if (!form.motDue) errors.motDue = "Required.";
+        if (!form.taxDue) errors.taxDue = "Required.";
+        if (!form.insuranceDue) errors.insuranceDue = "Required.";
+        state.errors.vehicleEdit = errors;
+        return Object.keys(errors).length === 0;
+      }
+
+      function validateUpload() {
+        const form = state.forms.upload;
+        const errors = {};
+        if (!form.title.trim()) errors.title = "Required.";
+        if (!form.expiresAt) errors.expiresAt = "Required.";
+        if (form.source === "camera" && state.permissions.camera !== "granted") errors.source = "Camera access is required.";
+        if (form.source === "files" && state.permissions.files !== "granted") errors.source = "File access is required.";
+        state.errors.upload = errors;
+        return Object.keys(errors).length === 0;
+      }
+
+      function validateDocumentEdit() {
+        const form = state.forms.documentEdit;
+        const errors = {};
+        if (!form.title.trim()) errors.title = "Required.";
+        if (!form.expiresAt) errors.expiresAt = "Required.";
+        state.errors.documentEdit = errors;
+        return Object.keys(errors).length === 0;
+      }
+
+      function validateAlertEdit() {
+        const errors = {};
+        const leadDays = Number(state.forms.alertEdit.leadDays);
+        if (!Number.isFinite(leadDays) || leadDays < 0) errors.leadDays = "Enter 0 or more days.";
+        state.errors.alertEdit = errors;
+        return Object.keys(errors).length === 0;
+      }
+
+      function validateProfile() {
+        const form = state.forms.profile;
+        const errors = {};
+        if (!form.firstName.trim()) errors.firstName = "Required.";
+        if (!form.lastName.trim()) errors.lastName = "Required.";
+        if (!validateEmail(form.email)) errors.email = "Enter a valid email.";
+        if (!form.phone.trim()) errors.phone = "Required.";
+        if (!form.address.trim()) errors.address = "Required.";
+        state.errors.profile = errors;
+        return Object.keys(errors).length === 0;
+      }
+
+      function validateZoneAdd() {
+        const form = state.forms.zoneAdd;
+        const errors = {};
+        if (!form.name.trim()) errors.name = "Required.";
+        if (!form.charge.trim()) errors.charge = "Required.";
+        if (!form.route.trim()) errors.route = "Required.";
+        state.errors.zoneAdd = errors;
+        return Object.keys(errors).length === 0;
+      }
+
+      function openVehicle(vehicleId) {
+        state.selectedVehicleId = vehicleId;
+        navigate("vehicleDetail");
+      }
+
+      function openDocument(documentId) {
+        state.selectedDocumentId = documentId;
+        prepareDocumentEdit();
+        navigate("documentDetail");
+      }
+
+      function openAlert(alertId) {
+        state.selectedAlertId = alertId;
+        prepareAlertEdit();
+        navigate("alertDetail");
+      }
+
+      function requestPermission(key) {
+        state.permissions[key] = "granted";
+        persist();
+        showToast(`${key.charAt(0).toUpperCase() + key.slice(1)} access granted`);
+        render();
+      }
+
+      function onboardingWelcomeScreen() {
+        return `
+          <div class="screen">
+            ${renderTopBar({ title: "DriveReady UK", subtitle: "Vehicle concierge" })}
+            <div class="body no-nav">
+              <div class="stack-xl">
+                <section class="hero">
+                  <div class="hero-media">
+                    <img src="https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?auto=format&fit=crop&w=1200&q=80" alt="" />
+                  </div>
+                  <div class="hero-copy">
+                    <div class="progress">
+                      <span class="active"></span>
+                      <span></span>
+                    </div>
+                    <div class="stack-sm">
+                      <h1 class="display">Stay ahead of every UK vehicle deadline.</h1>
+                      <p class="muted" style="color:rgba(255,255,255,0.78)">MOT, tax, insurance, V5C and charge-zone clarity in one iPhone-first flow.</p>
+                    </div>
+                  </div>
+                </section>
+
+                <section class="card stack-lg">
+                  <div class="stack-sm">
+                    <p class="eyebrow">Choose your path</p>
+                    <h2 class="headline">Start as a new user or return to an existing account.</h2>
+                  </div>
+                  <button class="primary-button" data-action="goto-onboarding-features">I’m new to DriveReady</button>
+                  <button class="secondary-button" data-action="goto-sign-in">I already have an account</button>
+                </section>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      function onboardingFeaturesScreen() {
+        return `
+          <div class="screen">
+            ${renderTopBar({ title: "Getting Started", subtitle: "New user journey", back: true })}
+            <div class="body no-nav">
+              <div class="stack-xl">
+                <section class="card stack-lg">
+                  <div class="progress">
+                    <span></span>
+                    <span class="active"></span>
+                  </div>
+                  <div class="stack-sm">
+                    <h1 class="headline">What you’ll get once you set up your garage.</h1>
+                    <p class="muted">This onboarding path is for new users. It leads into account creation and then the full app.</p>
+                  </div>
+                </section>
+
+                <div class="list">
+                  <div class="list-item">
+                    ${badge("good", "Reminders")}
+                    <div class="item-copy">
+                      <strong>Smart MOT, tax and insurance tracking</strong>
+                      <span>Deadlines are computed from actual dates, not static labels.</span>
+                    </div>
+                  </div>
+                  <div class="list-item">
+                    ${badge("neutral", "Vault")}
+                    <div class="item-copy">
+                      <strong>Secure document storage</strong>
+                      <span>Keep MOT certificates, insurance policies and V5C copies together.</span>
+                    </div>
+                  </div>
+                  <div class="list-item">
+                    ${badge("warn", "Zones")}
+                    <div class="item-copy">
+                      <strong>Charge-zone awareness</strong>
+                      <span>Track monitored routes and surface charge risks before the trip.</span>
+                    </div>
+                  </div>
+                </div>
+
+                <section class="card stack-lg">
+                  <div class="stack-sm">
+                    <p class="eyebrow">Permissions</p>
+                    <p class="muted">Notifications can be granted here or later in Settings.</p>
+                  </div>
+                  <div class="row" style="justify-content:space-between">
+                    ${badge(state.permissions.notifications === "granted" ? "good" : "warn", state.permissions.notifications)}
+                    <button class="mini-button" data-action="request-notifications">Enable</button>
+                  </div>
+                  <button class="primary-button" data-action="goto-sign-up">Continue as new user</button>
+                  <button class="secondary-button" data-action="goto-sign-in">I already have an account</button>
+                </section>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      function signInScreen() {
+        return `
+          <div class="screen">
+            ${renderTopBar({ title: "Sign In", subtitle: "Existing user journey", back: true })}
+            <div class="body no-nav">
+              <div class="stack-xl">
+                <section class="card stack-lg">
+                  <div class="stack-sm">
+                    <h1 class="headline">Welcome back.</h1>
+                    <p class="muted">Use the existing-user path to go straight into the product.</p>
+                  </div>
+                  ${inputField("signIn", "email", "Email", "email", state.forms.signIn.email)}
+                  ${inputField("signIn", "password", "Password", "password", state.forms.signIn.password)}
+                  <button class="primary-button" data-action="submit-sign-in">Sign in</button>
+                  <button class="secondary-button" data-action="biometric-sign-in">Use Face ID / Touch ID</button>
+                  <button class="mini-button" data-action="goto-reset">Forgot password?</button>
+                </section>
+
+                <button class="secondary-button" data-action="goto-sign-up">Create a new account instead</button>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      function signUpScreen() {
+        return `
+          <div class="screen">
+            ${renderTopBar({ title: "Create Account", subtitle: "New user journey", back: true })}
+            <div class="body no-nav">
+              <div class="stack-xl">
+                <section class="card stack-lg">
+                  <div class="stack-sm">
+                    <h1 class="headline">Create your DriveReady account.</h1>
+                    <p class="muted">This is the new-user path after onboarding.</p>
+                  </div>
+                  <div class="field-row">
+                    ${inputField("signUp", "firstName", "First name", "text", state.forms.signUp.firstName)}
+                    ${inputField("signUp", "lastName", "Last name", "text", state.forms.signUp.lastName)}
+                  </div>
+                  ${inputField("signUp", "email", "Email", "email", state.forms.signUp.email)}
+                  ${inputField("signUp", "password", "Password", "password", state.forms.signUp.password)}
+                  ${inputField("signUp", "confirmPassword", "Confirm password", "password", state.forms.signUp.confirmPassword)}
+                  <button class="primary-button" data-action="submit-sign-up">Create account</button>
+                </section>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      function resetPasswordScreen() {
+        return `
+          <div class="screen">
+            ${renderTopBar({ title: "Reset Password", subtitle: "Recovery flow", back: true })}
+            <div class="body no-nav">
+              <div class="stack-xl">
+                <section class="card stack-lg">
+                  <div class="stack-sm">
+                    <h1 class="headline">Recover access.</h1>
+                    <p class="muted">Enter your email and this prototype will simulate the reset flow.</p>
+                  </div>
+                  ${inputField("reset", "email", "Email", "email", state.forms.reset.email)}
+                  <button class="primary-button" data-action="submit-reset">Send reset link</button>
+                </section>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      function dashboardScreen() {
+        const vehicle = selectedVehicle();
+        const health = vehicleHealth(vehicle);
+        const actions = buildAlerts().filter((alert) => !alert.resolved).slice(0, 2);
+        const docs = state.documents.filter((document) => document.vehicleId === vehicle.id).slice(0, 2);
+
+        return `
+          <div class="screen">
+            ${renderTopBar({ title: "DriveReady", subtitle: vehicle.nickname, action: "goto-zones", icon: "map" })}
+            <div class="body">
+              <div class="stack-xl">
+                <section class="hero">
+                  <div class="hero-media"><img src="${escapeHtml(vehicle.image)}" alt="" /></div>
+                  <div class="hero-copy">
+                    <div class="stack-sm">
+                      <div class="plate">${escapeHtml(vehicle.plate)}</div>
+                      <div>
+                        <h1 class="display">${escapeHtml(vehicle.nickname)}</h1>
+                        <p class="muted" style="color:rgba(255,255,255,0.8)">${escapeHtml(vehicle.makeModel)} · ${escapeHtml(vehicle.fuelType)}</p>
+                      </div>
+                    </div>
+                    <div class="row" style="justify-content:space-between">
+                      ${badge(health.tone, health.label)}
+                      <button class="text-button" style="color:#fff" data-open-vehicle="${escapeHtml(vehicle.id)}">Vehicle record</button>
+                    </div>
+                  </div>
+                </section>
+
+                <section class="grid-3">
+                  ${statCard(`${Math.abs(health.insurance)}`, health.insurance < 0 ? "Insurance overdue" : "Insurance days")}
+                  ${statCard(`${Math.abs(health.mot)}`, health.mot < 0 ? "MOT overdue" : "MOT days")}
+                  ${statCard(`${Math.abs(health.tax)}`, health.tax < 0 ? "Tax overdue" : "Tax days")}
+                </section>
+
+                <section class="stack-md">
+                  <div class="section-head">
+                    <h3>Next actions</h3>
+                    <button class="text-button" data-tab="alerts">See all</button>
+                  </div>
+                  <div class="list">
+                    ${actions
+                      .map(
+                        (alert) => `
+                          <button class="list-item" data-open-alert="${escapeHtml(alert.id)}" type="button">
+                            <div class="row" style="justify-content:space-between">
+                              ${badge(alert.tone, alert.title)}
+                              <span class="meta">${escapeHtml(formatDate(alert.dueDate))}</span>
+                            </div>
+                            <div class="item-copy">
+                              <strong>${escapeHtml(alert.subtitle)}</strong>
+                              <span>${escapeHtml(alert.detail)}</span>
+                            </div>
+                          </button>
+                        `
+                      )
+                      .join("")}
+                  </div>
+                </section>
+
+                <section class="quick-grid">
+                  <button class="quick-button" data-action="goto-add-vehicle">
+                    <div class="icon-badge"><span class="material-symbols-outlined">directions_car</span></div>
+                    <strong>Add vehicle</strong>
+                  </button>
+                  <button class="quick-button" data-action="goto-upload-document">
+                    <div class="icon-badge"><span class="material-symbols-outlined">upload_file</span></div>
+                    <strong>Upload doc</strong>
+                  </button>
+                  <button class="quick-button" data-action="goto-zones">
+                    <div class="icon-badge"><span class="material-symbols-outlined">map</span></div>
+                    <strong>Manage zones</strong>
+                  </button>
+                </section>
+
+                <section class="stack-md">
+                  <div class="section-head">
+                    <h3>Recent documents</h3>
+                    <button class="text-button" data-tab="docs">Open vault</button>
+                  </div>
+                  ${docs
+                    .map((document) => {
+                      const status = documentStatus(document);
+                      return `
+                        <button class="compact-item" data-open-document="${escapeHtml(document.id)}" type="button">
+                          <div class="compact-main">
+                            <strong>${escapeHtml(document.title)}</strong>
+                            <span>${escapeHtml(document.type)} · ${escapeHtml(formatDate(document.expiresAt))}</span>
+                          </div>
+                          ${badge(status.tone, status.label)}
+                        </button>
+                      `;
+                    })
+                    .join("")}
+                </section>
+              </div>
+            </div>
+            ${renderBottomNav()}
+            ${renderToast()}
+            ${renderModal()}
+          </div>
+        `;
+      }
+
+      function garageScreen() {
+        return `
+          <div class="screen">
+            ${renderTopBar({ title: "Garage", subtitle: `${state.vehicles.length} vehicles`, action: "goto-add-vehicle", icon: "add" })}
+            <div class="body">
+              <div class="stack-xl">
+                <div class="list">
+                  ${state.vehicles
+                    .map((vehicle) => {
+                      const health = vehicleHealth(vehicle);
+                      return `
+                        <button class="list-item" data-open-vehicle="${escapeHtml(vehicle.id)}" type="button">
+                          <div class="row">
+                            <div class="vehicle-thumb"><img src="${escapeHtml(vehicle.image)}" alt="" /></div>
+                            <div class="item-copy" style="flex:1">
+                              <strong>${escapeHtml(vehicle.nickname)}</strong>
+                              <span>${escapeHtml(vehicle.makeModel)} · ${escapeHtml(vehicle.plate)}</span>
+                            </div>
+                            ${badge(health.tone, health.label)}
+                          </div>
+                          <div class="row" style="justify-content:space-between">
+                            <span class="meta">MOT ${escapeHtml(formatDate(vehicle.motDue))}</span>
+                            <span class="meta">${escapeHtml(vehicle.mileage.toLocaleString())} mi</span>
+                          </div>
+                        </button>
+                      `;
+                    })
+                    .join("")}
+                </div>
+                <button class="secondary-button" data-action="goto-add-vehicle">Add another vehicle</button>
+              </div>
+            </div>
+            ${renderBottomNav()}
+            ${renderToast()}
+            ${renderModal()}
+          </div>
+        `;
+      }
+
+      function addVehicleScreen() {
+        return `
+          <div class="screen">
+            ${renderTopBar({ title: "Add Vehicle", subtitle: "New record", back: true })}
+            <div class="body">
+              <div class="stack-xl">
+                <section class="card stack-lg">
+                  <div class="stack-sm">
+                    <h1 class="headline">Create a vehicle record.</h1>
+                    <p class="muted">This is now a dedicated screen, not a bottom sheet.</p>
+                  </div>
+                  <div class="field ${state.errors.addVehicle?.plate ? "error" : ""}">
+                    <label>Registration plate</label>
+                    <div class="plate-input-wrap">
+                      <input class="plate-input" data-scope="addVehicle" data-form-field="plate" value="${escapeHtml(state.forms.addVehicle.plate)}" />
+                    </div>
+                    ${state.errors.addVehicle?.plate ? `<div class="error-copy">${escapeHtml(state.errors.addVehicle.plate)}</div>` : ""}
+                  </div>
+                  ${inputField("addVehicle", "nickname", "Nickname", "text", state.forms.addVehicle.nickname)}
+                  ${inputField("addVehicle", "makeModel", "Make and model", "text", state.forms.addVehicle.makeModel)}
+                  ${selectField("addVehicle", "fuelType", "Fuel type", ["Petrol", "Diesel", "Euro 6 Diesel", "Petrol Hybrid", "Electric"], state.forms.addVehicle.fuelType)}
+                  <button class="primary-button" data-action="save-add-vehicle">Add vehicle</button>
+                </section>
+              </div>
+            </div>
+            ${renderBottomNav()}
+            ${renderToast()}
+            ${renderModal()}
+          </div>
+        `;
+      }
+
+      function vehicleDetailScreen() {
+        const vehicle = selectedVehicle();
+        const health = vehicleHealth(vehicle);
+        const docs = state.documents.filter((document) => document.vehicleId === vehicle.id);
+        const zones = state.zones.filter((zone) => vehicle.zoneIds.includes(zone.id));
+
+        return `
+          <div class="screen">
+            ${renderTopBar({ title: vehicle.nickname, subtitle: vehicle.makeModel, back: true, action: "goto-vehicle-edit", icon: "edit" })}
+            <div class="body">
+              <div class="stack-xl">
+                <section class="card stack-lg">
+                  <div class="vehicle-thumb large"><img src="${escapeHtml(vehicle.image)}" alt="" /></div>
+                  <div class="stack-sm">
+                    <div class="plate">${escapeHtml(vehicle.plate)}</div>
+                    <div class="pill-row">
+                      ${badge(health.tone, health.label)}
+                      ${badge("neutral", vehicle.fuelType)}
+                    </div>
+                  </div>
+                </section>
+
+                <section class="grid-3">
+                  ${statCard(`${Math.abs(health.insurance)}`, health.insurance < 0 ? "Insurance overdue" : "Insurance days")}
+                  ${statCard(`${Math.abs(health.mot)}`, health.mot < 0 ? "MOT overdue" : "MOT days")}
+                  ${statCard(`${Math.abs(health.tax)}`, health.tax < 0 ? "Tax overdue" : "Tax days")}
+                </section>
+
+                <section class="card">
+                  <p class="eyebrow">Vehicle notes</p>
+                  <p class="muted">${escapeHtml(vehicle.notes)}</p>
+                </section>
+
+                <section class="stack-md">
+                  <div class="section-head"><h3>Service history</h3></div>
+                  <div class="timeline">
+                    ${vehicle.history
+                      .map(
+                        (item) => `
+                          <div class="timeline-item">
+                            <strong>${escapeHtml(item.title)}</strong>
+                            <span>${escapeHtml(formatDate(item.date))} · ${escapeHtml(item.note)}</span>
+                          </div>
+                        `
+                      )
+                      .join("")}
+                  </div>
+                </section>
+
+                <section class="stack-md">
+                  <div class="section-head"><h3>Linked documents</h3></div>
+                  ${docs
+                    .map((document) => {
+                      const status = documentStatus(document);
+                      return `
+                        <button class="compact-item" data-open-document="${escapeHtml(document.id)}" type="button">
+                          <div class="compact-main">
+                            <strong>${escapeHtml(document.title)}</strong>
+                            <span>${escapeHtml(document.type)} · ${escapeHtml(formatDate(document.expiresAt))}</span>
+                          </div>
+                          ${badge(status.tone, status.label)}
+                        </button>
+                      `;
+                    })
+                    .join("")}
+                </section>
+
+                <section class="stack-md">
+                  <div class="section-head"><h3>Saved zones</h3></div>
+                  ${zones
+                    .map(
+                      (zone) => `
+                        <div class="compact-item">
+                          <div class="compact-main">
+                            <strong>${escapeHtml(zone.name)}</strong>
+                            <span>${escapeHtml(zone.route)}</span>
+                          </div>
+                          ${badge(zone.compliant ? "good" : "danger", zone.compliant ? "Compliant" : "Charge risk")}
+                        </div>
+                      `
+                    )
+                    .join("")}
+                </section>
+              </div>
+            </div>
+            ${renderBottomNav()}
+            ${renderToast()}
+            ${renderModal()}
+          </div>
+        `;
+      }
+
+      function vehicleEditScreen() {
+        return `
+          <div class="screen">
+            ${renderTopBar({ title: "Edit Vehicle", subtitle: selectedVehicle().nickname, back: true })}
+            <div class="body">
+              <div class="stack-xl">
+                <section class="card stack-lg">
+                  ${inputField("vehicleEdit", "nickname", "Nickname", "text", state.forms.vehicleEdit.nickname)}
+                  ${inputField("vehicleEdit", "makeModel", "Make and model", "text", state.forms.vehicleEdit.makeModel)}
+                  ${inputField("vehicleEdit", "mileage", "Mileage", "number", state.forms.vehicleEdit.mileage)}
+                  ${inputField("vehicleEdit", "motDue", "MOT due", "date", state.forms.vehicleEdit.motDue)}
+                  ${inputField("vehicleEdit", "taxDue", "Tax due", "date", state.forms.vehicleEdit.taxDue)}
+                  ${inputField("vehicleEdit", "insuranceDue", "Insurance due", "date", state.forms.vehicleEdit.insuranceDue)}
+                  ${textareaField("vehicleEdit", "notes", "Notes", state.forms.vehicleEdit.notes)}
+                  <button class="primary-button" data-action="save-vehicle">Save changes</button>
+                  <button class="danger-button" data-action="confirm-delete-vehicle">Remove vehicle</button>
+                </section>
+              </div>
+            </div>
+            ${renderBottomNav()}
+            ${renderToast()}
+            ${renderModal()}
+          </div>
+        `;
+      }
+
+      function alertsScreen() {
+        const alerts = buildAlerts().filter((alert) => {
+          const matchesSearch =
+            !state.searchAlerts.trim() ||
+            [alert.title, alert.subtitle, alert.detail].join(" ").toLowerCase().includes(state.searchAlerts.trim().toLowerCase());
+          const matchesFilter = state.filters.alerts === "handled" ? alert.resolved : !alert.resolved;
+          return matchesSearch && matchesFilter;
+        });
+
+        return `
+          <div class="screen">
+            ${renderTopBar({ title: "Alerts", subtitle: `${alerts.length} visible`, action: "goto-zones", icon: "map" })}
+            <div class="body">
+              <div class="stack-xl">
+                <label class="search">
+                  <span class="material-symbols-outlined">search</span>
+                  <input type="text" data-field="searchAlerts" value="${escapeHtml(state.searchAlerts)}" placeholder="Search alerts" />
+                </label>
+                <div class="segmented">
+                  <button class="segment ${state.filters.alerts === "open" ? "active" : ""}" data-alert-filter="open">Open</button>
+                  <button class="segment ${state.filters.alerts === "handled" ? "active" : ""}" data-alert-filter="handled">Handled</button>
+                </div>
+                <div class="list">
+                  ${alerts.length
+                    ? alerts
+                        .map(
+                          (alert) => `
+                            <button class="list-item" data-open-alert="${escapeHtml(alert.id)}" type="button">
+                              <div class="row" style="justify-content:space-between">
+                                ${badge(alert.tone, alert.title)}
+                                <span class="meta">${escapeHtml(formatDate(alert.dueDate))}</span>
+                              </div>
+                              <div class="item-copy">
+                                <strong>${escapeHtml(alert.subtitle)}</strong>
+                                <span>${escapeHtml(alert.detail)}</span>
+                              </div>
+                              <div class="row" style="justify-content:space-between">
+                                <span class="meta">Lead time ${escapeHtml(String(alert.leadDays))} days</span>
+                                ${alert.muted ? badge("neutral", "Muted") : ""}
+                              </div>
+                            </button>
+                          `
+                        )
+                        .join("")
+                    : `<div class="empty-state"><p class="muted">No alerts match the current filter.</p></div>`}
+                </div>
+              </div>
+            </div>
+            ${renderBottomNav()}
+            ${renderToast()}
+            ${renderModal()}
+          </div>
+        `;
+      }
+
+      function alertDetailScreen() {
+        const alert = selectedAlert();
+        if (!alert) return "";
+        return `
+          <div class="screen">
+            ${renderTopBar({ title: alert.title, subtitle: alert.subtitle, back: true })}
+            <div class="body">
+              <div class="stack-xl">
+                <section class="card stack-lg">
+                  <div class="pill-row">
+                    ${badge(alert.tone, alert.title)}
+                    ${alert.resolved ? badge("good", "Handled") : ""}
+                    ${alert.muted ? badge("neutral", "Muted") : ""}
+                  </div>
+                  <p class="muted">${escapeHtml(alert.detail)}</p>
+                  <span class="meta">Due ${escapeHtml(formatDate(alert.dueDate))}</span>
+                </section>
+
+                <section class="card stack-lg">
+                  ${inputField("alertEdit", "leadDays", "Lead time (days)", "number", state.forms.alertEdit.leadDays)}
+                  <button class="toggle-row" data-action="toggle-alert-muted" type="button">
+                    <div class="item-copy">
+                      <strong>Mute reminder</strong>
+                      <span>Hide notifications without deleting the alert.</span>
+                    </div>
+                    <div class="toggle ${state.forms.alertEdit.muted ? "on" : ""}"></div>
+                  </button>
+                  <button class="toggle-row" data-action="toggle-alert-resolved" type="button">
+                    <div class="item-copy">
+                      <strong>Mark handled</strong>
+                      <span>Move this item out of the open queue.</span>
+                    </div>
+                    <div class="toggle ${state.forms.alertEdit.resolved ? "on" : ""}"></div>
+                  </button>
+                  <button class="primary-button" data-action="save-alert">Save reminder</button>
+                </section>
+
+                <section class="stack-md">
+                  ${alert.vehicleId ? `<button class="secondary-button" data-open-vehicle="${escapeHtml(alert.vehicleId)}">Open vehicle</button>` : ""}
+                  ${alert.documentId ? `<button class="secondary-button" data-open-document="${escapeHtml(alert.documentId)}">Open document</button>` : ""}
+                </section>
+              </div>
+            </div>
+            ${renderBottomNav()}
+            ${renderToast()}
+            ${renderModal()}
+          </div>
+        `;
+      }
+
+      function docsScreen() {
+        const docs = state.documents.filter((document) => {
+          const status = documentStatus(document);
+          if (state.filters.docs === "current") return status.tone === "good";
+          if (state.filters.docs === "review") return status.tone !== "good";
+          return true;
+        });
+
+        return `
+          <div class="screen">
+            ${renderTopBar({ title: "Docs", subtitle: `${docs.length} visible`, action: "goto-upload-document", icon: "add" })}
+            <div class="body">
+              <div class="stack-xl">
+                <div class="segmented">
+                  <button class="segment ${state.filters.docs === "all" ? "active" : ""}" data-doc-filter="all">All</button>
+                  <button class="segment ${state.filters.docs === "current" ? "active" : ""}" data-doc-filter="current">Current</button>
+                  <button class="segment ${state.filters.docs === "review" ? "active" : ""}" data-doc-filter="review">Needs review</button>
+                </div>
+                <div class="list">
+                  ${docs
+                    .map((document) => {
+                      const status = documentStatus(document);
+                      const vehicle = getVehicle(document.vehicleId);
+                      return `
+                        <button class="list-item" data-open-document="${escapeHtml(document.id)}" type="button">
+                          <div class="row" style="justify-content:space-between">
+                            ${badge(status.tone, status.label)}
+                            <span class="meta">${escapeHtml(document.format)}</span>
+                          </div>
+                          <div class="item-copy">
+                            <strong>${escapeHtml(document.title)}</strong>
+                            <span>${escapeHtml(vehicle ? vehicle.nickname : "Vehicle")} · ${escapeHtml(formatDate(document.expiresAt))}</span>
+                          </div>
+                        </button>
+                      `;
+                    })
+                    .join("")}
+                </div>
+                <button class="secondary-button" data-action="goto-upload-document">Upload document</button>
+              </div>
+            </div>
+            ${renderBottomNav()}
+            ${renderToast()}
+            ${renderModal()}
+          </div>
+        `;
+      }
+
+      function uploadDocumentScreen() {
+        return `
+          <div class="screen">
+            ${renderTopBar({ title: "Upload Document", subtitle: "Scan or import", back: true })}
+            <div class="body">
+              <div class="stack-xl">
+                <section class="card stack-lg">
+                  ${selectField(
+                    "upload",
+                    "vehicleId",
+                    "Vehicle",
+                    state.vehicles.map((vehicle) => [vehicle.id, `${vehicle.nickname} · ${vehicle.plate}`]),
+                    state.forms.upload.vehicleId
+                  )}
+                  ${inputField("upload", "title", "Document title", "text", state.forms.upload.title)}
+                  ${selectField("upload", "type", "Type", ["Insurance Policy", "MOT Certificate", "V5C Logbook", "Service Invoice"], state.forms.upload.type)}
+                  ${inputField("upload", "expiresAt", "Expiry / review date", "date", state.forms.upload.expiresAt)}
+                  <div class="field ${state.errors.upload?.source ? "error" : ""}">
+                    <label>Source</label>
+                    <div class="segmented">
+                      <button class="segment ${state.forms.upload.source === "files" ? "active" : ""}" data-upload-source="files">Files</button>
+                      <button class="segment ${state.forms.upload.source === "camera" ? "active" : ""}" data-upload-source="camera">Camera</button>
+                    </div>
+                    ${state.errors.upload?.source ? `<div class="error-copy">${escapeHtml(state.errors.upload.source)}</div>` : ""}
+                  </div>
+                  <div class="card">
+                    <p class="muted">Files: ${escapeHtml(state.permissions.files)} · Camera: ${escapeHtml(state.permissions.camera)}</p>
+                  </div>
+                  <button class="primary-button" data-action="save-upload">Save document</button>
+                </section>
+              </div>
+            </div>
+            ${renderBottomNav()}
+            ${renderToast()}
+            ${renderModal()}
+          </div>
+        `;
+      }
+
+      function documentDetailScreen() {
+        const document = getDocument(state.selectedDocumentId);
+        const status = documentStatus(document);
+        return `
+          <div class="screen">
+            ${renderTopBar({ title: document.title, subtitle: getVehicle(document.vehicleId)?.nickname || "Document", back: true })}
+            <div class="body">
+              <div class="stack-xl">
+                <section class="card stack-lg">
+                  <div class="pill-row">
+                    ${badge(status.tone, status.label)}
+                    ${badge("neutral", document.format)}
+                  </div>
+                  <p class="muted">${escapeHtml(document.preview)}</p>
+                  <span class="meta">Uploaded ${escapeHtml(formatDate(document.uploadedAt))} · Expires ${escapeHtml(formatDate(document.expiresAt))}</span>
+                </section>
+
+                <section class="card stack-lg">
+                  ${inputField("documentEdit", "title", "Title", "text", state.forms.documentEdit.title)}
+                  ${selectField("documentEdit", "type", "Type", ["Insurance Policy", "MOT Certificate", "V5C Logbook", "Service Invoice"], state.forms.documentEdit.type)}
+                  ${inputField("documentEdit", "expiresAt", "Expiry / review date", "date", state.forms.documentEdit.expiresAt)}
+                  <button class="primary-button" data-action="save-document">Save changes</button>
+                  <button class="secondary-button" data-action="replace-document">Replace file</button>
+                  <button class="secondary-button" data-action="share-document">Share document</button>
+                  <button class="danger-button" data-action="confirm-delete-document">Delete document</button>
+                </section>
+              </div>
+            </div>
+            ${renderBottomNav()}
+            ${renderToast()}
+            ${renderModal()}
+          </div>
+        `;
+      }
+
+      function settingsScreen() {
+        return `
+          <div class="screen">
+            ${renderTopBar({ title: "Settings", subtitle: state.user.plan, action: "goto-profile", icon: "person" })}
+            <div class="body">
+              <div class="stack-xl">
+                <button class="setting-row" data-action="goto-profile" type="button">
+                  <div class="item-copy">
+                    <strong>${escapeHtml(state.user.firstName)} ${escapeHtml(state.user.lastName)}</strong>
+                    <span>${escapeHtml(state.user.email)}</span>
+                  </div>
+                  <span class="material-symbols-outlined">chevron_right</span>
+                </button>
+
+                <section class="stack-md">
+                  <div class="section-head"><h3>Notifications</h3></div>
+                  ${toggleItem("mot", "MOT alerts")}
+                  ${toggleItem("tax", "Tax reminders")}
+                  ${toggleItem("insurance", "Insurance reminders")}
+                  ${toggleItem("docs", "Document reviews")}
+                  ${toggleItem("zones", "Zone monitoring")}
+                </section>
+
+                <section class="stack-md">
+                  <div class="section-head"><h3>Permissions</h3></div>
+                  ${permissionItem("notifications", "Notifications")}
+                  ${permissionItem("camera", "Camera")}
+                  ${permissionItem("files", "Files")}
+                  ${permissionItem("biometrics", "Biometrics")}
+                </section>
+
+                <section class="stack-md">
+                  <button class="setting-row" data-action="goto-support" type="button">
+                    <div class="item-copy">
+                      <strong>Support & legal</strong>
+                      <span>Help, contact, privacy and export.</span>
+                    </div>
+                    <span class="material-symbols-outlined">chevron_right</span>
+                  </button>
+                  <button class="setting-row" data-action="goto-zones" type="button">
+                    <div class="item-copy">
+                      <strong>Saved zones</strong>
+                      <span>Manage monitored charge areas.</span>
+                    </div>
+                    <span class="material-symbols-outlined">chevron_right</span>
+                  </button>
+                  <button class="danger-button" data-action="confirm-sign-out">Sign out</button>
+                </section>
+              </div>
+            </div>
+            ${renderBottomNav()}
+            ${renderToast()}
+            ${renderModal()}
+          </div>
+        `;
+      }
+
+      function profileScreen() {
+        return `
+          <div class="screen">
+            ${renderTopBar({ title: "Profile", subtitle: "Account details", back: true })}
+            <div class="body">
+              <div class="stack-xl">
+                <section class="card stack-lg">
+                  <div class="field-row">
+                    ${inputField("profile", "firstName", "First name", "text", state.forms.profile.firstName)}
+                    ${inputField("profile", "lastName", "Last name", "text", state.forms.profile.lastName)}
+                  </div>
+                  ${inputField("profile", "email", "Email", "email", state.forms.profile.email)}
+                  ${inputField("profile", "phone", "Phone", "tel", state.forms.profile.phone)}
+                  ${textareaField("profile", "address", "Address", state.forms.profile.address)}
+                  <button class="primary-button" data-action="save-profile">Save profile</button>
+                </section>
+              </div>
+            </div>
+            ${renderBottomNav()}
+            ${renderToast()}
+            ${renderModal()}
+          </div>
+        `;
+      }
+
+      function zonesScreen() {
+        return `
+          <div class="screen">
+            ${renderTopBar({ title: "Saved Zones", subtitle: `${state.zones.length} monitored routes`, back: true })}
+            <div class="body">
+              <div class="stack-xl">
+                <div class="list">
+                  ${state.zones
+                    .map(
+                      (zone) => `
+                        <div class="list-item">
+                          <div class="row">
+                            <div class="zone-thumb"><img src="${escapeHtml(zone.image)}" alt="" /></div>
+                            <div class="item-copy" style="flex:1">
+                              <strong>${escapeHtml(zone.name)}</strong>
+                              <span>${escapeHtml(zone.route)} · ${escapeHtml(zone.charge)}</span>
+                            </div>
+                            ${badge(zone.compliant ? "good" : "danger", zone.compliant ? "Compliant" : "Charge risk")}
+                          </div>
+                          <button class="toggle-row" data-toggle-zone="${escapeHtml(zone.id)}" type="button">
+                            <div class="item-copy">
+                              <strong>${zone.monitored ? "Monitoring enabled" : "Monitoring paused"}</strong>
+                              <span>Toggle route monitoring for this zone.</span>
+                            </div>
+                            <div class="toggle ${zone.monitored ? "on" : ""}"></div>
+                          </button>
+                        </div>
+                      `
+                    )
+                    .join("")}
+                </div>
+
+                <section class="card stack-lg">
+                  <div class="stack-sm">
+                    <h2 class="headline">Add monitored zone</h2>
+                    <p class="muted">This keeps the flow screen-based while still giving you zone management.</p>
+                  </div>
+                  ${inputField("zoneAdd", "name", "Zone name", "text", state.forms.zoneAdd.name)}
+                  ${inputField("zoneAdd", "charge", "Daily charge", "text", state.forms.zoneAdd.charge)}
+                  ${inputField("zoneAdd", "route", "Typical route", "text", state.forms.zoneAdd.route)}
+                  <button class="primary-button" data-action="add-zone">Add zone</button>
+                </section>
+              </div>
+            </div>
+            ${renderBottomNav()}
+            ${renderToast()}
+            ${renderModal()}
+          </div>
+        `;
+      }
+
+      function supportScreen() {
+        return `
+          <div class="screen">
+            ${renderTopBar({ title: "Support & Legal", subtitle: "Help, privacy and export", back: true })}
+            <div class="body">
+              <div class="stack-xl">
+                <section class="card stack-lg">
+                  <p class="eyebrow">Support</p>
+                  <h2 class="headline">Get help with your account and garage.</h2>
+                  <button class="secondary-button" data-action="support-help">Open help centre</button>
+                  <button class="secondary-button" data-action="support-email">Contact support</button>
+                  <button class="secondary-button" data-action="support-export">Export my data</button>
+                </section>
+
+                <section class="card stack-lg">
+                  <p class="eyebrow">Legal</p>
+                  <p class="muted">This prototype stores state locally in your browser. Upload, share, export and reminder actions are simulated.</p>
+                  <p class="muted">Permissions for notifications, camera, files and biometrics are represented so the iOS-style flows stay visible.</p>
+                </section>
+              </div>
+            </div>
+            ${renderBottomNav()}
+            ${renderToast()}
+            ${renderModal()}
+          </div>
+        `;
+      }
+
+      function toggleItem(key, label) {
+        return `
+          <button class="toggle-row" data-toggle-notification="${escapeHtml(key)}" type="button">
+            <div class="item-copy">
+              <strong>${escapeHtml(label)}</strong>
+              <span>${state.notificationSettings[key] ? "Enabled" : "Disabled"}</span>
+            </div>
+            <div class="toggle ${state.notificationSettings[key] ? "on" : ""}"></div>
+          </button>
+        `;
+      }
+
+      function permissionItem(key, label) {
+        return `
+          <button class="setting-row" data-request-permission="${escapeHtml(key)}" type="button">
+            <div class="item-copy">
+              <strong>${escapeHtml(label)}</strong>
+              <span>Current status: ${escapeHtml(state.permissions[key])}</span>
+            </div>
+            ${badge(state.permissions[key] === "granted" ? "good" : "warn", state.permissions[key])}
+          </button>
+        `;
+      }
+
+      function renderBottomNav() {
+        const alertsCount = buildAlerts().filter((alert) => !alert.resolved).length;
+        return `
+          <div class="bottom-nav">
+            ${[
+              ["dashboard", "dashboard", "Home"],
+              ["garage", "directions_car", "Garage"],
+              ["alerts", "notifications_active", "Alerts"],
+              ["docs", "description", "Docs"],
+              ["settings", "settings", "Settings"],
+            ]
+              .map(
+                ([tab, icon, label]) => `
+                  <button class="tab ${currentTab() === tab ? "active" : ""}" data-tab="${escapeHtml(tab)}" type="button">
+                    <span class="material-symbols-outlined">${escapeHtml(icon)}</span>
+                    ${tab === "alerts" && alertsCount ? '<span class="tab-dot"></span>' : ""}
+                    <small>${escapeHtml(label)}</small>
+                  </button>
+                `
+              )
+              .join("")}
+          </div>
+        `;
+      }
+
+      function renderToast() {
+        if (!ui.toast) return "";
+        return `
+          <div class="toast">
+            <span>${escapeHtml(ui.toast)}</span>
+            <button data-action="dismiss-toast"><span class="material-symbols-outlined">close</span></button>
+          </div>
+        `;
+      }
+
+      function renderModal() {
+        if (!state.modal) return "";
+        const config = {
+          deleteVehicle: {
+            title: "Remove vehicle?",
+            body: "This also removes any linked documents in the prototype.",
+            confirm: "delete-vehicle-now",
+          },
+          deleteDocument: {
+            title: "Delete document?",
+            body: "This removes the selected vault item.",
+            confirm: "delete-document-now",
+          },
+          signOut: {
+            title: "Sign out?",
+            body: "You’ll return to the onboarding and auth flow.",
+            confirm: "sign-out-now",
+          },
+        }[state.modal.type];
+
+        return `
+          <div class="modal-scrim" data-overlay="modal">
+            <div class="modal" data-stop-modal="true">
+              <div class="stack-lg">
+                <div>
+                  <h3 class="headline">${escapeHtml(config.title)}</h3>
+                  <p class="muted">${escapeHtml(config.body)}</p>
+                </div>
+                <button class="danger-button" data-action="${escapeHtml(config.confirm)}">Continue</button>
+                <button class="secondary-button" data-action="close-modal">Cancel</button>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      function render() {
+        normalizeSelections();
+        const screens = {
+          onboardingWelcome: onboardingWelcomeScreen,
+          onboardingFeatures: onboardingFeaturesScreen,
+          signIn: signInScreen,
+          signUp: signUpScreen,
+          resetPassword: resetPasswordScreen,
+          dashboard: dashboardScreen,
+          garage: garageScreen,
+          addVehicle: addVehicleScreen,
+          vehicleDetail: vehicleDetailScreen,
+          vehicleEdit: vehicleEditScreen,
+          alerts: alertsScreen,
+          alertDetail: alertDetailScreen,
+          docs: docsScreen,
+          uploadDocument: uploadDocumentScreen,
+          documentDetail: documentDetailScreen,
+          settings: settingsScreen,
+          profile: profileScreen,
+          zones: zonesScreen,
+          support: supportScreen,
+        };
+
+        app.innerHTML = screens[state.route]();
+        persist();
+      }
+
+      document.addEventListener("click", (event) => {
+        const openVehicleNode = event.target.closest("[data-open-vehicle]");
+        if (openVehicleNode) {
+          openVehicle(openVehicleNode.dataset.openVehicle);
+          return;
+        }
+
+        const openDocumentNode = event.target.closest("[data-open-document]");
+        if (openDocumentNode) {
+          openDocument(openDocumentNode.dataset.openDocument);
+          return;
+        }
+
+        const openAlertNode = event.target.closest("[data-open-alert]");
+        if (openAlertNode) {
+          openAlert(openAlertNode.dataset.openAlert);
+          return;
+        }
+
+        const tabNode = event.target.closest("[data-tab]");
+        if (tabNode) {
+          navigate(tabNode.dataset.tab, { replace: true });
+          return;
+        }
+
+        const alertFilterNode = event.target.closest("[data-alert-filter]");
+        if (alertFilterNode) {
+          state.filters.alerts = alertFilterNode.dataset.alertFilter;
+          render();
+          return;
+        }
+
+        const docFilterNode = event.target.closest("[data-doc-filter]");
+        if (docFilterNode) {
+          state.filters.docs = docFilterNode.dataset.docFilter;
+          render();
+          return;
+        }
+
+        const uploadSourceNode = event.target.closest("[data-upload-source]");
+        if (uploadSourceNode) {
+          state.forms.upload.source = uploadSourceNode.dataset.uploadSource;
+          render();
+          return;
+        }
+
+        const toggleNotificationNode = event.target.closest("[data-toggle-notification]");
+        if (toggleNotificationNode) {
+          const key = toggleNotificationNode.dataset.toggleNotification;
+          state.notificationSettings[key] = !state.notificationSettings[key];
+          render();
+          return;
+        }
+
+        const requestPermissionNode = event.target.closest("[data-request-permission]");
+        if (requestPermissionNode) {
+          requestPermission(requestPermissionNode.dataset.requestPermission);
+          return;
+        }
+
+        const toggleZoneNode = event.target.closest("[data-toggle-zone]");
+        if (toggleZoneNode) {
+          const zone = getZone(toggleZoneNode.dataset.toggleZone);
+          if (zone) zone.monitored = !zone.monitored;
+          persist();
+          showToast(zone?.monitored ? "Zone monitoring enabled" : "Zone monitoring paused");
+          render();
+          return;
+        }
+
+        const actionNode = event.target.closest("[data-action]");
+        if (!actionNode) {
+          const overlay = event.target.closest("[data-overlay='modal']");
+          if (overlay && event.target === overlay) {
+            state.modal = null;
+            render();
+          }
+          return;
+        }
+
+        switch (actionNode.dataset.action) {
+          case "back":
+            goBack();
+            break;
+          case "goto-onboarding-features":
+            navigate("onboardingFeatures");
+            break;
+          case "goto-sign-in":
+            navigate("signIn");
+            break;
+          case "goto-sign-up":
+            navigate("signUp");
+            break;
+          case "goto-reset":
+            navigate("resetPassword");
+            break;
+          case "goto-add-vehicle":
+            navigate("addVehicle");
+            break;
+          case "goto-upload-document":
+            navigate("uploadDocument");
+            break;
+          case "goto-vehicle-edit":
+            prepareVehicleEdit();
+            navigate("vehicleEdit");
+            break;
+          case "goto-profile":
+            prepareProfileForm();
+            navigate("profile");
+            break;
+          case "goto-zones":
+            navigate("zones");
+            break;
+          case "goto-support":
+            navigate("support");
+            break;
+          case "request-notifications":
+            requestPermission("notifications");
+            break;
+          case "submit-sign-in":
+            clearErrors();
+            if (!validateSignIn()) {
+              render();
+              return;
+            }
+            state.user.email = state.forms.signIn.email.trim();
+            navigate("dashboard", { reset: true });
+            showToast("Signed in");
+            break;
+          case "biometric-sign-in":
+            state.permissions.biometrics = "granted";
+            navigate("dashboard", { reset: true });
+            showToast("Signed in with biometrics");
+            break;
+          case "submit-sign-up":
+            clearErrors();
+            if (!validateSignUp()) {
+              render();
+              return;
+            }
+            state.user.firstName = state.forms.signUp.firstName.trim();
+            state.user.lastName = state.forms.signUp.lastName.trim();
+            state.user.email = state.forms.signUp.email.trim();
+            navigate("dashboard", { reset: true });
+            showToast("Account created");
+            break;
+          case "submit-reset":
+            clearErrors();
+            if (!validateReset()) {
+              render();
+              return;
+            }
+            navigate("signIn", { reset: true });
+            showToast("Reset link sent");
+            break;
+          case "save-add-vehicle":
+            clearErrors();
+            if (!validateAddVehicle()) {
+              render();
+              return;
+            }
+            state.vehicles.unshift({
+              id: `veh-${Date.now()}`,
+              nickname: state.forms.addVehicle.nickname.trim(),
+              makeModel: state.forms.addVehicle.makeModel.trim(),
+              plate: state.forms.addVehicle.plate.trim().toUpperCase(),
+              fuelType: state.forms.addVehicle.fuelType,
+              mileage: 0,
+              motDue: addDays(30),
+              taxDue: addDays(45),
+              insuranceDue: addDays(21),
+              notes: "Newly added vehicle.",
+              image:
+                "https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=1200&q=80",
+              history: [{ date: addDays(0), title: "Vehicle added", note: "Record created in the prototype." }],
+              zoneIds: ["zone-1"],
+            });
+            state.selectedVehicleId = state.vehicles[0].id;
+            navigate("vehicleDetail");
+            showToast("Vehicle added");
+            break;
+          case "save-vehicle":
+            clearErrors();
+            if (!validateVehicleEdit()) {
+              render();
+              return;
+            }
+            Object.assign(selectedVehicle(), {
+              nickname: state.forms.vehicleEdit.nickname.trim(),
+              makeModel: state.forms.vehicleEdit.makeModel.trim(),
+              mileage: Number(state.forms.vehicleEdit.mileage),
+              motDue: state.forms.vehicleEdit.motDue,
+              taxDue: state.forms.vehicleEdit.taxDue,
+              insuranceDue: state.forms.vehicleEdit.insuranceDue,
+              notes: state.forms.vehicleEdit.notes.trim(),
+            });
+            navigate("vehicleDetail");
+            showToast("Vehicle updated");
+            break;
+          case "confirm-delete-vehicle":
+            state.modal = { type: "deleteVehicle" };
+            render();
+            break;
+          case "delete-vehicle-now": {
+            const vehicleId = state.selectedVehicleId;
+            state.documents = state.documents.filter((document) => document.vehicleId !== vehicleId);
+            state.vehicles = state.vehicles.filter((vehicle) => vehicle.id !== vehicleId);
+            state.selectedVehicleId = state.vehicles[0]?.id || null;
+            state.modal = null;
+            navigate("garage", { reset: true });
+            showToast("Vehicle removed");
+            break;
+          }
+          case "save-upload":
+            clearErrors();
+            if (!validateUpload()) {
+              render();
+              return;
+            }
+            state.documents.unshift({
+              id: `doc-${Date.now()}`,
+              vehicleId: state.forms.upload.vehicleId,
+              title: state.forms.upload.title.trim(),
+              type: state.forms.upload.type,
+              format: "PDF",
+              uploadedAt: addDays(0),
+              expiresAt: state.forms.upload.expiresAt,
+              source: state.forms.upload.source,
+              preview: `Imported via ${state.forms.upload.source === "camera" ? "camera scan" : "file picker"} in the prototype.`,
+            });
+            state.selectedDocumentId = state.documents[0].id;
+            navigate("documentDetail");
+            showToast("Document stored");
+            break;
+          case "save-document":
+            clearErrors();
+            if (!validateDocumentEdit()) {
+              render();
+              return;
+            }
+            Object.assign(getDocument(state.selectedDocumentId), {
+              title: state.forms.documentEdit.title.trim(),
+              type: state.forms.documentEdit.type,
+              expiresAt: state.forms.documentEdit.expiresAt,
+            });
+            render();
+            showToast("Document updated");
+            break;
+          case "replace-document":
+            getDocument(state.selectedDocumentId).uploadedAt = addDays(0);
+            getDocument(state.selectedDocumentId).preview = "Replacement file stored in the prototype.";
+            render();
+            showToast("Document replaced");
+            break;
+          case "share-document":
+            showToast("Share sheet simulated");
+            break;
+          case "confirm-delete-document":
+            state.modal = { type: "deleteDocument" };
+            render();
+            break;
+          case "delete-document-now":
+            state.documents = state.documents.filter((document) => document.id !== state.selectedDocumentId);
+            state.selectedDocumentId = state.documents[0]?.id || null;
+            state.modal = null;
+            navigate("docs", { reset: true });
+            showToast("Document deleted");
+            break;
+          case "toggle-alert-muted":
+            state.forms.alertEdit.muted = !state.forms.alertEdit.muted;
+            render();
+            break;
+          case "toggle-alert-resolved":
+            state.forms.alertEdit.resolved = !state.forms.alertEdit.resolved;
+            render();
+            break;
+          case "save-alert":
+            clearErrors();
+            if (!validateAlertEdit()) {
+              render();
+              return;
+            }
+            state.alertOverrides[state.selectedAlertId] = {
+              leadDays: Number(state.forms.alertEdit.leadDays),
+              muted: Boolean(state.forms.alertEdit.muted),
+              resolved: Boolean(state.forms.alertEdit.resolved),
+            };
+            navigate("alerts");
+            showToast("Reminder updated");
+            break;
+          case "save-profile":
+            clearErrors();
+            if (!validateProfile()) {
+              render();
+              return;
+            }
+            Object.assign(state.user, {
+              firstName: state.forms.profile.firstName.trim(),
+              lastName: state.forms.profile.lastName.trim(),
+              email: state.forms.profile.email.trim(),
+              phone: state.forms.profile.phone.trim(),
+              address: state.forms.profile.address.trim(),
+            });
+            navigate("settings");
+            showToast("Profile updated");
+            break;
+          case "add-zone":
+            clearErrors();
+            if (!validateZoneAdd()) {
+              render();
+              return;
+            }
+            state.zones.unshift({
+              id: `zone-${Date.now()}`,
+              name: state.forms.zoneAdd.name.trim(),
+              charge: state.forms.zoneAdd.charge.trim(),
+              route: state.forms.zoneAdd.route.trim(),
+              monitored: true,
+              compliant: true,
+              image:
+                "https://images.unsplash.com/photo-1515548217831-8c7d144ac6a3?auto=format&fit=crop&w=900&q=80",
+            });
+            state.forms.zoneAdd = { name: "", charge: "£10.00", route: "" };
+            render();
+            showToast("Zone added");
+            break;
+          case "support-help":
+            showToast("Help centre simulated");
+            break;
+          case "support-email":
+            showToast("Support email composer simulated");
+            break;
+          case "support-export":
+            showToast("Export queued");
+            break;
+          case "confirm-sign-out":
+            state.modal = { type: "signOut" };
+            render();
+            break;
+          case "sign-out-now":
+            state.modal = null;
+            navigate("onboardingWelcome", { reset: true });
+            showToast("Signed out");
+            break;
+          case "close-modal":
+            state.modal = null;
+            render();
+            break;
+          case "dismiss-toast":
+            ui.toast = "";
+            render();
+            break;
+          default:
+            break;
+        }
+      });
+
+      document.addEventListener("input", (event) => {
+        updateFieldState(event.target, true);
+      });
+
+      document.addEventListener("change", (event) => {
+        updateFieldState(event.target, false);
+      });
+
+      function updateFieldState(target, rerenderSearchOnly) {
+        const searchField = target.dataset.field;
+        if (searchField === "searchAlerts") {
+          state.searchAlerts = target.value;
+          render();
+          return;
+        }
+
+        const scope = target.dataset.scope;
+        const field = target.dataset.formField;
+        if (!scope || !field) return;
+
+        let value = target.value;
+        if (scope === "addVehicle" && field === "plate") {
+          value = value.toUpperCase();
+          target.value = value;
+        }
+
+        state.forms[scope][field] = value;
+        if (state.errors[scope]) delete state.errors[scope][field];
+        persist();
+
+        if (!rerenderSearchOnly && (target.tagName === "SELECT" || target.tagName === "TEXTAREA")) {
+          render();
+        }
+      }
+
+      render();
+    </script>
+  </body>
+</html>

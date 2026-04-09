@@ -1,0 +1,2911 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>DriveReady Standard Prototype</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,500,0,0"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg: #eef3f6;
+        --surface: #f7f9fb;
+        --card: #ffffff;
+        --muted-surface: #edf2f5;
+        --text: #233036;
+        --text-muted: #66757b;
+        --line: rgba(35, 48, 54, 0.08);
+        --primary: #1f4e78;
+        --primary-strong: #173c5b;
+        --primary-soft: rgba(31, 78, 120, 0.12);
+        --good: #0d7b52;
+        --good-soft: rgba(13, 123, 82, 0.12);
+        --warn: #9d590a;
+        --warn-soft: rgba(157, 89, 10, 0.12);
+        --danger: #a13434;
+        --danger-soft: rgba(161, 52, 52, 0.12);
+        --plate: #ffd300;
+        --shadow: 0 26px 50px -30px rgba(20, 28, 33, 0.45);
+        --card-shadow: 0 16px 34px -28px rgba(20, 28, 33, 0.28);
+        --radius-xl: 30px;
+        --radius-lg: 24px;
+        --radius-md: 18px;
+        --radius-sm: 14px;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        margin: 0;
+        min-height: 100%;
+        font-family: "Inter", sans-serif;
+        background:
+          radial-gradient(circle at top left, rgba(31, 78, 120, 0.14), transparent 28%),
+          radial-gradient(circle at bottom right, rgba(13, 123, 82, 0.1), transparent 24%),
+          linear-gradient(180deg, #f6f8fa 0%, #eaf0f3 100%);
+        color: var(--text);
+      }
+
+      button,
+      input,
+      select,
+      textarea {
+        font: inherit;
+      }
+
+      button {
+        border: 0;
+        background: none;
+        color: inherit;
+        cursor: pointer;
+      }
+
+      .material-symbols-outlined {
+        font-variation-settings: "FILL" 0, "wght" 500, "GRAD" 0, "opsz" 24;
+        vertical-align: middle;
+      }
+
+      .page {
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        padding: 24px;
+      }
+
+      .device {
+        width: min(430px, 100%);
+        background: #171a1d;
+        border-radius: 42px;
+        padding: 12px;
+        box-shadow: 0 40px 90px -36px rgba(0, 0, 0, 0.55);
+      }
+
+      .phone {
+        background: var(--surface);
+        border-radius: 32px;
+        min-height: 860px;
+        overflow: hidden;
+        position: relative;
+      }
+
+      .statusbar {
+        height: 34px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 8px 22px 0;
+        font-size: 13px;
+        font-weight: 700;
+      }
+
+      .dynamic-island {
+        width: 132px;
+        height: 30px;
+        border-radius: 999px;
+        background: #0c0d0f;
+      }
+
+      .screen {
+        min-height: 826px;
+        position: relative;
+      }
+
+      .topbar {
+        position: sticky;
+        top: 0;
+        z-index: 12;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 14px 18px;
+        background: rgba(247, 249, 251, 0.86);
+        backdrop-filter: blur(18px);
+      }
+
+      .brand,
+      .row,
+      .inline {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .avatar,
+      .icon-button,
+      .icon-badge,
+      .sheet-grabber {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 14px;
+        overflow: hidden;
+        background: var(--muted-surface);
+      }
+
+      .avatar img,
+      .hero-media img,
+      .vehicle-thumb img,
+      .zone-thumb img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .topcopy strong {
+        display: block;
+        font-size: 17px;
+      }
+
+      .topcopy span {
+        display: block;
+        margin-top: 4px;
+        color: var(--text-muted);
+        font-size: 12px;
+      }
+
+      .icon-button {
+        width: 42px;
+        height: 42px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.92);
+        box-shadow: inset 0 0 0 1px rgba(35, 48, 54, 0.08);
+        flex-shrink: 0;
+      }
+
+      .body {
+        padding: 8px 18px 118px;
+      }
+
+      .stack-xl,
+      .stack-lg,
+      .stack-md,
+      .stack-sm,
+      .list {
+        display: grid;
+      }
+
+      .stack-xl {
+        gap: 24px;
+      }
+
+      .stack-lg {
+        gap: 18px;
+      }
+
+      .stack-md,
+      .list {
+        gap: 14px;
+      }
+
+      .stack-sm {
+        gap: 10px;
+      }
+
+      .eyebrow {
+        margin: 0;
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--text-muted);
+      }
+
+      .display {
+        margin: 0;
+        font-size: 33px;
+        line-height: 0.96;
+        letter-spacing: -0.06em;
+        font-weight: 900;
+      }
+
+      .headline {
+        margin: 0;
+        font-size: 23px;
+        line-height: 1.02;
+        letter-spacing: -0.05em;
+        font-weight: 800;
+      }
+
+      .muted {
+        margin: 0;
+        color: var(--text-muted);
+        line-height: 1.55;
+      }
+
+      .card,
+      .hero,
+      .list-item,
+      .compact-item,
+      .sheet-card,
+      .auth-panel {
+        background: var(--card);
+        border-radius: var(--radius-lg);
+        box-shadow: var(--card-shadow);
+      }
+
+      .card,
+      .auth-panel {
+        padding: 18px;
+      }
+
+      .hero {
+        overflow: hidden;
+        position: relative;
+        min-height: 210px;
+      }
+
+      .hero-media {
+        position: absolute;
+        inset: 0;
+      }
+
+      .hero-media::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(180deg, rgba(15, 19, 22, 0.06), rgba(15, 19, 22, 0.72));
+      }
+
+      .hero-copy {
+        position: relative;
+        z-index: 1;
+        height: 100%;
+        padding: 18px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        color: #ffffff;
+      }
+
+      .plate {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 40px;
+        padding: 0 14px;
+        border-radius: 12px;
+        background: var(--plate);
+        color: #101113;
+        box-shadow: inset 0 0 0 2px rgba(35, 48, 54, 0.06);
+        font-size: 17px;
+        font-weight: 900;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+      }
+
+      .pill-row,
+      .segmented {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      .pill,
+      .segment,
+      .ghost-chip {
+        min-height: 32px;
+        padding: 0 12px;
+        border-radius: 999px;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .pill.good {
+        background: var(--good-soft);
+        color: var(--good);
+      }
+
+      .pill.warn {
+        background: var(--warn-soft);
+        color: var(--warn);
+      }
+
+      .pill.danger {
+        background: var(--danger-soft);
+        color: var(--danger);
+      }
+
+      .pill.neutral,
+      .ghost-chip {
+        background: var(--primary-soft);
+        color: var(--primary);
+      }
+
+      .grid-3 {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      .stat {
+        padding: 14px;
+        border-radius: var(--radius-md);
+        background: var(--card);
+        box-shadow: var(--card-shadow);
+      }
+
+      .stat strong {
+        display: block;
+        font-size: 22px;
+        letter-spacing: -0.05em;
+      }
+
+      .stat span {
+        display: block;
+        margin-top: 6px;
+        color: var(--text-muted);
+        font-size: 12px;
+      }
+
+      .section-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .section-head h3 {
+        margin: 0;
+        font-size: 19px;
+        letter-spacing: -0.04em;
+      }
+
+      .text-button,
+      .mini-button {
+        color: var(--primary);
+        font-weight: 800;
+      }
+
+      .list-item,
+      .compact-item {
+        padding: 16px;
+      }
+
+      .list-item {
+        display: grid;
+        gap: 12px;
+      }
+
+      .compact-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .compact-main,
+      .item-copy {
+        min-width: 0;
+      }
+
+      .item-copy strong,
+      .compact-main strong {
+        display: block;
+        font-size: 15px;
+      }
+
+      .item-copy span,
+      .compact-main span,
+      .meta {
+        display: block;
+        margin-top: 5px;
+        color: var(--text-muted);
+        font-size: 12px;
+        line-height: 1.5;
+      }
+
+      .vehicle-thumb,
+      .zone-thumb {
+        width: 72px;
+        height: 72px;
+        border-radius: 18px;
+        overflow: hidden;
+        flex-shrink: 0;
+      }
+
+      .quick-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      .quick-button {
+        min-height: 84px;
+        padding: 14px;
+        border-radius: var(--radius-md);
+        background: var(--card);
+        box-shadow: var(--card-shadow);
+        display: grid;
+        justify-items: start;
+        align-content: space-between;
+      }
+
+      .quick-button strong {
+        font-size: 13px;
+        line-height: 1.3;
+        text-align: left;
+      }
+
+      .icon-badge {
+        width: 40px;
+        height: 40px;
+        border-radius: 14px;
+        background: var(--muted-surface);
+        color: var(--primary);
+      }
+
+      .primary-button,
+      .secondary-button,
+      .danger-button {
+        min-height: 50px;
+        width: 100%;
+        border-radius: 999px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        font-weight: 800;
+      }
+
+      .primary-button {
+        background: linear-gradient(180deg, var(--primary), var(--primary-strong));
+        color: #ffffff;
+        box-shadow: 0 16px 30px -20px rgba(31, 78, 120, 0.7);
+      }
+
+      .secondary-button {
+        background: var(--muted-surface);
+        color: var(--text);
+      }
+
+      .danger-button {
+        background: var(--danger-soft);
+        color: var(--danger);
+      }
+
+      .search {
+        min-height: 50px;
+        border-radius: 16px;
+        background: var(--card);
+        box-shadow: var(--card-shadow);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 0 14px;
+      }
+
+      .search input {
+        flex: 1;
+        border: 0;
+        background: transparent;
+        min-height: 46px;
+        color: var(--text);
+      }
+
+      .search input:focus {
+        outline: none;
+      }
+
+      .segment {
+        background: var(--muted-surface);
+        color: var(--text-muted);
+      }
+
+      .segment.active {
+        background: var(--primary-soft);
+        color: var(--primary);
+      }
+
+      .settings-row,
+      .toggle-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 14px 16px;
+        border-radius: var(--radius-md);
+        background: var(--card);
+        box-shadow: var(--card-shadow);
+      }
+
+      .toggle {
+        position: relative;
+        width: 52px;
+        height: 30px;
+        border-radius: 999px;
+        background: rgba(35, 48, 54, 0.14);
+        flex-shrink: 0;
+      }
+
+      .toggle::after {
+        content: "";
+        position: absolute;
+        top: 3px;
+        left: 3px;
+        width: 24px;
+        height: 24px;
+        border-radius: 999px;
+        background: #ffffff;
+        box-shadow: 0 4px 10px rgba(35, 48, 54, 0.12);
+        transition: transform 160ms ease;
+      }
+
+      .toggle.on {
+        background: rgba(13, 123, 82, 0.28);
+      }
+
+      .toggle.on::after {
+        transform: translateX(22px);
+      }
+
+      .bottom-nav {
+        position: absolute;
+        left: 14px;
+        right: 14px;
+        bottom: 12px;
+        background: rgba(255, 255, 255, 0.9);
+        backdrop-filter: blur(18px);
+        border-radius: 28px;
+        padding: 8px;
+        box-shadow: 0 -12px 26px -18px rgba(20, 28, 33, 0.26);
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: 4px;
+        z-index: 10;
+      }
+
+      .tab {
+        min-height: 58px;
+        border-radius: 20px;
+        display: grid;
+        place-items: center;
+        gap: 4px;
+        color: var(--text-muted);
+        font-size: 10px;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        position: relative;
+      }
+
+      .tab.active {
+        background: var(--primary-soft);
+        color: var(--primary);
+      }
+
+      .tab-dot {
+        position: absolute;
+        top: 12px;
+        right: calc(50% - 18px);
+        width: 7px;
+        height: 7px;
+        border-radius: 999px;
+        background: var(--danger);
+      }
+
+      .sheet-scrim,
+      .modal-scrim {
+        position: absolute;
+        inset: 0;
+        background: rgba(14, 19, 23, 0.28);
+        backdrop-filter: blur(10px);
+        z-index: 20;
+      }
+
+      .sheet-scrim {
+        display: flex;
+        align-items: flex-end;
+        padding: 14px;
+      }
+
+      .sheet {
+        width: 100%;
+        background: rgba(255, 255, 255, 0.96);
+        border-radius: 28px;
+        max-height: 82%;
+        overflow: auto;
+        box-shadow: var(--shadow);
+      }
+
+      .sheet-head {
+        position: sticky;
+        top: 0;
+        z-index: 1;
+        background: rgba(255, 255, 255, 0.96);
+        padding: 10px 16px 14px;
+      }
+
+      .sheet-grabber {
+        width: 40px;
+        height: 5px;
+        border-radius: 999px;
+        background: rgba(35, 48, 54, 0.16);
+        margin: 0 auto 12px;
+      }
+
+      .sheet-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .sheet-body {
+        padding: 0 16px 18px;
+      }
+
+      .sheet-title strong {
+        display: block;
+        font-size: 19px;
+      }
+
+      .sheet-title span {
+        display: block;
+        margin-top: 4px;
+        color: var(--text-muted);
+        font-size: 12px;
+      }
+
+      .field {
+        display: grid;
+        gap: 6px;
+      }
+
+      .field label {
+        color: var(--text-muted);
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .field input,
+      .field select,
+      .field textarea {
+        width: 100%;
+        min-height: 50px;
+        border-radius: 16px;
+        border: 1px solid var(--line);
+        background: var(--muted-surface);
+        padding: 0 14px;
+        color: var(--text);
+      }
+
+      .field textarea {
+        min-height: 98px;
+        padding-top: 12px;
+        resize: vertical;
+      }
+
+      .field input:focus,
+      .field select:focus,
+      .field textarea:focus {
+        outline: 2px solid rgba(31, 78, 120, 0.14);
+      }
+
+      .field.error input,
+      .field.error select,
+      .field.error textarea {
+        border-color: rgba(161, 52, 52, 0.28);
+        background: rgba(161, 52, 52, 0.05);
+      }
+
+      .error-copy {
+        color: var(--danger);
+        font-size: 12px;
+      }
+
+      .plate-input-wrap {
+        background: var(--plate);
+        border-radius: 16px;
+        min-height: 88px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: inset 0 0 0 2px rgba(35, 48, 54, 0.06);
+      }
+
+      .plate-input {
+        width: 100%;
+        border: 0;
+        background: transparent;
+        text-align: center;
+        color: #111214;
+        font-size: 34px;
+        font-weight: 900;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+      }
+
+      .plate-input:focus {
+        outline: none;
+      }
+
+      .timeline {
+        display: grid;
+        gap: 12px;
+      }
+
+      .timeline-item {
+        padding: 14px 14px 14px 18px;
+        border-radius: var(--radius-md);
+        background: var(--card);
+        box-shadow: var(--card-shadow);
+        border-left: 4px solid rgba(13, 123, 82, 0.3);
+      }
+
+      .timeline-item strong {
+        display: block;
+        font-size: 14px;
+      }
+
+      .timeline-item span {
+        display: block;
+        margin-top: 4px;
+        color: var(--text-muted);
+        font-size: 12px;
+      }
+
+      .modal-scrim {
+        display: grid;
+        place-items: center;
+        padding: 22px;
+      }
+
+      .modal {
+        width: 100%;
+        background: rgba(255, 255, 255, 0.98);
+        border-radius: 24px;
+        box-shadow: var(--shadow);
+        padding: 18px;
+      }
+
+      .toast {
+        position: absolute;
+        left: 18px;
+        right: 18px;
+        bottom: 96px;
+        min-height: 48px;
+        border-radius: 16px;
+        background: rgba(14, 19, 23, 0.92);
+        color: #ffffff;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 12px 14px;
+        z-index: 16;
+      }
+
+      .auth-shell {
+        padding: 22px 18px 24px;
+        min-height: 826px;
+        display: grid;
+        align-content: space-between;
+      }
+
+      .auth-hero {
+        display: grid;
+        gap: 18px;
+      }
+
+      .auth-panel {
+        display: grid;
+        gap: 16px;
+      }
+
+      @media (max-width: 520px) {
+        .page {
+          padding: 0;
+        }
+
+        .device {
+          width: 100%;
+          border-radius: 0;
+          padding: 0;
+          background: transparent;
+          box-shadow: none;
+        }
+
+        .phone {
+          border-radius: 0;
+          min-height: 100vh;
+        }
+
+        .screen,
+        .auth-shell {
+          min-height: calc(100vh - 34px);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <div class="device">
+        <div class="phone">
+          <div class="statusbar">
+            <span>09:41</span>
+            <div class="dynamic-island"></div>
+            <span>5G</span>
+          </div>
+          <div id="app"></div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const STORAGE_KEY = "driveready-standard-prototype";
+      const VERSION = 1;
+      const app = document.getElementById("app");
+
+      const ui = {
+        toast: "",
+        toastTimer: null,
+      };
+
+      function addDays(days) {
+        const date = new Date();
+        date.setHours(12, 0, 0, 0);
+        date.setDate(date.getDate() + days);
+        return date.toISOString().slice(0, 10);
+      }
+
+      function baseState() {
+        return {
+          version: VERSION,
+          view: "app",
+          authMode: "signIn",
+          activeTab: "dashboard",
+          sheet: null,
+          modal: null,
+          filters: {
+            alerts: "open",
+            docs: "all",
+          },
+          searchAlerts: "",
+          selectedVehicleId: "veh-1",
+          user: {
+            firstName: "James",
+            lastName: "Harrington",
+            email: "james@driveready.uk",
+            phone: "07700 900123",
+            address: "14 Camden Mews, London NW1",
+            plan: "Premium Concierge",
+          },
+          permissions: {
+            notifications: "granted",
+            camera: "prompt",
+            files: "granted",
+            biometrics: "granted",
+          },
+          notificationSettings: {
+            mot: true,
+            tax: true,
+            insurance: true,
+            docs: true,
+            zones: true,
+          },
+          alertOverrides: {},
+          forms: {
+            auth: {
+              signInEmail: "james@driveready.uk",
+              signInPassword: "demo1234",
+              signUpFirstName: "James",
+              signUpLastName: "Harrington",
+              signUpEmail: "james@driveready.uk",
+              signUpPassword: "demo1234",
+              signUpConfirmPassword: "demo1234",
+              resetEmail: "james@driveready.uk",
+            },
+            addVehicle: {
+              plate: "",
+              nickname: "",
+              makeModel: "",
+              fuelType: "Petrol",
+            },
+            vehicleEdit: {
+              nickname: "",
+              makeModel: "",
+              mileage: "",
+              motDue: "",
+              taxDue: "",
+              insuranceDue: "",
+              notes: "",
+            },
+            upload: {
+              vehicleId: "veh-1",
+              title: "",
+              type: "Insurance Policy",
+              source: "files",
+              expiresAt: addDays(30),
+            },
+            documentEdit: {
+              title: "",
+              type: "",
+              expiresAt: "",
+            },
+            alertEdit: {
+              leadDays: "14",
+              muted: false,
+              resolved: false,
+            },
+            profile: {
+              firstName: "James",
+              lastName: "Harrington",
+              email: "james@driveready.uk",
+              phone: "07700 900123",
+              address: "14 Camden Mews, London NW1",
+            },
+            zoneAdd: {
+              name: "",
+              charge: "£10.00",
+              route: "",
+            },
+          },
+          errors: {},
+          vehicles: [
+            {
+              id: "veh-1",
+              nickname: "City Saloon",
+              makeModel: "Audi A4 Avant",
+              plate: "LM21 KPR",
+              fuelType: "Euro 6 Diesel",
+              mileage: 48210,
+              motDue: addDays(24),
+              taxDue: addDays(37),
+              insuranceDue: addDays(12),
+              notes: "Primary work vehicle for London travel.",
+              image:
+                "https://images.unsplash.com/photo-1553440569-bcc63803a83d?auto=format&fit=crop&w=1200&q=80",
+              history: [
+                { date: addDays(-40), title: "Interim service", note: "Oil, filters and safety check complete." },
+                { date: addDays(-163), title: "Brake inspection", note: "Front brake pads replaced." },
+              ],
+              zoneIds: ["zone-1", "zone-2"],
+            },
+            {
+              id: "veh-2",
+              nickname: "Family SUV",
+              makeModel: "Range Rover Evoque",
+              plate: "LR19 ABC",
+              fuelType: "Petrol Hybrid",
+              mileage: 61104,
+              motDue: addDays(-4),
+              taxDue: addDays(18),
+              insuranceDue: addDays(32),
+              notes: "Weekend trips and airport runs.",
+              image:
+                "https://images.unsplash.com/photo-1494976388531-d1058494cdd8?auto=format&fit=crop&w=1200&q=80",
+              history: [
+                { date: addDays(-31), title: "Tyre advisory", note: "Rear tyre wear noted during inspection." },
+                { date: addDays(-117), title: "Annual service", note: "Fluids, filters and diagnostics checked." },
+              ],
+              zoneIds: ["zone-2", "zone-3"],
+            },
+            {
+              id: "veh-3",
+              nickname: "Compact Runabout",
+              makeModel: "Mini Cooper S",
+              plate: "MK22 TYA",
+              fuelType: "Petrol",
+              mileage: 21054,
+              motDue: addDays(91),
+              taxDue: addDays(74),
+              insuranceDue: addDays(62),
+              notes: "Local use only.",
+              image:
+                "https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=1200&q=80",
+              history: [
+                { date: addDays(-21), title: "Valet and inspection", note: "No defects reported." },
+                { date: addDays(-149), title: "Service record uploaded", note: "Dealer PDF filed in the vault." },
+              ],
+              zoneIds: ["zone-1"],
+            },
+          ],
+          documents: [
+            {
+              id: "doc-1",
+              vehicleId: "veh-1",
+              title: "MOT Certificate",
+              type: "MOT Certificate",
+              format: "PDF",
+              uploadedAt: addDays(-71),
+              expiresAt: addDays(24),
+              source: "files",
+              preview: "Issued by London Test Centre. Minor advisory: tyre wear even and within tolerance.",
+            },
+            {
+              id: "doc-2",
+              vehicleId: "veh-1",
+              title: "Insurance Policy",
+              type: "Insurance Policy",
+              format: "PDF",
+              uploadedAt: addDays(-22),
+              expiresAt: addDays(12),
+              source: "files",
+              preview: "Comprehensive cover with roadside assistance and named drivers.",
+            },
+            {
+              id: "doc-3",
+              vehicleId: "veh-1",
+              title: "V5C Logbook",
+              type: "V5C Logbook",
+              format: "PDF",
+              uploadedAt: addDays(-321),
+              expiresAt: addDays(5),
+              source: "files",
+              preview: "Keeper address needs review before the next DVLA sync.",
+            },
+            {
+              id: "doc-4",
+              vehicleId: "veh-2",
+              title: "MOT Certificate",
+              type: "MOT Certificate",
+              format: "PDF",
+              uploadedAt: addDays(-410),
+              expiresAt: addDays(-4),
+              source: "files",
+              preview: "Certificate has expired. Vehicle needs a new MOT immediately.",
+            },
+          ],
+          zones: [
+            {
+              id: "zone-1",
+              name: "London ULEZ",
+              charge: "£12.50",
+              route: "Morning school route",
+              monitored: true,
+              compliant: true,
+              image:
+                "https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?auto=format&fit=crop&w=900&q=80",
+            },
+            {
+              id: "zone-2",
+              name: "Birmingham CAZ",
+              charge: "£8.00",
+              route: "Client visits",
+              monitored: true,
+              compliant: true,
+              image:
+                "https://images.unsplash.com/photo-1494526585095-c41746248156?auto=format&fit=crop&w=900&q=80",
+            },
+            {
+              id: "zone-3",
+              name: "Bristol CAZ",
+              charge: "£9.00",
+              route: "Weekend family trips",
+              monitored: true,
+              compliant: false,
+              image:
+                "https://images.unsplash.com/photo-1470004914212-05527e49370b?auto=format&fit=crop&w=900&q=80",
+            },
+          ],
+        };
+      }
+
+      function loadState() {
+        try {
+          const raw = localStorage.getItem(STORAGE_KEY);
+          if (!raw) return baseState();
+          const parsed = JSON.parse(raw);
+          if (!parsed || parsed.version !== VERSION) return baseState();
+          return parsed;
+        } catch {
+          return baseState();
+        }
+      }
+
+      let state = loadState();
+
+      function persist() {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      }
+
+      function escapeHtml(value) {
+        return String(value ?? "")
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#39;");
+      }
+
+      function formatDate(value) {
+        return new Intl.DateTimeFormat("en-GB", {
+          day: "numeric",
+          month: "short",
+          year: "numeric",
+        }).format(new Date(`${value}T12:00:00`));
+      }
+
+      function daysUntil(value) {
+        const now = new Date();
+        now.setHours(12, 0, 0, 0);
+        const target = new Date(`${value}T12:00:00`);
+        return Math.round((target - now) / 86400000);
+      }
+
+      function toneForDays(days) {
+        if (days < 0) return "danger";
+        if (days <= 14) return "warn";
+        return "good";
+      }
+
+      function selectedVehicle() {
+        return state.vehicles.find((vehicle) => vehicle.id === state.selectedVehicleId) || state.vehicles[0];
+      }
+
+      function getVehicle(vehicleId) {
+        return state.vehicles.find((vehicle) => vehicle.id === vehicleId);
+      }
+
+      function getDocument(documentId) {
+        return state.documents.find((document) => document.id === documentId);
+      }
+
+      function getZone(zoneId) {
+        return state.zones.find((zone) => zone.id === zoneId);
+      }
+
+      function vehicleHealth(vehicle) {
+        const insurance = daysUntil(vehicle.insuranceDue);
+        const mot = daysUntil(vehicle.motDue);
+        const tax = daysUntil(vehicle.taxDue);
+        const lowest = Math.min(insurance, mot, tax);
+        const tone = toneForDays(lowest);
+        const label =
+          lowest < 0 ? "Immediate action" : lowest <= 14 ? "Needs attention" : "Ready";
+        return { insurance, mot, tax, tone, label };
+      }
+
+      function documentStatus(document) {
+        const days = daysUntil(document.expiresAt);
+        return {
+          days,
+          tone: toneForDays(days),
+          label: days < 0 ? "Expired" : days <= 14 ? "Needs review" : "Current",
+        };
+      }
+
+      function alertDefaults(kind) {
+        const map = {
+          mot: { leadDays: 30, muted: false },
+          tax: { leadDays: 21, muted: false },
+          insurance: { leadDays: 14, muted: false },
+          document: { leadDays: 21, muted: false },
+          zone: { leadDays: 0, muted: false },
+        };
+        return map[kind] || { leadDays: 14, muted: false };
+      }
+
+      function buildAlerts() {
+        const alerts = [];
+        state.vehicles.forEach((vehicle) => {
+          [
+            ["insurance", vehicle.insuranceDue, "Insurance renewal", "Review policy and renew cover"],
+            ["mot", vehicle.motDue, "MOT check", "Book a garage slot or upload a new certificate"],
+            ["tax", vehicle.taxDue, "Vehicle tax", "Confirm payment or direct debit status"],
+          ].forEach(([kind, dueDate, title, detail]) => {
+            const days = daysUntil(dueDate);
+            const defaults = alertDefaults(kind);
+            const override = state.alertOverrides[`${vehicle.id}:${kind}`] || {};
+            const leadDays = override.leadDays ?? defaults.leadDays;
+            const muted = override.muted ?? defaults.muted;
+            const resolved = override.resolved ?? false;
+            if (days <= leadDays || days < 0 || resolved) {
+              alerts.push({
+                id: `${vehicle.id}:${kind}`,
+                kind,
+                title,
+                subtitle: `${vehicle.nickname} · ${vehicle.plate}`,
+                detail,
+                dueDate,
+                days,
+                tone: toneForDays(days),
+                leadDays,
+                muted,
+                resolved,
+                vehicleId: vehicle.id,
+              });
+            }
+          });
+        });
+
+        state.documents.forEach((document) => {
+          const days = daysUntil(document.expiresAt);
+          const defaults = alertDefaults("document");
+          const override = state.alertOverrides[`${document.id}:document`] || {};
+          const leadDays = override.leadDays ?? defaults.leadDays;
+          const muted = override.muted ?? defaults.muted;
+          const resolved = override.resolved ?? false;
+          if (days <= leadDays || days < 0 || resolved) {
+            alerts.push({
+              id: `${document.id}:document`,
+              kind: "document",
+              title: `${document.title} review`,
+              subtitle: `${getVehicle(document.vehicleId)?.nickname || "Vehicle"} · ${document.format}`,
+              detail: "Check the date, replace the file if needed, and keep the vault current",
+              dueDate: document.expiresAt,
+              days,
+              tone: toneForDays(days),
+              leadDays,
+              muted,
+              resolved,
+              vehicleId: document.vehicleId,
+              documentId: document.id,
+            });
+          }
+        });
+
+        state.zones
+          .filter((zone) => zone.monitored && !zone.compliant)
+          .forEach((zone) => {
+            const defaults = alertDefaults("zone");
+            const override = state.alertOverrides[`${zone.id}:zone`] || {};
+            alerts.push({
+              id: `${zone.id}:zone`,
+              kind: "zone",
+              title: `${zone.name} charge risk`,
+              subtitle: `${zone.charge} daily charge`,
+              detail: "Use a compliant vehicle or plan payment before travelling this route",
+              dueDate: addDays(0),
+              days: 0,
+              tone: "danger",
+              leadDays: override.leadDays ?? defaults.leadDays,
+              muted: override.muted ?? defaults.muted,
+              resolved: override.resolved ?? false,
+              zoneId: zone.id,
+            });
+          });
+
+        return alerts.sort((a, b) => {
+          if (a.resolved !== b.resolved) return a.resolved ? 1 : -1;
+          return a.days - b.days;
+        });
+      }
+
+      function openAlerts() {
+        const list = buildAlerts();
+        const searched = list.filter((alert) => {
+          if (!state.searchAlerts.trim()) return true;
+          return [alert.title, alert.subtitle, alert.detail]
+            .join(" ")
+            .toLowerCase()
+            .includes(state.searchAlerts.trim().toLowerCase());
+        });
+        if (state.filters.alerts === "handled") return searched.filter((alert) => alert.resolved);
+        return searched.filter((alert) => !alert.resolved);
+      }
+
+      function visibleDocuments() {
+        return state.documents.filter((document) => {
+          const status = documentStatus(document);
+          if (state.filters.docs === "current") return status.tone === "good";
+          if (state.filters.docs === "review") return status.tone !== "good";
+          return true;
+        });
+      }
+
+      function defaultSegment(type) {
+        return {
+          vehicle: "overview",
+          alert: "details",
+          document: "preview",
+          zones: "list",
+          support: "help",
+        }[type] || "main";
+      }
+
+      function prepareSheet(type, payload) {
+        if (type === "vehicle") {
+          const vehicle = getVehicle(payload.vehicleId);
+          if (!vehicle) return;
+          state.forms.vehicleEdit = {
+            nickname: vehicle.nickname,
+            makeModel: vehicle.makeModel,
+            mileage: String(vehicle.mileage),
+            motDue: vehicle.motDue,
+            taxDue: vehicle.taxDue,
+            insuranceDue: vehicle.insuranceDue,
+            notes: vehicle.notes,
+          };
+        }
+
+        if (type === "document") {
+          const document = getDocument(payload.documentId);
+          if (!document) return;
+          state.forms.documentEdit = {
+            title: document.title,
+            type: document.type,
+            expiresAt: document.expiresAt,
+          };
+        }
+
+        if (type === "alert") {
+          const alert = buildAlerts().find((item) => item.id === payload.alertId);
+          if (!alert) return;
+          state.forms.alertEdit = {
+            leadDays: String(alert.leadDays),
+            muted: Boolean(alert.muted),
+            resolved: Boolean(alert.resolved),
+          };
+        }
+
+        if (type === "profile") {
+          state.forms.profile = {
+            firstName: state.user.firstName,
+            lastName: state.user.lastName,
+            email: state.user.email,
+            phone: state.user.phone,
+            address: state.user.address,
+          };
+        }
+
+        if (type === "addVehicle") {
+          state.forms.addVehicle = {
+            plate: "",
+            nickname: "",
+            makeModel: "",
+            fuelType: "Petrol",
+          };
+        }
+
+        if (type === "upload") {
+          state.forms.upload = {
+            vehicleId: state.selectedVehicleId,
+            title: "",
+            type: "Insurance Policy",
+            source: "files",
+            expiresAt: addDays(30),
+          };
+        }
+      }
+
+      function openSheet(type, payload = {}, keepCurrent = false) {
+        const prev = keepCurrent && state.sheet ? { ...state.sheet } : null;
+        state.sheet = {
+          type,
+          payload,
+          segment: defaultSegment(type),
+          prev,
+        };
+        state.errors = {};
+        prepareSheet(type, payload);
+        persist();
+        render();
+      }
+
+      function closeSheet() {
+        if (state.sheet?.prev) {
+          state.sheet = state.sheet.prev;
+        } else {
+          state.sheet = null;
+        }
+        state.errors = {};
+        persist();
+        render();
+      }
+
+      function openModal(type, payload = {}) {
+        state.modal = { type, payload };
+        render();
+      }
+
+      function closeModal() {
+        state.modal = null;
+        render();
+      }
+
+      function showToast(message) {
+        ui.toast = message;
+        if (ui.toastTimer) clearTimeout(ui.toastTimer);
+        ui.toastTimer = setTimeout(() => {
+          ui.toast = "";
+          render();
+        }, 2200);
+        render();
+      }
+
+      function clearErrors() {
+        state.errors = {};
+      }
+
+      function fieldError(scope, key) {
+        return state.errors[scope]?.[key] || "";
+      }
+
+      function validateEmail(value) {
+        return /\S+@\S+\.\S+/.test(value);
+      }
+
+      function validatePlate(value) {
+        return /^[A-Z0-9 ]{5,8}$/.test(value.trim().toUpperCase());
+      }
+
+      function validateAuth() {
+        const errors = {};
+        const auth = state.forms.auth;
+        if (state.authMode === "signIn") {
+          if (!validateEmail(auth.signInEmail)) errors.signInEmail = "Enter a valid email.";
+          if (!auth.signInPassword || auth.signInPassword.length < 6) errors.signInPassword = "Use at least 6 characters.";
+        }
+        if (state.authMode === "signUp") {
+          if (!auth.signUpFirstName.trim()) errors.signUpFirstName = "Required.";
+          if (!auth.signUpLastName.trim()) errors.signUpLastName = "Required.";
+          if (!validateEmail(auth.signUpEmail)) errors.signUpEmail = "Enter a valid email.";
+          if (!auth.signUpPassword || auth.signUpPassword.length < 6) errors.signUpPassword = "Use at least 6 characters.";
+          if (auth.signUpPassword !== auth.signUpConfirmPassword) errors.signUpConfirmPassword = "Passwords must match.";
+        }
+        if (state.authMode === "reset") {
+          if (!validateEmail(auth.resetEmail)) errors.resetEmail = "Enter a valid email.";
+        }
+        state.errors.auth = errors;
+        return Object.keys(errors).length === 0;
+      }
+
+      function validateAddVehicle() {
+        const form = state.forms.addVehicle;
+        const errors = {};
+        if (!validatePlate(form.plate)) errors.plate = "Enter a valid UK plate.";
+        if (!form.nickname.trim()) errors.nickname = "Required.";
+        if (!form.makeModel.trim()) errors.makeModel = "Required.";
+        state.errors.addVehicle = errors;
+        return Object.keys(errors).length === 0;
+      }
+
+      function validateVehicleEdit() {
+        const form = state.forms.vehicleEdit;
+        const errors = {};
+        if (!form.nickname.trim()) errors.nickname = "Required.";
+        if (!form.makeModel.trim()) errors.makeModel = "Required.";
+        if (!form.mileage || Number(form.mileage) < 0) errors.mileage = "Enter a valid mileage.";
+        if (!form.motDue) errors.motDue = "Required.";
+        if (!form.taxDue) errors.taxDue = "Required.";
+        if (!form.insuranceDue) errors.insuranceDue = "Required.";
+        state.errors.vehicleEdit = errors;
+        return Object.keys(errors).length === 0;
+      }
+
+      function validateUpload() {
+        const form = state.forms.upload;
+        const errors = {};
+        if (!form.title.trim()) errors.title = "Required.";
+        if (!form.expiresAt) errors.expiresAt = "Required.";
+        if (form.source === "camera" && state.permissions.camera !== "granted") errors.source = "Camera access is required.";
+        if (form.source === "files" && state.permissions.files !== "granted") errors.source = "File access is required.";
+        state.errors.upload = errors;
+        return Object.keys(errors).length === 0;
+      }
+
+      function validateDocumentEdit() {
+        const form = state.forms.documentEdit;
+        const errors = {};
+        if (!form.title.trim()) errors.title = "Required.";
+        if (!form.expiresAt) errors.expiresAt = "Required.";
+        state.errors.documentEdit = errors;
+        return Object.keys(errors).length === 0;
+      }
+
+      function validateAlertEdit() {
+        const errors = {};
+        const leadDays = Number(state.forms.alertEdit.leadDays);
+        if (!Number.isFinite(leadDays) || leadDays < 0) errors.leadDays = "Enter 0 or more days.";
+        state.errors.alertEdit = errors;
+        return Object.keys(errors).length === 0;
+      }
+
+      function validateProfile() {
+        const form = state.forms.profile;
+        const errors = {};
+        if (!form.firstName.trim()) errors.firstName = "Required.";
+        if (!form.lastName.trim()) errors.lastName = "Required.";
+        if (!validateEmail(form.email)) errors.email = "Enter a valid email.";
+        if (!form.phone.trim()) errors.phone = "Required.";
+        if (!form.address.trim()) errors.address = "Required.";
+        state.errors.profile = errors;
+        return Object.keys(errors).length === 0;
+      }
+
+      function validateZoneAdd() {
+        const form = state.forms.zoneAdd;
+        const errors = {};
+        if (!form.name.trim()) errors.name = "Required.";
+        if (!form.charge.trim()) errors.charge = "Required.";
+        if (!form.route.trim()) errors.route = "Required.";
+        state.errors.zoneAdd = errors;
+        return Object.keys(errors).length === 0;
+      }
+
+      function submitAuth() {
+        clearErrors();
+        if (!validateAuth()) {
+          render();
+          return;
+        }
+
+        if (state.authMode === "signIn") {
+          state.user.email = state.forms.auth.signInEmail.trim();
+          state.view = "app";
+          state.activeTab = "dashboard";
+          showToast("Signed in");
+        }
+
+        if (state.authMode === "signUp") {
+          state.user.firstName = state.forms.auth.signUpFirstName.trim();
+          state.user.lastName = state.forms.auth.signUpLastName.trim();
+          state.user.email = state.forms.auth.signUpEmail.trim();
+          state.view = "app";
+          state.activeTab = "dashboard";
+          showToast("Account created");
+        }
+
+        if (state.authMode === "reset") {
+          state.authMode = "signIn";
+          showToast("Reset link sent");
+        }
+
+        persist();
+        render();
+      }
+
+      function addVehicle() {
+        clearErrors();
+        if (!validateAddVehicle()) {
+          render();
+          return;
+        }
+
+        const id = `veh-${Date.now()}`;
+        state.vehicles.unshift({
+          id,
+          nickname: state.forms.addVehicle.nickname.trim(),
+          makeModel: state.forms.addVehicle.makeModel.trim(),
+          plate: state.forms.addVehicle.plate.trim().toUpperCase(),
+          fuelType: state.forms.addVehicle.fuelType,
+          mileage: 0,
+          motDue: addDays(30),
+          taxDue: addDays(45),
+          insuranceDue: addDays(21),
+          notes: "Newly added vehicle.",
+          image:
+            "https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=1200&q=80",
+          history: [{ date: addDays(0), title: "Vehicle added", note: "Record created in the prototype." }],
+          zoneIds: ["zone-1"],
+        });
+        state.selectedVehicleId = id;
+        state.sheet = null;
+        persist();
+        showToast("Vehicle added");
+      }
+
+      function saveVehicle() {
+        clearErrors();
+        if (!validateVehicleEdit()) {
+          render();
+          return;
+        }
+
+        const vehicle = getVehicle(state.sheet.payload.vehicleId);
+        if (!vehicle) return;
+        Object.assign(vehicle, {
+          nickname: state.forms.vehicleEdit.nickname.trim(),
+          makeModel: state.forms.vehicleEdit.makeModel.trim(),
+          mileage: Number(state.forms.vehicleEdit.mileage),
+          motDue: state.forms.vehicleEdit.motDue,
+          taxDue: state.forms.vehicleEdit.taxDue,
+          insuranceDue: state.forms.vehicleEdit.insuranceDue,
+          notes: state.forms.vehicleEdit.notes.trim(),
+        });
+        persist();
+        showToast("Vehicle updated");
+      }
+
+      function saveDocument() {
+        clearErrors();
+        if (!validateDocumentEdit()) {
+          render();
+          return;
+        }
+
+        const document = getDocument(state.sheet.payload.documentId);
+        if (!document) return;
+        Object.assign(document, {
+          title: state.forms.documentEdit.title.trim(),
+          type: state.forms.documentEdit.type,
+          expiresAt: state.forms.documentEdit.expiresAt,
+        });
+        persist();
+        showToast("Document updated");
+      }
+
+      function uploadDocument() {
+        clearErrors();
+        if (!validateUpload()) {
+          render();
+          return;
+        }
+
+        const id = `doc-${Date.now()}`;
+        state.documents.unshift({
+          id,
+          vehicleId: state.forms.upload.vehicleId,
+          title: state.forms.upload.title.trim(),
+          type: state.forms.upload.type,
+          format: "PDF",
+          uploadedAt: addDays(0),
+          expiresAt: state.forms.upload.expiresAt,
+          source: state.forms.upload.source,
+          preview: `Imported via ${state.forms.upload.source === "camera" ? "camera scan" : "file picker"} in the standard prototype.`,
+        });
+        state.sheet = null;
+        persist();
+        showToast("Document stored");
+      }
+
+      function saveAlert() {
+        clearErrors();
+        if (!validateAlertEdit()) {
+          render();
+          return;
+        }
+        const alertId = state.sheet.payload.alertId;
+        state.alertOverrides[alertId] = {
+          leadDays: Number(state.forms.alertEdit.leadDays),
+          muted: Boolean(state.forms.alertEdit.muted),
+          resolved: Boolean(state.forms.alertEdit.resolved),
+        };
+        persist();
+        showToast("Reminder updated");
+      }
+
+      function saveProfile() {
+        clearErrors();
+        if (!validateProfile()) {
+          render();
+          return;
+        }
+        Object.assign(state.user, {
+          firstName: state.forms.profile.firstName.trim(),
+          lastName: state.forms.profile.lastName.trim(),
+          email: state.forms.profile.email.trim(),
+          phone: state.forms.profile.phone.trim(),
+          address: state.forms.profile.address.trim(),
+        });
+        persist();
+        showToast("Profile updated");
+      }
+
+      function addZone() {
+        clearErrors();
+        if (!validateZoneAdd()) {
+          render();
+          return;
+        }
+        state.zones.unshift({
+          id: `zone-${Date.now()}`,
+          name: state.forms.zoneAdd.name.trim(),
+          charge: state.forms.zoneAdd.charge.trim(),
+          route: state.forms.zoneAdd.route.trim(),
+          monitored: true,
+          compliant: true,
+          image:
+            "https://images.unsplash.com/photo-1515548217831-8c7d144ac6a3?auto=format&fit=crop&w=900&q=80",
+        });
+        state.forms.zoneAdd = { name: "", charge: "£10.00", route: "" };
+        persist();
+        showToast("Zone added");
+      }
+
+      function deleteVehicle() {
+        const vehicleId = state.modal.payload.vehicleId;
+        state.documents = state.documents.filter((document) => document.vehicleId !== vehicleId);
+        state.vehicles = state.vehicles.filter((vehicle) => vehicle.id !== vehicleId);
+        state.selectedVehicleId = state.vehicles[0]?.id || null;
+        state.modal = null;
+        state.sheet = null;
+        persist();
+        showToast("Vehicle removed");
+      }
+
+      function deleteDocument() {
+        const documentId = state.modal.payload.documentId;
+        state.documents = state.documents.filter((document) => document.id !== documentId);
+        state.modal = null;
+        state.sheet = null;
+        persist();
+        showToast("Document deleted");
+      }
+
+      function requestPermission(key) {
+        state.permissions[key] = "granted";
+        persist();
+        showToast(`${key.charAt(0).toUpperCase() + key.slice(1)} access granted`);
+      }
+
+      function signOut() {
+        state.view = "auth";
+        state.authMode = "signIn";
+        state.sheet = null;
+        state.modal = null;
+        persist();
+        render();
+      }
+
+      function renderTopBar() {
+        const config = {
+          dashboard: { title: "DriveReady", subtitle: selectedVehicle()?.nickname || "Garage", action: "open-zones", icon: "map" },
+          garage: { title: "Garage", subtitle: `${state.vehicles.length} vehicles`, action: "add-vehicle-sheet", icon: "add" },
+          alerts: { title: "Alerts", subtitle: `${openAlerts().length} open items`, action: "open-zones", icon: "map" },
+          docs: { title: "Docs", subtitle: `${visibleDocuments().length} files`, action: "upload-sheet", icon: "add" },
+          settings: { title: "Settings", subtitle: state.user.plan, action: "profile-sheet", icon: "person" },
+        }[state.activeTab];
+
+        return `
+          <div class="topbar">
+            <div class="brand">
+              <div class="avatar">
+                <img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=300&q=80" alt="" />
+              </div>
+              <div class="topcopy">
+                <strong>${escapeHtml(config.title)}</strong>
+                <span>${escapeHtml(config.subtitle)}</span>
+              </div>
+            </div>
+            <button class="icon-button" data-action="${escapeHtml(config.action)}">
+              <span class="material-symbols-outlined">${escapeHtml(config.icon)}</span>
+            </button>
+          </div>
+        `;
+      }
+
+      function badge(tone, label) {
+        return `<span class="pill ${escapeHtml(tone)}">${escapeHtml(label)}</span>`;
+      }
+
+      function statCard(value, label) {
+        return `<div class="stat"><strong>${escapeHtml(value)}</strong><span>${escapeHtml(label)}</span></div>`;
+      }
+
+      function dashboardTab() {
+        const vehicle = selectedVehicle();
+        const health = vehicleHealth(vehicle);
+        const actions = openAlerts().slice(0, 2);
+        const docs = state.documents.filter((document) => document.vehicleId === vehicle.id).slice(0, 2);
+
+        return `
+          <div class="body">
+            <div class="stack-xl">
+              <section class="hero">
+                <div class="hero-media"><img src="${escapeHtml(vehicle.image)}" alt="" /></div>
+                <div class="hero-copy">
+                  <div class="stack-sm">
+                    <div class="plate">${escapeHtml(vehicle.plate)}</div>
+                    <div>
+                      <h1 class="display">${escapeHtml(vehicle.nickname)}</h1>
+                      <p class="muted" style="color:rgba(255,255,255,0.78)">${escapeHtml(vehicle.makeModel)} · ${escapeHtml(vehicle.fuelType)}</p>
+                    </div>
+                  </div>
+                  <div class="row" style="justify-content:space-between">
+                    ${badge(health.tone, health.label)}
+                    <button class="text-button" data-open-vehicle="${escapeHtml(vehicle.id)}" style="color:#fff">View details</button>
+                  </div>
+                </div>
+              </section>
+
+              <section class="grid-3">
+                ${statCard(`${Math.abs(health.insurance)}`, health.insurance < 0 ? "Insurance overdue" : "Insurance days")}
+                ${statCard(`${Math.abs(health.mot)}`, health.mot < 0 ? "MOT overdue" : "MOT days")}
+                ${statCard(`${Math.abs(health.tax)}`, health.tax < 0 ? "Tax overdue" : "Tax days")}
+              </section>
+
+              <section class="stack-md">
+                <div class="section-head">
+                  <h3>Next actions</h3>
+                  <button class="text-button" data-tab="alerts">Open all</button>
+                </div>
+                <div class="list">
+                  ${
+                    actions.length
+                      ? actions
+                          .map(
+                            (alert) => `
+                              <button class="list-item" data-open-alert="${escapeHtml(alert.id)}" type="button">
+                                <div class="row" style="justify-content:space-between">
+                                  ${badge(alert.tone, alert.title)}
+                                  <span class="meta">${escapeHtml(formatDate(alert.dueDate))}</span>
+                                </div>
+                                <div class="item-copy">
+                                  <strong>${escapeHtml(alert.subtitle)}</strong>
+                                  <span>${escapeHtml(alert.detail)}</span>
+                                </div>
+                              </button>
+                            `
+                          )
+                          .join("")
+                      : `<div class="card"><p class="muted">Everything is currently handled.</p></div>`
+                  }
+                </div>
+              </section>
+
+              <section class="quick-grid">
+                <button class="quick-button" data-action="open-zones">
+                  <div class="icon-badge"><span class="material-symbols-outlined">map</span></div>
+                  <strong>Manage zones</strong>
+                </button>
+                <button class="quick-button" data-action="upload-sheet">
+                  <div class="icon-badge"><span class="material-symbols-outlined">upload_file</span></div>
+                  <strong>Upload doc</strong>
+                </button>
+                <button class="quick-button" data-action="add-vehicle-sheet">
+                  <div class="icon-badge"><span class="material-symbols-outlined">directions_car</span></div>
+                  <strong>Add vehicle</strong>
+                </button>
+              </section>
+
+              <section class="stack-md">
+                <div class="section-head">
+                  <h3>Recent documents</h3>
+                  <button class="text-button" data-tab="docs">Vault</button>
+                </div>
+                ${docs
+                  .map((document) => {
+                    const status = documentStatus(document);
+                    return `
+                      <button class="compact-item" data-open-document="${escapeHtml(document.id)}" type="button">
+                        <div class="compact-main">
+                          <strong>${escapeHtml(document.title)}</strong>
+                          <span>${escapeHtml(document.type)} · ${escapeHtml(formatDate(document.expiresAt))}</span>
+                        </div>
+                        ${badge(status.tone, status.label)}
+                      </button>
+                    `;
+                  })
+                  .join("")}
+              </section>
+            </div>
+          </div>
+        `;
+      }
+
+      function garageTab() {
+        return `
+          <div class="body">
+            <div class="stack-xl">
+              <section class="list">
+                ${state.vehicles
+                  .map((vehicle) => {
+                    const health = vehicleHealth(vehicle);
+                    return `
+                      <button class="list-item" data-open-vehicle="${escapeHtml(vehicle.id)}" type="button">
+                        <div class="row">
+                          <div class="vehicle-thumb"><img src="${escapeHtml(vehicle.image)}" alt="" /></div>
+                          <div class="item-copy" style="flex:1">
+                            <strong>${escapeHtml(vehicle.nickname)}</strong>
+                            <span>${escapeHtml(vehicle.makeModel)} · ${escapeHtml(vehicle.plate)}</span>
+                          </div>
+                          ${badge(health.tone, health.label)}
+                        </div>
+                        <div class="row" style="justify-content:space-between">
+                          <span class="meta">MOT ${escapeHtml(formatDate(vehicle.motDue))}</span>
+                          <span class="meta">${escapeHtml(vehicle.mileage.toLocaleString())} mi</span>
+                        </div>
+                      </button>
+                    `;
+                  })
+                  .join("")}
+              </section>
+              <button class="secondary-button" data-action="add-vehicle-sheet">Add another vehicle</button>
+            </div>
+          </div>
+        `;
+      }
+
+      function alertsTab() {
+        return `
+          <div class="body">
+            <div class="stack-xl">
+              <label class="search">
+                <span class="material-symbols-outlined">search</span>
+                <input type="text" data-field="searchAlerts" value="${escapeHtml(state.searchAlerts)}" placeholder="Search alerts" />
+              </label>
+              <div class="segmented">
+                <button class="segment ${state.filters.alerts === "open" ? "active" : ""}" data-alert-filter="open">Open</button>
+                <button class="segment ${state.filters.alerts === "handled" ? "active" : ""}" data-alert-filter="handled">Handled</button>
+              </div>
+              <div class="list">
+                ${
+                  openAlerts().length
+                    ? openAlerts()
+                        .map(
+                          (alert) => `
+                            <button class="list-item" data-open-alert="${escapeHtml(alert.id)}" type="button">
+                              <div class="row" style="justify-content:space-between">
+                                ${badge(alert.tone, alert.title)}
+                                <span class="meta">${escapeHtml(formatDate(alert.dueDate))}</span>
+                              </div>
+                              <div class="item-copy">
+                                <strong>${escapeHtml(alert.subtitle)}</strong>
+                                <span>${escapeHtml(alert.detail)}</span>
+                              </div>
+                              <div class="row" style="justify-content:space-between">
+                                <span class="meta">Lead time ${escapeHtml(String(alert.leadDays))} days</span>
+                                ${alert.muted ? badge("neutral", "Muted") : ""}
+                              </div>
+                            </button>
+                          `
+                        )
+                        .join("")
+                    : `<div class="card"><p class="muted">No alerts match the current filter.</p></div>`
+                }
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      function docsTab() {
+        return `
+          <div class="body">
+            <div class="stack-xl">
+              <div class="segmented">
+                <button class="segment ${state.filters.docs === "all" ? "active" : ""}" data-doc-filter="all">All</button>
+                <button class="segment ${state.filters.docs === "current" ? "active" : ""}" data-doc-filter="current">Current</button>
+                <button class="segment ${state.filters.docs === "review" ? "active" : ""}" data-doc-filter="review">Needs review</button>
+              </div>
+              <div class="list">
+                ${visibleDocuments()
+                  .map((document) => {
+                    const status = documentStatus(document);
+                    const vehicle = getVehicle(document.vehicleId);
+                    return `
+                      <button class="list-item" data-open-document="${escapeHtml(document.id)}" type="button">
+                        <div class="row" style="justify-content:space-between">
+                          ${badge(status.tone, status.label)}
+                          <span class="meta">${escapeHtml(document.format)}</span>
+                        </div>
+                        <div class="item-copy">
+                          <strong>${escapeHtml(document.title)}</strong>
+                          <span>${escapeHtml(vehicle ? vehicle.nickname : "Vehicle")} · ${escapeHtml(formatDate(document.expiresAt))}</span>
+                        </div>
+                      </button>
+                    `;
+                  })
+                  .join("")}
+              </div>
+              <button class="secondary-button" data-action="upload-sheet">Upload document</button>
+            </div>
+          </div>
+        `;
+      }
+
+      function settingsTab() {
+        return `
+          <div class="body">
+            <div class="stack-xl">
+              <button class="settings-row" data-action="profile-sheet" type="button">
+                <div class="row">
+                  <div class="avatar">
+                    <img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=300&q=80" alt="" />
+                  </div>
+                  <div class="item-copy">
+                    <strong>${escapeHtml(state.user.firstName)} ${escapeHtml(state.user.lastName)}</strong>
+                    <span>${escapeHtml(state.user.email)}</span>
+                  </div>
+                </div>
+                <span class="material-symbols-outlined">chevron_right</span>
+              </button>
+
+              <section class="stack-md">
+                <div class="section-head"><h3>Notifications</h3></div>
+                ${toggleItem("mot", "MOT alerts")}
+                ${toggleItem("tax", "Tax reminders")}
+                ${toggleItem("insurance", "Insurance reminders")}
+                ${toggleItem("docs", "Document reviews")}
+                ${toggleItem("zones", "Zone monitoring")}
+              </section>
+
+              <section class="stack-md">
+                <div class="section-head"><h3>Permissions</h3></div>
+                ${permissionItem("notifications", "Notifications")}
+                ${permissionItem("camera", "Camera")}
+                ${permissionItem("files", "Files")}
+                ${permissionItem("biometrics", "Biometrics")}
+              </section>
+
+              <section class="stack-md">
+                <button class="settings-row" data-action="support-sheet" type="button">
+                  <div class="item-copy">
+                    <strong>Support & legal</strong>
+                    <span>Help, contact, terms and privacy.</span>
+                  </div>
+                  <span class="material-symbols-outlined">chevron_right</span>
+                </button>
+                <button class="danger-button" data-action="confirm-sign-out">Sign out</button>
+              </section>
+            </div>
+          </div>
+        `;
+      }
+
+      function toggleItem(key, label) {
+        return `
+          <button class="toggle-row" data-toggle-notification="${escapeHtml(key)}" type="button">
+            <div class="item-copy">
+              <strong>${escapeHtml(label)}</strong>
+              <span>${state.notificationSettings[key] ? "Enabled" : "Disabled"}</span>
+            </div>
+            <div class="toggle ${state.notificationSettings[key] ? "on" : ""}"></div>
+          </button>
+        `;
+      }
+
+      function permissionItem(key, label) {
+        return `
+          <button class="settings-row" data-request-permission="${escapeHtml(key)}" type="button">
+            <div class="item-copy">
+              <strong>${escapeHtml(label)}</strong>
+              <span>Current status: ${escapeHtml(state.permissions[key])}</span>
+            </div>
+            ${badge(state.permissions[key] === "granted" ? "good" : "warn", state.permissions[key])}
+          </button>
+        `;
+      }
+
+      function renderBottomNav() {
+        const alertsCount = openAlerts().length;
+        return `
+          <div class="bottom-nav">
+            ${[
+              ["dashboard", "dashboard", "Home"],
+              ["garage", "directions_car", "Garage"],
+              ["alerts", "notifications_active", "Alerts"],
+              ["docs", "description", "Docs"],
+              ["settings", "settings", "Settings"],
+            ]
+              .map(
+                ([tab, icon, label]) => `
+                  <button class="tab ${state.activeTab === tab ? "active" : ""}" data-tab="${escapeHtml(tab)}" type="button">
+                    <span class="material-symbols-outlined">${escapeHtml(icon)}</span>
+                    ${tab === "alerts" && alertsCount ? '<span class="tab-dot"></span>' : ""}
+                    <small>${escapeHtml(label)}</small>
+                  </button>
+                `
+              )
+              .join("")}
+          </div>
+        `;
+      }
+
+      function inputField(scope, field, label, type, value) {
+        const error = fieldError(scope, field);
+        return `
+          <div class="field ${error ? "error" : ""}">
+            <label>${escapeHtml(label)}</label>
+            <input type="${escapeHtml(type)}" data-scope="${escapeHtml(scope)}" data-form-field="${escapeHtml(field)}" value="${escapeHtml(value)}" />
+            ${error ? `<div class="error-copy">${escapeHtml(error)}</div>` : ""}
+          </div>
+        `;
+      }
+
+      function selectField(scope, field, label, options, value) {
+        const error = fieldError(scope, field);
+        const normalized = options.map((option) => (Array.isArray(option) ? option : [option, option]));
+        return `
+          <div class="field ${error ? "error" : ""}">
+            <label>${escapeHtml(label)}</label>
+            <select data-scope="${escapeHtml(scope)}" data-form-field="${escapeHtml(field)}">
+              ${normalized
+                .map(
+                  ([optionValue, optionLabel]) =>
+                    `<option value="${escapeHtml(optionValue)}" ${optionValue === value ? "selected" : ""}>${escapeHtml(optionLabel)}</option>`
+                )
+                .join("")}
+            </select>
+            ${error ? `<div class="error-copy">${escapeHtml(error)}</div>` : ""}
+          </div>
+        `;
+      }
+
+      function textareaField(scope, field, label, value) {
+        const error = fieldError(scope, field);
+        return `
+          <div class="field ${error ? "error" : ""}">
+            <label>${escapeHtml(label)}</label>
+            <textarea data-scope="${escapeHtml(scope)}" data-form-field="${escapeHtml(field)}">${escapeHtml(value)}</textarea>
+            ${error ? `<div class="error-copy">${escapeHtml(error)}</div>` : ""}
+          </div>
+        `;
+      }
+
+      function renderVehicleSheet() {
+        const vehicle = getVehicle(state.sheet.payload.vehicleId);
+        if (!vehicle) return "";
+        const health = vehicleHealth(vehicle);
+        const docs = state.documents.filter((document) => document.vehicleId === vehicle.id).slice(0, 2);
+        const zones = state.zones.filter((zone) => vehicle.zoneIds.includes(zone.id));
+        return `
+          ${sheetChrome(vehicle.nickname, vehicle.makeModel, `
+            <div class="segmented">
+              <button class="segment ${state.sheet.segment === "overview" ? "active" : ""}" data-sheet-segment="overview">Overview</button>
+              <button class="segment ${state.sheet.segment === "history" ? "active" : ""}" data-sheet-segment="history">History</button>
+              <button class="segment ${state.sheet.segment === "edit" ? "active" : ""}" data-sheet-segment="edit">Edit</button>
+            </div>
+          `)}
+          <div class="sheet-body">
+            ${
+              state.sheet.segment === "overview"
+                ? `
+                  <div class="stack-lg">
+                    <div class="hero" style="min-height:180px">
+                      <div class="hero-media"><img src="${escapeHtml(vehicle.image)}" alt="" /></div>
+                      <div class="hero-copy">
+                        <div class="plate">${escapeHtml(vehicle.plate)}</div>
+                        <div class="row" style="justify-content:space-between">
+                          ${badge(health.tone, health.label)}
+                          <span class="meta" style="color:rgba(255,255,255,0.8)">${escapeHtml(vehicle.mileage.toLocaleString())} mi</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="grid-3">
+                      ${statCard(`${Math.abs(health.insurance)}`, health.insurance < 0 ? "Insurance overdue" : "Insurance days")}
+                      ${statCard(`${Math.abs(health.mot)}`, health.mot < 0 ? "MOT overdue" : "MOT days")}
+                      ${statCard(`${Math.abs(health.tax)}`, health.tax < 0 ? "Tax overdue" : "Tax days")}
+                    </div>
+                    <div class="card">
+                      <p class="eyebrow">Notes</p>
+                      <p class="muted">${escapeHtml(vehicle.notes)}</p>
+                    </div>
+                    <div class="stack-md">
+                      <div class="section-head"><h3>Linked docs</h3></div>
+                      ${docs
+                        .map(
+                          (document) => `
+                            <button class="compact-item" data-open-document="${escapeHtml(document.id)}" type="button">
+                              <div class="compact-main">
+                                <strong>${escapeHtml(document.title)}</strong>
+                                <span>${escapeHtml(formatDate(document.expiresAt))}</span>
+                              </div>
+                              <span class="material-symbols-outlined">chevron_right</span>
+                            </button>
+                          `
+                        )
+                        .join("")}
+                    </div>
+                    <div class="stack-md">
+                      <div class="section-head"><h3>Saved zones</h3></div>
+                      ${zones
+                        .map(
+                          (zone) => `
+                            <div class="compact-item">
+                              <div class="compact-main">
+                                <strong>${escapeHtml(zone.name)}</strong>
+                                <span>${escapeHtml(zone.route)}</span>
+                              </div>
+                              ${badge(zone.compliant ? "good" : "danger", zone.compliant ? "Compliant" : "Charge risk")}
+                            </div>
+                          `
+                        )
+                        .join("")}
+                    </div>
+                  </div>
+                `
+                : state.sheet.segment === "history"
+                  ? `
+                    <div class="timeline">
+                      ${vehicle.history
+                        .map(
+                          (item) => `
+                            <div class="timeline-item">
+                              <strong>${escapeHtml(item.title)}</strong>
+                              <span>${escapeHtml(formatDate(item.date))} · ${escapeHtml(item.note)}</span>
+                            </div>
+                          `
+                        )
+                        .join("")}
+                    </div>
+                  `
+                  : `
+                    <div class="stack-lg">
+                      ${inputField("vehicleEdit", "nickname", "Nickname", "text", state.forms.vehicleEdit.nickname)}
+                      ${inputField("vehicleEdit", "makeModel", "Make and model", "text", state.forms.vehicleEdit.makeModel)}
+                      ${inputField("vehicleEdit", "mileage", "Mileage", "number", state.forms.vehicleEdit.mileage)}
+                      ${inputField("vehicleEdit", "motDue", "MOT due", "date", state.forms.vehicleEdit.motDue)}
+                      ${inputField("vehicleEdit", "taxDue", "Tax due", "date", state.forms.vehicleEdit.taxDue)}
+                      ${inputField("vehicleEdit", "insuranceDue", "Insurance due", "date", state.forms.vehicleEdit.insuranceDue)}
+                      ${textareaField("vehicleEdit", "notes", "Notes", state.forms.vehicleEdit.notes)}
+                      <button class="primary-button" data-action="save-vehicle">Save changes</button>
+                      <button class="danger-button" data-action="delete-vehicle-modal">Remove vehicle</button>
+                    </div>
+                  `
+            }
+          </div>
+        `;
+      }
+
+      function renderAlertSheet() {
+        const alert = buildAlerts().find((item) => item.id === state.sheet.payload.alertId);
+        if (!alert) return "";
+        return `
+          ${sheetChrome(alert.title, alert.subtitle, `
+            <div class="segmented">
+              <button class="segment ${state.sheet.segment === "details" ? "active" : ""}" data-sheet-segment="details">Details</button>
+              <button class="segment ${state.sheet.segment === "reminder" ? "active" : ""}" data-sheet-segment="reminder">Reminder</button>
+            </div>
+          `)}
+          <div class="sheet-body">
+            ${
+              state.sheet.segment === "details"
+                ? `
+                  <div class="stack-lg">
+                    <div class="card stack-md">
+                      ${badge(alert.tone, alert.title)}
+                      <p class="muted">${escapeHtml(alert.detail)}</p>
+                      <div class="meta">Due ${escapeHtml(formatDate(alert.dueDate))}</div>
+                    </div>
+                    <div class="stack-md">
+                      ${
+                        alert.vehicleId
+                          ? `<button class="secondary-button" data-open-vehicle="${escapeHtml(alert.vehicleId)}">Open vehicle</button>`
+                          : ""
+                      }
+                      ${
+                        alert.documentId
+                          ? `<button class="secondary-button" data-open-document="${escapeHtml(alert.documentId)}">Open document</button>`
+                          : ""
+                      }
+                      ${
+                        alert.zoneId
+                          ? `<button class="secondary-button" data-action="open-zones">Open zones</button>`
+                          : ""
+                      }
+                    </div>
+                  </div>
+                `
+                : `
+                  <div class="stack-lg">
+                    ${inputField("alertEdit", "leadDays", "Lead time (days)", "number", state.forms.alertEdit.leadDays)}
+                    <button class="toggle-row" data-action="toggle-alert-muted" type="button">
+                      <div class="item-copy">
+                        <strong>Mute reminder</strong>
+                        <span>Hide alerts without deleting the entry.</span>
+                      </div>
+                      <div class="toggle ${state.forms.alertEdit.muted ? "on" : ""}"></div>
+                    </button>
+                    <button class="toggle-row" data-action="toggle-alert-resolved" type="button">
+                      <div class="item-copy">
+                        <strong>Mark handled</strong>
+                        <span>Move this item out of the open queue.</span>
+                      </div>
+                      <div class="toggle ${state.forms.alertEdit.resolved ? "on" : ""}"></div>
+                    </button>
+                    <button class="primary-button" data-action="save-alert">Save reminder</button>
+                  </div>
+                `
+            }
+          </div>
+        `;
+      }
+
+      function renderDocumentSheet() {
+        const document = getDocument(state.sheet.payload.documentId);
+        if (!document) return "";
+        const status = documentStatus(document);
+        return `
+          ${sheetChrome(document.title, getVehicle(document.vehicleId)?.nickname || "Document", `
+            <div class="segmented">
+              <button class="segment ${state.sheet.segment === "preview" ? "active" : ""}" data-sheet-segment="preview">Preview</button>
+              <button class="segment ${state.sheet.segment === "edit" ? "active" : ""}" data-sheet-segment="edit">Edit</button>
+            </div>
+          `)}
+          <div class="sheet-body">
+            ${
+              state.sheet.segment === "preview"
+                ? `
+                  <div class="stack-lg">
+                    <div class="card stack-md">
+                      ${badge(status.tone, status.label)}
+                      <p class="muted">${escapeHtml(document.preview)}</p>
+                      <div class="meta">Uploaded ${escapeHtml(formatDate(document.uploadedAt))} · Expires ${escapeHtml(formatDate(document.expiresAt))}</div>
+                    </div>
+                    <button class="secondary-button" data-action="replace-document">Replace file</button>
+                    <button class="secondary-button" data-action="share-document">Share document</button>
+                  </div>
+                `
+                : `
+                  <div class="stack-lg">
+                    ${inputField("documentEdit", "title", "Title", "text", state.forms.documentEdit.title)}
+                    ${selectField("documentEdit", "type", "Type", ["Insurance Policy", "MOT Certificate", "V5C Logbook", "Service Invoice"], state.forms.documentEdit.type)}
+                    ${inputField("documentEdit", "expiresAt", "Expiry / review date", "date", state.forms.documentEdit.expiresAt)}
+                    <button class="primary-button" data-action="save-document">Save changes</button>
+                    <button class="danger-button" data-action="delete-document-modal">Delete document</button>
+                  </div>
+                `
+            }
+          </div>
+        `;
+      }
+
+      function renderZonesSheet() {
+        return `
+          ${sheetChrome("Saved zones", "Monitoring and charge checks", `
+            <div class="segmented">
+              <button class="segment ${state.sheet.segment === "list" ? "active" : ""}" data-sheet-segment="list">List</button>
+              <button class="segment ${state.sheet.segment === "add" ? "active" : ""}" data-sheet-segment="add">Add</button>
+            </div>
+          `)}
+          <div class="sheet-body">
+            ${
+              state.sheet.segment === "list"
+                ? `
+                  <div class="stack-lg">
+                    ${state.zones
+                      .map(
+                        (zone) => `
+                          <div class="compact-item">
+                            <div class="row">
+                              <div class="zone-thumb"><img src="${escapeHtml(zone.image)}" alt="" /></div>
+                              <div class="compact-main">
+                                <strong>${escapeHtml(zone.name)}</strong>
+                                <span>${escapeHtml(zone.route)} · ${escapeHtml(zone.charge)}</span>
+                              </div>
+                            </div>
+                            <button class="ghost-chip" data-toggle-zone="${escapeHtml(zone.id)}">${zone.monitored ? "Monitoring" : "Paused"}</button>
+                          </div>
+                        `
+                      )
+                      .join("")}
+                  </div>
+                `
+                : `
+                  <div class="stack-lg">
+                    ${inputField("zoneAdd", "name", "Zone name", "text", state.forms.zoneAdd.name)}
+                    ${inputField("zoneAdd", "charge", "Daily charge", "text", state.forms.zoneAdd.charge)}
+                    ${inputField("zoneAdd", "route", "Typical route", "text", state.forms.zoneAdd.route)}
+                    <button class="primary-button" data-action="add-zone">Add zone</button>
+                  </div>
+                `
+            }
+          </div>
+        `;
+      }
+
+      function renderProfileSheet() {
+        return `
+          ${sheetChrome("Profile", "Account details")}
+          <div class="sheet-body">
+            <div class="stack-lg">
+              ${inputField("profile", "firstName", "First name", "text", state.forms.profile.firstName)}
+              ${inputField("profile", "lastName", "Last name", "text", state.forms.profile.lastName)}
+              ${inputField("profile", "email", "Email", "email", state.forms.profile.email)}
+              ${inputField("profile", "phone", "Phone", "tel", state.forms.profile.phone)}
+              ${textareaField("profile", "address", "Address", state.forms.profile.address)}
+              <button class="primary-button" data-action="save-profile">Save profile</button>
+            </div>
+          </div>
+        `;
+      }
+
+      function renderSupportSheet() {
+        return `
+          ${sheetChrome("Support & legal", "Help, privacy and terms", `
+            <div class="segmented">
+              <button class="segment ${state.sheet.segment === "help" ? "active" : ""}" data-sheet-segment="help">Help</button>
+              <button class="segment ${state.sheet.segment === "legal" ? "active" : ""}" data-sheet-segment="legal">Legal</button>
+            </div>
+          `)}
+          <div class="sheet-body">
+            ${
+              state.sheet.segment === "help"
+                ? `
+                  <div class="stack-lg">
+                    <div class="card">
+                      <p class="eyebrow">Help centre</p>
+                      <p class="muted">Contact support, get upload guidance, or understand reminders and charge checks.</p>
+                    </div>
+                    <button class="secondary-button" data-action="support-email">Contact support</button>
+                    <button class="secondary-button" data-action="support-help">Open help centre</button>
+                    <button class="secondary-button" data-action="support-export">Export my data</button>
+                  </div>
+                `
+                : `
+                  <div class="stack-lg">
+                    <div class="card"><p class="eyebrow">Terms</p><p class="muted">This demo stores state locally and simulates upload, sharing and reminder operations.</p></div>
+                    <div class="card"><p class="eyebrow">Privacy</p><p class="muted">Permissions for notifications, camera, files and biometrics are modelled explicitly for the prototype.</p></div>
+                  </div>
+                `
+            }
+          </div>
+        `;
+      }
+
+      function renderAddVehicleSheet() {
+        return `
+          ${sheetChrome("Add vehicle", "Create a new record")}
+          <div class="sheet-body">
+            <div class="stack-lg">
+              <div class="field ${fieldError("addVehicle", "plate") ? "error" : ""}">
+                <label>Registration plate</label>
+                <div class="plate-input-wrap">
+                  <input class="plate-input" data-scope="addVehicle" data-form-field="plate" value="${escapeHtml(state.forms.addVehicle.plate)}" />
+                </div>
+                ${fieldError("addVehicle", "plate") ? `<div class="error-copy">${escapeHtml(fieldError("addVehicle", "plate"))}</div>` : ""}
+              </div>
+              ${inputField("addVehicle", "nickname", "Nickname", "text", state.forms.addVehicle.nickname)}
+              ${inputField("addVehicle", "makeModel", "Make and model", "text", state.forms.addVehicle.makeModel)}
+              ${selectField("addVehicle", "fuelType", "Fuel type", ["Petrol", "Diesel", "Euro 6 Diesel", "Petrol Hybrid", "Electric"], state.forms.addVehicle.fuelType)}
+              <button class="primary-button" data-action="save-add-vehicle">Add vehicle</button>
+            </div>
+          </div>
+        `;
+      }
+
+      function renderUploadSheet() {
+        return `
+          ${sheetChrome("Upload document", "Scan or import")}
+          <div class="sheet-body">
+            <div class="stack-lg">
+              ${selectField(
+                "upload",
+                "vehicleId",
+                "Vehicle",
+                state.vehicles.map((vehicle) => [vehicle.id, `${vehicle.nickname} · ${vehicle.plate}`]),
+                state.forms.upload.vehicleId
+              )}
+              ${inputField("upload", "title", "Document title", "text", state.forms.upload.title)}
+              ${selectField("upload", "type", "Type", ["Insurance Policy", "MOT Certificate", "V5C Logbook", "Service Invoice"], state.forms.upload.type)}
+              ${inputField("upload", "expiresAt", "Expiry / review date", "date", state.forms.upload.expiresAt)}
+              <div class="field ${fieldError("upload", "source") ? "error" : ""}">
+                <label>Source</label>
+                <div class="segmented">
+                  <button class="segment ${state.forms.upload.source === "files" ? "active" : ""}" data-upload-source="files">Files</button>
+                  <button class="segment ${state.forms.upload.source === "camera" ? "active" : ""}" data-upload-source="camera">Camera</button>
+                </div>
+                ${fieldError("upload", "source") ? `<div class="error-copy">${escapeHtml(fieldError("upload", "source"))}</div>` : ""}
+              </div>
+              <div class="card">
+                <p class="muted">Files: ${escapeHtml(state.permissions.files)} · Camera: ${escapeHtml(state.permissions.camera)}</p>
+              </div>
+              <button class="primary-button" data-action="save-upload">Save document</button>
+            </div>
+          </div>
+        `;
+      }
+
+      function sheetChrome(title, subtitle, extra = "") {
+        return `
+          <div class="sheet-head">
+            <div class="sheet-grabber"></div>
+            <div class="sheet-top">
+              <div class="sheet-title">
+                <strong>${escapeHtml(title)}</strong>
+                <span>${escapeHtml(subtitle || "")}</span>
+              </div>
+              <button class="icon-button" data-action="close-sheet"><span class="material-symbols-outlined">close</span></button>
+            </div>
+            ${extra}
+          </div>
+        `;
+      }
+
+      function renderSheet() {
+        if (!state.sheet) return "";
+        const content = {
+          vehicle: renderVehicleSheet,
+          alert: renderAlertSheet,
+          document: renderDocumentSheet,
+          zones: renderZonesSheet,
+          profile: renderProfileSheet,
+          support: renderSupportSheet,
+          addVehicle: renderAddVehicleSheet,
+          upload: renderUploadSheet,
+        }[state.sheet.type];
+
+        return `
+          <div class="sheet-scrim" data-overlay-close="sheet">
+            <div class="sheet" data-stop-click="true">
+              ${content ? content() : ""}
+            </div>
+          </div>
+        `;
+      }
+
+      function renderModal() {
+        if (!state.modal) return "";
+        const config = {
+          deleteVehicle: {
+            title: "Remove vehicle?",
+            body: "This also removes the linked documents in the prototype.",
+            confirm: "confirm-delete-vehicle",
+          },
+          deleteDocument: {
+            title: "Delete document?",
+            body: "This removes the selected vault item.",
+            confirm: "confirm-delete-document",
+          },
+          signOut: {
+            title: "Sign out?",
+            body: "You can return to the standard sign-in screen.",
+            confirm: "confirm-sign-out-now",
+          },
+        }[state.modal.type];
+
+        return `
+          <div class="modal-scrim" data-overlay-close="modal">
+            <div class="modal" data-stop-click="true">
+              <div class="stack-lg">
+                <div>
+                  <h3 class="headline">${escapeHtml(config.title)}</h3>
+                  <p class="muted">${escapeHtml(config.body)}</p>
+                </div>
+                <button class="danger-button" data-action="${escapeHtml(config.confirm)}">Continue</button>
+                <button class="secondary-button" data-action="close-modal">Cancel</button>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      function renderToast() {
+        if (!ui.toast) return "";
+        return `
+          <div class="toast">
+            <span>${escapeHtml(ui.toast)}</span>
+            <button data-action="dismiss-toast"><span class="material-symbols-outlined">close</span></button>
+          </div>
+        `;
+      }
+
+      function renderAppView() {
+        const content = {
+          dashboard: dashboardTab,
+          garage: garageTab,
+          alerts: alertsTab,
+          docs: docsTab,
+          settings: settingsTab,
+        }[state.activeTab]();
+
+        return `
+          <div class="screen">
+            ${renderTopBar()}
+            ${content}
+            ${renderBottomNav()}
+            ${renderToast()}
+            ${renderSheet()}
+            ${renderModal()}
+          </div>
+        `;
+      }
+
+      function renderAuthModeSwitch() {
+        return `
+          <div class="segmented">
+            <button class="segment ${state.authMode === "signIn" ? "active" : ""}" data-auth-mode="signIn">Sign In</button>
+            <button class="segment ${state.authMode === "signUp" ? "active" : ""}" data-auth-mode="signUp">Create Account</button>
+            <button class="segment ${state.authMode === "reset" ? "active" : ""}" data-auth-mode="reset">Reset</button>
+          </div>
+        `;
+      }
+
+      function renderAuthPanel() {
+        const auth = state.forms.auth;
+        return `
+          <div class="auth-panel">
+            ${renderAuthModeSwitch()}
+            ${
+              state.authMode === "signIn"
+                ? `
+                  ${inputField("auth", "signInEmail", "Email", "email", auth.signInEmail)}
+                  ${inputField("auth", "signInPassword", "Password", "password", auth.signInPassword)}
+                  <button class="primary-button" data-action="submit-auth">Sign in</button>
+                `
+                : state.authMode === "signUp"
+                  ? `
+                    ${inputField("auth", "signUpFirstName", "First name", "text", auth.signUpFirstName)}
+                    ${inputField("auth", "signUpLastName", "Last name", "text", auth.signUpLastName)}
+                    ${inputField("auth", "signUpEmail", "Email", "email", auth.signUpEmail)}
+                    ${inputField("auth", "signUpPassword", "Password", "password", auth.signUpPassword)}
+                    ${inputField("auth", "signUpConfirmPassword", "Confirm password", "password", auth.signUpConfirmPassword)}
+                    <button class="primary-button" data-action="submit-auth">Create account</button>
+                  `
+                  : `
+                    ${inputField("auth", "resetEmail", "Email", "email", auth.resetEmail)}
+                    <button class="primary-button" data-action="submit-auth">Send reset link</button>
+                  `
+            }
+          </div>
+        `;
+      }
+
+      function renderAuthView() {
+        return `
+          <div class="auth-shell">
+            <div class="auth-hero">
+              <div class="avatar" style="width:64px;height:64px;border-radius:20px">
+                <img src="https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?auto=format&fit=crop&w=300&q=80" alt="" />
+              </div>
+              <div class="stack-sm">
+                <p class="eyebrow">DriveReady UK</p>
+                <h1 class="display">Vehicle admin without the friction.</h1>
+                <p class="muted">A cleaner mobile prototype with compact primary screens and bottom-sheet workflows.</p>
+              </div>
+            </div>
+            ${renderAuthPanel()}
+          </div>
+        `;
+      }
+
+      function render() {
+        persist();
+        app.innerHTML = state.view === "auth" ? renderAuthView() : renderAppView();
+      }
+
+      document.addEventListener("click", (event) => {
+        const tabNode = event.target.closest("[data-tab]");
+        if (tabNode) {
+          state.activeTab = tabNode.dataset.tab;
+          state.sheet = null;
+          state.modal = null;
+          render();
+          return;
+        }
+
+        const authModeNode = event.target.closest("[data-auth-mode]");
+        if (authModeNode) {
+          state.authMode = authModeNode.dataset.authMode;
+          state.errors = {};
+          render();
+          return;
+        }
+
+        const alertFilterNode = event.target.closest("[data-alert-filter]");
+        if (alertFilterNode) {
+          state.filters.alerts = alertFilterNode.dataset.alertFilter;
+          render();
+          return;
+        }
+
+        const docFilterNode = event.target.closest("[data-doc-filter]");
+        if (docFilterNode) {
+          state.filters.docs = docFilterNode.dataset.docFilter;
+          render();
+          return;
+        }
+
+        const notificationNode = event.target.closest("[data-toggle-notification]");
+        if (notificationNode) {
+          const key = notificationNode.dataset.toggleNotification;
+          state.notificationSettings[key] = !state.notificationSettings[key];
+          render();
+          return;
+        }
+
+        const permissionNode = event.target.closest("[data-request-permission]");
+        if (permissionNode) {
+          requestPermission(permissionNode.dataset.requestPermission);
+          return;
+        }
+
+        const openVehicleNode = event.target.closest("[data-open-vehicle]");
+        if (openVehicleNode) {
+          state.selectedVehicleId = openVehicleNode.dataset.openVehicle;
+          openSheet("vehicle", { vehicleId: openVehicleNode.dataset.openVehicle });
+          return;
+        }
+
+        const openAlertNode = event.target.closest("[data-open-alert]");
+        if (openAlertNode) {
+          openSheet("alert", { alertId: openAlertNode.dataset.openAlert });
+          return;
+        }
+
+        const openDocumentNode = event.target.closest("[data-open-document]");
+        if (openDocumentNode) {
+          openSheet("document", { documentId: openDocumentNode.dataset.openDocument });
+          return;
+        }
+
+        const uploadSourceNode = event.target.closest("[data-upload-source]");
+        if (uploadSourceNode) {
+          state.forms.upload.source = uploadSourceNode.dataset.uploadSource;
+          render();
+          return;
+        }
+
+        const zoneToggleNode = event.target.closest("[data-toggle-zone]");
+        if (zoneToggleNode) {
+          const zone = getZone(zoneToggleNode.dataset.toggleZone);
+          if (zone) zone.monitored = !zone.monitored;
+          showToast(zone?.monitored ? "Zone monitoring enabled" : "Zone monitoring paused");
+          persist();
+          render();
+          return;
+        }
+
+        const sheetSegmentNode = event.target.closest("[data-sheet-segment]");
+        if (sheetSegmentNode && state.sheet) {
+          state.sheet.segment = sheetSegmentNode.dataset.sheetSegment;
+          render();
+          return;
+        }
+
+        const actionNode = event.target.closest("[data-action]");
+        if (actionNode) {
+          switch (actionNode.dataset.action) {
+            case "open-zones":
+              openSheet("zones");
+              return;
+            case "profile-sheet":
+              openSheet("profile");
+              return;
+            case "support-sheet":
+              openSheet("support");
+              return;
+            case "add-vehicle-sheet":
+              openSheet("addVehicle");
+              return;
+            case "upload-sheet":
+              openSheet("upload");
+              return;
+            case "close-sheet":
+              closeSheet();
+              return;
+            case "close-modal":
+              closeModal();
+              return;
+            case "dismiss-toast":
+              ui.toast = "";
+              render();
+              return;
+            case "submit-auth":
+              submitAuth();
+              return;
+            case "save-add-vehicle":
+              addVehicle();
+              return;
+            case "save-vehicle":
+              saveVehicle();
+              return;
+            case "save-document":
+              saveDocument();
+              return;
+            case "save-upload":
+              uploadDocument();
+              return;
+            case "save-alert":
+              saveAlert();
+              return;
+            case "save-profile":
+              saveProfile();
+              return;
+            case "add-zone":
+              addZone();
+              return;
+            case "toggle-alert-muted":
+              state.forms.alertEdit.muted = !state.forms.alertEdit.muted;
+              render();
+              return;
+            case "toggle-alert-resolved":
+              state.forms.alertEdit.resolved = !state.forms.alertEdit.resolved;
+              render();
+              return;
+            case "replace-document": {
+              const document = getDocument(state.sheet.payload.documentId);
+              if (document) {
+                document.uploadedAt = addDays(0);
+                document.preview = "Replacement file stored in the prototype.";
+              }
+              persist();
+              showToast("Document replaced");
+              return;
+            }
+            case "share-document":
+              showToast("Share sheet simulated");
+              return;
+            case "delete-vehicle-modal":
+              openModal("deleteVehicle", { vehicleId: state.sheet.payload.vehicleId });
+              return;
+            case "delete-document-modal":
+              openModal("deleteDocument", { documentId: state.sheet.payload.documentId });
+              return;
+            case "confirm-delete-vehicle":
+              deleteVehicle();
+              return;
+            case "confirm-delete-document":
+              deleteDocument();
+              return;
+            case "confirm-sign-out":
+              openModal("signOut");
+              return;
+            case "confirm-sign-out-now":
+              state.modal = null;
+              signOut();
+              return;
+            case "support-email":
+              showToast("Support email composer simulated");
+              return;
+            case "support-help":
+              showToast("Help centre simulated");
+              return;
+            case "support-export":
+              showToast("Export queued");
+              return;
+            default:
+              break;
+          }
+        }
+
+        const stopNode = event.target.closest("[data-stop-click='true']");
+        if (stopNode) return;
+
+        const overlayCloseNode = event.target.closest("[data-overlay-close]");
+        if (overlayCloseNode && event.target === overlayCloseNode) {
+          if (overlayCloseNode.dataset.overlayClose === "sheet") closeSheet();
+          if (overlayCloseNode.dataset.overlayClose === "modal") closeModal();
+        }
+      });
+
+      document.addEventListener("input", (event) => {
+        const formField = event.target.dataset.formField;
+        const scope = event.target.dataset.scope;
+
+        if (event.target.dataset.field === "searchAlerts") {
+          state.searchAlerts = event.target.value;
+          render();
+          return;
+        }
+
+        if (!formField || !scope) return;
+
+        let value = event.target.value;
+        if (scope === "addVehicle" && formField === "plate") {
+          value = value.toUpperCase();
+          event.target.value = value;
+        }
+
+        state.forms[scope][formField] = value;
+        if (state.errors[scope]) delete state.errors[scope][formField];
+        persist();
+      });
+
+      render();
+    </script>
+  </body>
+</html>

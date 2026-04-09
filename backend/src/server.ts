@@ -16,7 +16,7 @@ import {
   usesSupabaseAuth,
 } from './auth.js';
 import { writeAuditEntry } from './audit.js';
-import { appData, createInitialAppData } from './data.js';
+import { appData, createEmptyUserAppData } from './data.js';
 import { DvlaVesError, enrichVehicleWithDvlaVes, getDvlaVesTargetLabel, usesDvlaVes } from './dvla-ves.js';
 import { DvsaMotError, enrichVehicleWithDvsaMot, getDvsaMotTargetLabel, hasDvsaMotSetup } from './dvsa-mot.js';
 import {
@@ -218,7 +218,7 @@ async function loadSupabaseAppStateForUser(user: AppData['user']) {
     throw new Error('Supabase auth requires per-user storage support.');
   }
 
-  const state = createInitialAppData(user);
+  const state = createEmptyUserAppData(user);
   await hydrateUserAppData(user.id, state);
 
   if (mergeUserProfile(state, user)) {

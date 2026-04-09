@@ -275,3 +275,34 @@ export function createInitialAppData(userOverrides?: Partial<UserProfile>) {
   state.session = null;
   return state;
 }
+
+export function createEmptyUserAppData(user: UserProfile): AppData {
+  return {
+    user: {
+      ...user,
+      phone: user.phone ?? '',
+      address_line: user.address_line ?? '',
+    },
+    notification_preferences: {
+      mot_enabled: true,
+      tax_enabled: true,
+      insurance_enabled: true,
+      docs_enabled: true,
+      zones_enabled: true,
+    },
+    permission_states: {
+      notifications_state: 'not_requested',
+      camera_state: 'not_requested',
+      files_state: 'not_requested',
+      biometrics_state: 'not_requested',
+    },
+    session: null,
+    selected_vehicle_id: '',
+    vehicles: [],
+    service_history: [],
+    documents: [],
+    alerts: [],
+    zones: [],
+    trip_checks: [],
+  };
+}

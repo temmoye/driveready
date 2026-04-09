@@ -602,8 +602,8 @@ function SignInScreen({
   onResetPassword: () => void;
   onSignIn: (email: string, password: string) => Promise<void>;
 }) {
-  const [email, setEmail] = useState('james@driveready.uk');
-  const [password, setPassword] = useState('demo1234');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const submit = async () => {
@@ -653,10 +653,10 @@ function CreateAccountScreen({
   onSignIn: () => void;
   onSubmit: (payload: { first_name: string; last_name: string; email: string; password: string }) => Promise<void>;
 }) {
-  const [firstName, setFirstName] = useState('James');
-  const [lastName, setLastName] = useState('Harrington');
-  const [email, setEmail] = useState('james@driveready.uk');
-  const [password, setPassword] = useState('demo1234');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const submit = async () => {
@@ -705,7 +705,7 @@ function ResetPasswordScreen({
   onBack: () => void;
   onSubmit: (email: string) => Promise<void>;
 }) {
-  const [email, setEmail] = useState('james@driveready.uk');
+  const [email, setEmail] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const submit = async () => {
@@ -1375,7 +1375,7 @@ function EditVehicleScreen({
       destructiveActionLabel="Delete vehicle"
       onBack={onBack}
       onDestructiveAction={() =>
-        Alert.alert('Delete vehicle', 'This removes the vehicle and linked data from the local backend demo.', [
+        Alert.alert('Delete vehicle', 'This removes the vehicle and linked data from DriveReady.', [
           { text: 'Cancel', style: 'cancel' },
           {
             text: 'Delete',
@@ -1640,7 +1640,7 @@ function DocumentDetailScreen({
       destructiveActionLabel="Delete document"
       onBack={onBack}
       onDestructiveAction={() =>
-        Alert.alert('Delete document', 'This removes the document from the backend demo.', [
+        Alert.alert('Delete document', 'This removes the document from DriveReady.', [
           { text: 'Cancel', style: 'cancel' },
           {
             text: 'Delete',

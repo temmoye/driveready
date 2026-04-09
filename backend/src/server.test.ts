@@ -78,6 +78,40 @@ describe('DriveReady backend', () => {
     expect(createZone.body.zone.name).toBe('Manchester CAZ');
   });
 
+  it('creates a vehicle from a registration-only payload', async () => {
+    const token = await signInAndGetToken();
+
+    const createVehicle = await request(app)
+      .post('/api/v1/vehicles')
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        registration_plate: 'AB12 CDE',
+      });
+
+    expect(createVehicle.status).toBe(201);
+    expect(createVehicle.body.vehicle.registration_plate).toBe('AB12 CDE');
+    expect(createVehicle.body.vehicle.nickname).toBe('AB12 CDE');
+    expect(createVehicle.body.vehicle.make_model).toBe('Vehicle details pending');
+  });
+
+  it('does not fabricate parking suggestions while the parking provider is pending', async () => {
+    const token = await signInAndGetToken();
+
+    const tripCheck = await request(app)
+      .post('/api/v1/trip-checks')
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        vehicle_id: 'vehicle-family',
+        input_type: 'destination',
+        destination_query: 'Leeds station',
+        persist_result: false,
+      });
+
+    expect(tripCheck.status).toBe(201);
+    expect(tripCheck.body.trip_check.parking_suggestions).toEqual([]);
+    expect(tripCheck.body.degraded.code).toBe('parking_provider_pending');
+  });
+
   it('creates an upload session and accepts a document file', async () => {
     const token = await signInAndGetToken();
 

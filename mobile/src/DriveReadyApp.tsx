@@ -1137,33 +1137,33 @@ function AddVehicleScreen({
   onBack: () => void;
   onSubmit: (payload: Record<string, unknown>) => Promise<void>;
 }) {
-  const [registrationPlate, setRegistrationPlate] = useState('LS12 ABC');
-  const [nickname, setNickname] = useState('Weekend Coupe');
-  const [makeModel, setMakeModel] = useState('BMW 4 Series');
-  const [fuelType, setFuelType] = useState('Petrol');
-  const [mileage, setMileage] = useState('28500');
-  const [motDueAt, setMotDueAt] = useState(dateInputFromNow(240));
-  const [taxDueAt, setTaxDueAt] = useState(dateInputFromNow(120));
-  const [insuranceDueAt, setInsuranceDueAt] = useState(dateInputFromNow(90));
-  const [notes, setNotes] = useState('Used mainly for weekend trips.');
+  const [registrationPlate, setRegistrationPlate] = useState('');
+  const [nickname, setNickname] = useState('');
+  const [makeModel, setMakeModel] = useState('');
+  const [fuelType, setFuelType] = useState('');
+  const [mileage, setMileage] = useState('');
+  const [motDueAt, setMotDueAt] = useState('');
+  const [taxDueAt, setTaxDueAt] = useState('');
+  const [insuranceDueAt, setInsuranceDueAt] = useState('');
+  const [notes, setNotes] = useState('');
 
   const submit = async () => {
-    if (!registrationPlate.trim() || !nickname.trim() || !makeModel.trim() || !fuelType.trim()) {
-      Alert.alert('Missing vehicle details', 'Registration, name, make/model, and fuel type are required.');
+    if (!registrationPlate.trim()) {
+      Alert.alert('Registration required', 'Enter the UK registration. DriveReady will try DVLA first and you can edit the vehicle afterwards.');
       return;
     }
 
     try {
       await onSubmit({
         registration_plate: registrationPlate,
-        nickname,
-        make_model: makeModel,
-        fuel_type: fuelType,
-        mileage: Number(mileage),
-        mot_due_at: motDueAt,
-        tax_due_at: taxDueAt,
-        insurance_due_at: insuranceDueAt,
-        notes,
+        ...(nickname.trim() ? { nickname } : {}),
+        ...(makeModel.trim() ? { make_model: makeModel } : {}),
+        ...(fuelType.trim() ? { fuel_type: fuelType } : {}),
+        ...(mileage.trim() ? { mileage: Number(mileage) } : {}),
+        ...(motDueAt.trim() ? { mot_due_at: motDueAt } : {}),
+        ...(taxDueAt.trim() ? { tax_due_at: taxDueAt } : {}),
+        ...(insuranceDueAt.trim() ? { insurance_due_at: insuranceDueAt } : {}),
+        ...(notes.trim() ? { notes } : {}),
       });
     } catch (error) {
       Alert.alert('Unable to add vehicle', getErrorMessage(error));
@@ -1173,14 +1173,19 @@ function AddVehicleScreen({
   return (
     <FormScreen
       onBack={onBack}
-      primaryActionLabel="Save vehicle"
+      primaryActionLabel="Add vehicle"
       onPrimaryAction={() => {
         void submit();
       }}
       title="Add vehicle"
     >
+      <ListCard
+        body="Start with the registration. If DVLA access is configured, DriveReady fills fuel type, make, MOT and tax fields automatically. Insurance and notes can be added after."
+        title="Registration-first setup"
+      />
       <InputField label="Registration" onChangeText={setRegistrationPlate} value={registrationPlate} />
-      <InputField label="Vehicle name" onChangeText={setNickname} value={nickname} />
+      <InputField label="Vehicle name (optional)" onChangeText={setNickname} value={nickname} />
+      <SectionTitle title="Optional manual details" />
       <InputField label="Make / model" onChangeText={setMakeModel} value={makeModel} />
       <InputField label="Fuel type" onChangeText={setFuelType} value={fuelType} />
       <InputField keyboardType="numeric" label="Mileage" onChangeText={setMileage} value={mileage} />
@@ -1727,7 +1732,7 @@ function TripCheckScreen({
 }) {
   const [vehicleId, setVehicleId] = useState(vehicles[0]?.id ?? '');
   const [mode, setMode] = useState<'destination' | 'saved_zone'>('destination');
-  const [destination, setDestination] = useState('Shoreditch High Street, London');
+  const [destination, setDestination] = useState('');
   const [zoneId, setZoneId] = useState(zones[0]?.id ?? '');
   const [result, setResult] = useState<ReturnType<typeof useDriveReadyModel>['tripChecks'][number] | null>(null);
   const [destinationSuggestions, setDestinationSuggestions] = useState<DestinationSuggestion[]>([]);
@@ -1888,18 +1893,25 @@ function TripCheckScreen({
         <View style={styles.resultStack}>
           <ListCard
             badge={complianceLabel(result.compliance_status)}
-            body={`Charge estimate: ${result.charge_amount_label} · Confidence ${result.confidence_label}`}
+            body={`Charge-zone estimate: ${result.charge_amount_label} · Confidence ${result.confidence_label}`}
             title={mode === 'destination' ? result.destination_query ?? 'Trip result' : 'Saved zone result'}
           />
-          {result.parking_suggestions.map((parking) => (
-            <ParkingCard key={parking.id} parking={parking} />
-          ))}
+          {result.parking_suggestions.length > 0 ? (
+            result.parking_suggestions.map((parking) => (
+              <ParkingCard key={parking.id} parking={parking} />
+            ))
+          ) : (
+            <ListCard
+              body="We have requested parking-provider access. Until a contract/API is connected, DriveReady will not invent parking availability, restrictions, or prices."
+              title="Parking suggestions pending"
+            />
+          )}
         </View>
       ) : null}
 
       <SectionTitle title="Recent Trip Checks" />
       {tripChecks.length === 0 ? (
-        <ListCard body="Run a trip check to save recent compliance and parking results." title="No Trip Check history" />
+        <ListCard body="Run a trip check to save recent charge-zone results. Live parking will appear after a provider is connected." title="No Trip Check history" />
       ) : (
         tripChecks.slice(0, 4).map((tripCheck) => (
           <ListCard

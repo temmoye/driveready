@@ -309,6 +309,12 @@ function generateId(prefix: string) {
   return `${prefix}-${Date.now()}-${Math.round(Math.random() * 1000)}`;
 }
 
+function isoDateFromNow(days: number) {
+  const date = new Date();
+  date.setDate(date.getDate() + days);
+  return date.toISOString().slice(0, 10);
+}
+
 function sessionExpiry() {
   const date = new Date();
   date.setDate(date.getDate() + 30);
@@ -644,20 +650,36 @@ app.post('/api/v1/vehicles', asyncRoute(async (request, response) => {
   const { registration_plate, nickname, make_model, fuel_type, mileage, mot_due_at, tax_due_at, insurance_due_at, notes } =
     parsed.data;
 
-  const vehicle: VehicleRecord = {
+  let vehicle: VehicleRecord = {
     id: generateId('vehicle'),
     registration_plate: registration_plate.toUpperCase(),
-    nickname,
-    make_model,
-    fuel_type,
+    nickname: nickname?.trim() || registration_plate.toUpperCase(),
+    make_model: make_model?.trim() || 'Vehicle details pending',
+    fuel_type: fuel_type?.trim() || 'Unknown',
     mileage: mileage ?? 0,
-    mot_due_at: mot_due_at ?? '2026-01-01',
-    tax_due_at: tax_due_at ?? '2025-12-01',
-    insurance_due_at: insurance_due_at ?? '2025-12-15',
+    mot_due_at: mot_due_at ?? isoDateFromNow(30),
+    tax_due_at: tax_due_at ?? isoDateFromNow(30),
+    insurance_due_at: insurance_due_at ?? isoDateFromNow(30),
     notes: notes ?? '',
     image_url:
       'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=1200&q=80',
   };
+
+  if (usesDvlaVes()) {
+    try {
+      vehicle = (await enrichVehicleWithDvlaVes(vehicle)).vehicle;
+    } catch (error) {
+      if (!(error instanceof DvlaVesError)) {
+        throw error;
+      }
+
+      writeAuditEntry('vehicle.dvla_create_enrichment_skipped', {
+        message: error.message,
+        registration_plate: vehicle.registration_plate,
+        status_code: error.statusCode,
+      });
+    }
+  }
 
   state.vehicles.unshift(vehicle);
   state.selected_vehicle_id = vehicle.id;
@@ -1158,30 +1180,7 @@ app.post('/api/v1/trip-checks', asyncRoute(async (request, response) => {
   const zone = state.zones.find((entry) => entry.id === saved_zone_id) ?? state.zones[0];
   const destinationLabel = destination_query ?? zone.name;
   const freshness = new Date().toISOString();
-  const parkingSuggestions: ParkingSuggestion[] = [
-    {
-      id: generateId('park'),
-      label: `${destinationLabel} street parking`,
-      price_band: compliance === 'charge_risk' ? 'Free after 18:30' : '£2.80 / hr',
-      is_free: false,
-      walking_distance_meters: compliance === 'charge_risk' ? 650 : 240,
-      restriction_note: compliance === 'charge_risk' ? 'Permit-only before 18:30' : 'Pay by phone, max stay 4 hours',
-      confidence_label: 'medium',
-      source_name: 'parking-provider',
-      freshness_at: freshness,
-    },
-    {
-      id: generateId('park'),
-      label: `${destinationLabel} secure car park`,
-      price_band: '£5.50 flat evening rate',
-      is_free: false,
-      walking_distance_meters: 300,
-      restriction_note: 'Covered parking with ANPR entry',
-      confidence_label: 'high',
-      source_name: 'parking-provider',
-      freshness_at: freshness,
-    },
-  ];
+  const parkingSuggestions: ParkingSuggestion[] = [];
 
   const tripCheck: TripCheckRecord = {
     id: generateId('trip'),
@@ -1193,7 +1192,7 @@ app.post('/api/v1/trip-checks', asyncRoute(async (request, response) => {
     charge_amount_label: compliance === 'charge_risk' ? zone.charge_amount_label : '£0.00',
     confidence_label: 'medium',
     freshness_at: freshness,
-    source_name: 'trip-check-orchestrator',
+    source_name: 'trip-check-beta',
     parking_suggestions: parkingSuggestions,
   };
 
@@ -1205,7 +1204,10 @@ app.post('/api/v1/trip-checks', asyncRoute(async (request, response) => {
 
   response.status(201).json({
     trip_check: tripCheck,
-    degraded: compliance === 'charge_risk' ? undefined : null,
+    degraded: {
+      code: 'parking_provider_pending',
+      message: 'Parking suggestions are unavailable until a parking data provider is connected.',
+    },
   });
 }));
 
@@ -1229,9 +1231,26 @@ app.get('/api/v1/trip-checks/:tripCheckId', (request, response) => {
 app.get('/api/v1/support/content', (_request, response) => {
   response.json({
     items: [
-      { id: 'help', title: 'Help Centre', body: 'Get support for reminders, docs, and Trip Check.' },
-      { id: 'privacy', title: 'Privacy', body: 'Your personal data and uploaded documents are stored securely.' },
-      { id: 'terms', title: 'Terms', body: 'Trip Check outputs are advisory and depend on provider freshness.' },
+      {
+        id: 'help',
+        title: 'Help Centre',
+        body: 'Need help? Contact DriveReady support with your account email, vehicle registration, the screen you were using, and the error message you saw.',
+      },
+      {
+        id: 'privacy',
+        title: 'Privacy',
+        body: 'DriveReady stores your account profile, vehicles, reminder preferences, uploaded document metadata, and private document files. Vehicle lookups are sent from our backend to configured providers such as DVLA VES and, after approval, DVSA MOT History.',
+      },
+      {
+        id: 'terms',
+        title: 'Terms',
+        body: 'DriveReady is an organisation and reminder tool, not legal, insurance, tax, parking, or roadworthiness advice. Always verify MOT, tax, insurance, parking, charge-zone, and restriction decisions with the official provider before driving.',
+      },
+      {
+        id: 'providers',
+        title: 'Live provider status',
+        body: `Vehicle enquiry: ${getDvlaVesTargetLabel()}. MOT history: ${getDvsaMotTargetLabel()}. Parking provider: pending contract/API access.`,
+      },
     ],
   });
 });

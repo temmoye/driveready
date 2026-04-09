@@ -34,10 +34,10 @@ export const vehicleSchema = z.object({
     .trim()
     .min(5, 'Enter a valid UK plate.')
     .max(8, 'Enter a valid UK plate.'),
-  nickname: z.string().trim().min(1, 'Enter a vehicle name.'),
-  make_model: z.string().trim().min(1, 'Enter a make and model.'),
-  fuel_type: z.string().trim().min(1, 'Enter a fuel type.'),
-  mileage: z.number().int().nonnegative().catch(0),
+  nickname: z.string().trim().optional(),
+  make_model: z.string().trim().optional(),
+  fuel_type: z.string().trim().optional(),
+  mileage: z.number().int().nonnegative().optional().catch(undefined),
   mot_due_at: dateField.optional(),
   tax_due_at: dateField.optional(),
   insurance_due_at: dateField.optional(),

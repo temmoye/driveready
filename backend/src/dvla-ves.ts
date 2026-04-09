@@ -159,6 +159,7 @@ export async function enrichVehicleWithDvlaVes(vehicle: VehicleRecord): Promise<
     vehicle: {
       ...vehicle,
       fuel_type: titleCase(payload.fuelType) ?? vehicle.fuel_type,
+      make_model: titleCase(payload.make) ?? vehicle.make_model,
       mot_due_at: isIsoDate(payload.motExpiryDate) ? payload.motExpiryDate : vehicle.mot_due_at,
       registration_plate: payload.registrationNumber?.trim() || vehicle.registration_plate,
       tax_due_at: isIsoDate(payload.taxDueDate) ? payload.taxDueDate : vehicle.tax_due_at,

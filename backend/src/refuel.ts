@@ -55,7 +55,7 @@ interface ResolvedOrigin {
 
 const MAPBOX_SOURCE_NAME = 'mapbox-search';
 const PROVIDER_PENDING_SOURCE_NAME = 'refuel-provider-pending';
-const SEARCH_RADIUS_METERS = 10_000;
+const SEARCH_RADIUS_KILOMETERS = 10;
 
 function trimValue(value?: string) {
   return value?.trim() ?? '';
@@ -211,7 +211,7 @@ async function findMapboxStations(input: {
   endpoint.searchParams.set('limit', '8');
   endpoint.searchParams.set('origin', `${input.origin.longitude},${input.origin.latitude}`);
   endpoint.searchParams.set('proximity', `${input.origin.longitude},${input.origin.latitude}`);
-  endpoint.searchParams.set('radius', String(SEARCH_RADIUS_METERS));
+  endpoint.searchParams.set('radius', String(SEARCH_RADIUS_KILOMETERS));
 
   const payload = await requestMapboxFeatureCollection(endpoint);
 

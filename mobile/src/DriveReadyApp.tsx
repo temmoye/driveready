@@ -437,6 +437,7 @@ function DriveReadyRoot() {
 
   return (
     <SupportScreen
+      onDeleteAccount={model.deleteAccount}
       items={model.supportItems}
       onBack={popApp}
       onExportRequest={model.exportRequest}
@@ -2058,16 +2059,41 @@ function ProfileScreen({
 
 function SupportScreen({
   items,
+  onDeleteAccount,
   onBack,
   onExportRequest,
 }: {
   items: SupportItem[];
+  onDeleteAccount: () => Promise<void>;
   onBack: () => void;
   onExportRequest: () => Promise<void>;
 }) {
+  const confirmDeleteAccount = () => {
+    Alert.alert(
+      'Delete account?',
+      'This permanently removes your DriveReady account, vehicles, reminders, trip checks, document records, and uploaded files. You will be signed out immediately.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete account',
+          style: 'destructive',
+          onPress: () => {
+            void onDeleteAccount().catch((error) => {
+              Alert.alert('Unable to delete account', getErrorMessage(error));
+            });
+          },
+        },
+      ],
+    );
+  };
+
   return (
     <ScreenScaffold onBack={onBack} title="Support & legal">
       <AppScrollView contentContainerStyle={styles.scrollContent}>
+        <ListCard
+          body="Export your data before deleting your account. Account deletion is designed to remove your profile, app state, uploaded DriveReady files, vehicles, alerts, documents, saved zones, and trip checks."
+          title="Privacy controls"
+        />
         {items.map((item) => (
           <ListCard key={item.id} body={item.body} title={item.title} />
         ))}
@@ -2076,13 +2102,14 @@ function SupportScreen({
           onPress={() => {
             void onExportRequest()
               .then(() => {
-                Alert.alert('Export requested', 'A backend export request has been queued.');
+                Alert.alert('Export requested', 'A backend export request has been queued. This beta currently records the request; downloadable export delivery is still being prepared.');
               })
               .catch((error) => {
                 Alert.alert('Unable to request export', getErrorMessage(error));
               });
           }}
         />
+        <DestructiveTextButton label="Delete account" onPress={confirmDeleteAccount} />
       </AppScrollView>
     </ScreenScaffold>
   );
@@ -2559,6 +2586,21 @@ function SecondaryButton({
     <Pressable onPress={onPress} style={({ pressed }) => [styles.secondaryButton, pressed && styles.pressed]}>
       {icon ? <MaterialIcons color={theme.colors.text} name={icon} size={18} /> : null}
       <Text style={styles.secondaryButtonLabel}>{label}</Text>
+    </Pressable>
+  );
+}
+
+function DestructiveTextButton({
+  label,
+  onPress,
+}: {
+  label: string;
+  onPress: () => void;
+}) {
+  return (
+    <Pressable onPress={onPress} style={({ pressed }) => [styles.destructiveTextButton, pressed && styles.pressed]}>
+      <MaterialIcons color={theme.colors.error} name="delete" size={18} />
+      <Text style={styles.destructiveTextButtonLabel}>{label}</Text>
     </Pressable>
   );
 }
@@ -3258,6 +3300,23 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '700',
     lineHeight: 14,
+  },
+  destructiveTextButton: {
+    ...ghostBorder(0.18),
+    alignItems: 'center',
+    backgroundColor: theme.colors.surface,
+    borderColor: theme.colors.error,
+    borderRadius: theme.radius.full,
+    flexDirection: 'row',
+    gap: theme.spacing[2],
+    justifyContent: 'center',
+    minHeight: 52,
+    paddingHorizontal: theme.spacing[4],
+  },
+  destructiveTextButtonLabel: {
+    ...typeRamp.body,
+    color: theme.colors.error,
+    fontWeight: '700',
   },
   textLink: {
     ...typeRamp.body,

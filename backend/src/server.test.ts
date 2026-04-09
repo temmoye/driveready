@@ -130,4 +130,18 @@ describe('DriveReady backend', () => {
     expect(uploadBinary.body.upload.file_name).toBe('demo.pdf');
     expect(uploadBinary.body.upload.file_key).toContain('demo.pdf');
   });
+
+  it('deletes the local account state and clears the current session', async () => {
+    const token = await signInAndGetToken();
+
+    const deleteAccount = await request(app)
+      .delete('/api/v1/me')
+      .set('Authorization', `Bearer ${token}`);
+
+    expect(deleteAccount.status).toBe(204);
+
+    const me = await request(app).get('/api/v1/me').set('Authorization', `Bearer ${token}`);
+
+    expect(me.status).toBe(401);
+  });
 });

@@ -8,6 +8,7 @@ import type { NextFunction, Request, Response } from 'express';
 
 import {
   confirmSupabasePasswordReset,
+  deleteSupabaseAuthUser,
   getSupabaseUserForToken,
   refreshSupabaseSession,
   requestSupabasePasswordReset,
@@ -20,6 +21,7 @@ import { appData, createEmptyUserAppData } from './data.js';
 import { DvlaVesError, enrichVehicleWithDvlaVes, getDvlaVesTargetLabel, usesDvlaVes } from './dvla-ves.js';
 import { DvsaMotError, enrichVehicleWithDvsaMot, getDvsaMotTargetLabel, hasDvsaMotSetup } from './dvsa-mot.js';
 import {
+  deleteUserAppData,
   getStorageTargetLabel,
   hydrateAppData,
   hydrateUserAppData,
@@ -328,6 +330,17 @@ function createSession() {
   };
 }
 
+function createDeletedLocalUser() {
+  return {
+    id: 'deleted-local-user',
+    first_name: '',
+    last_name: '',
+    email: '',
+    phone: '',
+    address_line: '',
+  };
+}
+
 function apiError(message: string, fields?: Record<string, string>) {
   return {
     error: {
@@ -352,6 +365,10 @@ async function saveRequestState(response: Response) {
   }
 
   await persistAppData(state);
+}
+
+async function deleteDocumentFilesForState(state: AppData) {
+  await Promise.all(state.documents.map((document) => deleteStoredDocument(document.file_key)));
 }
 
 app.get('/api/v1/health', (_request, response) => {
@@ -617,6 +634,32 @@ app.patch('/api/v1/me/permission-states', asyncRoute(async (request, response) =
   };
   await saveRequestState(response);
   response.json({ permission_states: state.permission_states });
+}));
+
+app.delete('/api/v1/me', asyncRoute(async (_request, response) => {
+  const state = getRequestState(response);
+  const authUserId = getRequestUserId(response);
+
+  await deleteDocumentFilesForState(state);
+
+  if (usesSupabaseAuth()) {
+    if (!authUserId) {
+      response.status(401).json(apiError('Authentication required.'));
+      return;
+    }
+
+    await deleteUserAppData(authUserId);
+    await deleteSupabaseAuthUser(authUserId);
+    writeAuditEntry('account.deleted', { user_id: authUserId, email: state.user.email, auth_backend: 'supabase' });
+    response.status(204).send();
+    return;
+  }
+
+  Object.assign(appData, createEmptyUserAppData(createDeletedLocalUser()));
+  appData.session = null;
+  await saveState();
+  writeAuditEntry('account.deleted', { user_id: state.user.id, email: state.user.email, auth_backend: 'local' });
+  response.status(204).send();
 }));
 
 app.get('/api/v1/dashboard', (_request, response) => {

@@ -276,3 +276,12 @@ export async function confirmSupabasePasswordReset(input: {
     throw new Error(error.message);
   }
 }
+
+export async function deleteSupabaseAuthUser(userId: string) {
+  const { adminClient } = requireSupabaseClients();
+  const { error } = await adminClient.auth.admin.deleteUser(userId);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+}

@@ -173,6 +173,10 @@ export const apiClient = {
       method: 'PATCH',
       body: JSON.stringify(body),
     }),
+  deleteAccount: () =>
+    request<void>('/me', {
+      method: 'DELETE',
+    }),
   dashboard: () => request<DashboardResponse>('/dashboard'),
   vehicles: () => request<{ vehicles: VehicleSummary[] }>('/vehicles'),
   vehicle: (vehicleId: string) => request<VehicleDetailResponse>(`/vehicles/${vehicleId}`),

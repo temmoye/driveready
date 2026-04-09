@@ -13,6 +13,7 @@ interface StorageDriver {
   persist(state: AppData): Promise<void>;
   hydrateUser?(userId: string, target: AppData): Promise<void>;
   persistUser?(userId: string, state: AppData): Promise<void>;
+  deleteUser?(userId: string): Promise<void>;
   describe(): string;
 }
 
@@ -215,6 +216,14 @@ function createSupabaseStorageDriver(config: SupabaseConfig): StorageDriver {
     Object.assign(target, rows[0].state);
   }
 
+  async function deleteUserState(userId: string) {
+    const searchParams = new URLSearchParams({
+      user_id: `eq.${userId}`,
+    });
+
+    await request<void>(config.userStateTable, 'DELETE', searchParams);
+  }
+
   return {
     async hydrate(target: AppData) {
       await hydrateGlobalState(target);
@@ -227,6 +236,9 @@ function createSupabaseStorageDriver(config: SupabaseConfig): StorageDriver {
     },
     async persistUser(userId: string, state: AppData) {
       await upsertUserState(userId, state);
+    },
+    async deleteUser(userId: string) {
+      await deleteUserState(userId);
     },
     describe() {
       return `Supabase (${baseUrl}, tables: ${config.stateTable}, ${config.userStateTable})`;
@@ -262,6 +274,14 @@ export async function persistUserAppData(userId: string, state: AppData) {
   }
 
   await storageDriver.persistUser(userId, state);
+}
+
+export async function deleteUserAppData(userId: string) {
+  if (!storageDriver.deleteUser) {
+    throw new Error('Per-user app data deletion is not supported by the configured storage backend.');
+  }
+
+  await storageDriver.deleteUser(userId);
 }
 
 export function getStorageTargetLabel() {

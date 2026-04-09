@@ -173,6 +173,17 @@ export function useDriveReadyModel() {
     }
   }, []);
 
+  const deleteAccount = useCallback(async () => {
+    try {
+      await apiClient.deleteAccount();
+    } finally {
+      await clearStoredSession();
+      setState({
+        ...initialState,
+      });
+    }
+  }, []);
+
   const createVehicle = useCallback(
     async (payload: Record<string, unknown>) => {
       await apiClient.createVehicle(payload);
@@ -333,6 +344,7 @@ export function useDriveReadyModel() {
     requestReset,
     confirmPasswordReset,
     signOut,
+    deleteAccount,
     createVehicle,
     updateVehicle,
     enrichVehicle,

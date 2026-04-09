@@ -254,4 +254,88 @@ describe('Refuel search route', () => {
     expect(response.body.stations[0].label).toContain('Cheaper Diesel');
     expect(response.body.stations[0].price_label).toContain('181.9p/L B7');
   });
+
+  it('returns nearest electric chargers while tariff pricing is still pending', async () => {
+    await resetRefuelState();
+    fetchMock.mockReset();
+    fetchMock
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            features: [
+              {
+                id: 'origin-leeds',
+                geometry: {
+                  coordinates: [-1.548567, 53.801277],
+                },
+                properties: {
+                  full_address: 'Leeds Station, Leeds',
+                },
+              },
+            ],
+          }),
+          {
+            status: 200,
+            headers: {
+              'content-type': 'application/json',
+            },
+          },
+        ),
+      )
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            features: [
+              {
+                id: 'charger-fast',
+                properties: {
+                  name: 'Fastned Leeds',
+                  full_address: 'A1(M) Services, Leeds',
+                  distance: 1200,
+                  mapbox_id: 'charger-fast',
+                },
+                geometry: {
+                  coordinates: [-1.56, 53.81],
+                },
+              },
+              {
+                id: 'charger-slow',
+                properties: {
+                  name: 'Pod Point Retail Park',
+                  full_address: 'Retail Park, Leeds',
+                  distance: 2400,
+                  mapbox_id: 'charger-slow',
+                },
+                geometry: {
+                  coordinates: [-1.57, 53.82],
+                },
+              },
+            ],
+          }),
+          {
+            status: 200,
+            headers: {
+              'content-type': 'application/json',
+            },
+          },
+        ),
+      );
+
+    const token = await signInAndGetToken();
+    const response = await request(app)
+      .post('/api/v1/refuel-options')
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        energy_type: 'electric',
+        origin_query: 'Leeds station',
+        sort_by: 'cheapest',
+      });
+
+    expect(response.status).toBe(200);
+    expect(response.body.search.price_status).toBe('provider_pending');
+    expect(response.body.stations).toHaveLength(2);
+    expect(response.body.stations[0].label).toContain('Fastned Leeds');
+    expect(response.body.stations[0].price_is_available).toBe(false);
+    expect(response.body.degraded.map((entry: { code: string }) => entry.code)).toContain('ev_tariff_provider_pending');
+  });
 });

@@ -1,3 +1,4 @@
+import { getChargingTariffTargetLabel, resolveElectricTariffs } from './charging-tariffs.js';
 import type {
   RefuelEnergyType,
   RefuelSearchSummary,
@@ -231,7 +232,7 @@ function labelForEnergyType(energyType: RefuelEnergyType) {
 
 function pricePendingMessage(energyType: RefuelEnergyType) {
   if (energyType === 'electric') {
-    return 'Charging tariff provider pending';
+    return `Charging tariff ${getChargingTariffTargetLabel()}`;
   }
 
   return 'Fuel-price provider pending';
@@ -503,7 +504,7 @@ async function findFuelPriceStations(input: {
 
 export function getRefuelTargetLabel() {
   const locationSearch = getMapboxToken() ? 'Mapbox POI search configured' : 'location search not configured';
-  return `Refuel (${locationSearch}; live fuel/charging prices pending provider)`;
+  return `Refuel (${locationSearch}; petrol/diesel prices via public feeds; EV tariffs: ${getChargingTariffTargetLabel()})`;
 }
 
 export async function searchRefuelOptions(input: RefuelSearchInput): Promise<RefuelSearchResult> {
@@ -610,11 +611,6 @@ export async function searchRefuelOptions(input: RefuelSearchInput): Promise<Ref
       code: 'refuel_fuel_price_area_gap',
       message: 'No live retailer fuel-price feed entries were found within the search radius. Showing nearest station POIs without prices instead.',
     });
-  } else {
-    degraded.push({
-      code: 'refuel_price_provider_pending',
-      message: 'Live charging tariffs require a dedicated charging-price provider.',
-    });
   }
 
   const features = await findMapboxStations({
@@ -625,6 +621,31 @@ export async function searchRefuelOptions(input: RefuelSearchInput): Promise<Ref
   const stations = features
     .map((feature, index) => toStationOption(feature, index, input.energyType, freshnessAt))
     .sort((left, right) => (left.distance_meters ?? Number.MAX_SAFE_INTEGER) - (right.distance_meters ?? Number.MAX_SAFE_INTEGER));
+
+  if (input.energyType === 'electric') {
+    const electricTariffs = await resolveElectricTariffs({
+      sortBy,
+      stations,
+    });
+
+    degraded.push(...electricTariffs.degraded);
+
+    return {
+      degraded,
+      search: {
+        ...buildSearchSummary({
+          energyType: input.energyType,
+          freshnessAt,
+          origin,
+          originQuery: input.originQuery,
+          sortBy,
+          sourceName: MAPBOX_SOURCE_NAME,
+        }),
+        price_status: electricTariffs.priceStatus,
+      },
+      stations: electricTariffs.stations,
+    };
+  }
 
   if (sortBy === 'cheapest') {
     degraded.push({

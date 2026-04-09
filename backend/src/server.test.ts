@@ -112,6 +112,25 @@ describe('DriveReady backend', () => {
     expect(tripCheck.body.degraded.code).toBe('parking_provider_pending');
   });
 
+  it('does not fabricate fuel or charging options while refuel providers are pending', async () => {
+    const token = await signInAndGetToken();
+
+    const response = await request(app)
+      .post('/api/v1/refuel-options')
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        energy_type: 'diesel',
+        origin_query: 'Leeds station',
+        sort_by: 'cheapest',
+      });
+
+    expect(response.status).toBe(200);
+    expect(response.body.stations).toEqual([]);
+    expect(response.body.search.energy_type).toBe('diesel');
+    expect(response.body.search.price_status).toBe('provider_pending');
+    expect(response.body.degraded.map((entry: { code: string }) => entry.code)).toContain('refuel_price_provider_pending');
+  });
+
   it('creates an upload session and accepts a document file', async () => {
     const token = await signInAndGetToken();
 

@@ -26,6 +26,10 @@ import type {
   DocumentStatus,
   DocumentSummary,
   ParkingSuggestion,
+  RefuelEnergyType,
+  RefuelSearchResponse,
+  RefuelSortMode,
+  RefuelStationOption,
   SavedZone,
   SupportItem,
   VehicleSummary,
@@ -46,6 +50,7 @@ type AppRoute =
   | { name: 'uploadDocument'; vehicleId?: string }
   | { name: 'documentDetail'; documentId: string }
   | { name: 'tripCheck' }
+  | { name: 'refuel' }
   | { name: 'savedZones' }
   | { name: 'profile' }
   | { name: 'support' };
@@ -289,6 +294,7 @@ function DriveReadyRoot() {
         onOpenAlert={(alertId) => pushApp({ name: 'alertDetail', alertId })}
         onOpenDocument={(documentId) => pushApp({ name: 'documentDetail', documentId })}
         onOpenProfile={() => pushApp({ name: 'profile' })}
+        onOpenRefuel={() => pushApp({ name: 'refuel' })}
         onOpenSupport={() => pushApp({ name: 'support' })}
         onOpenTripCheck={() => pushApp({ name: 'tripCheck' })}
         onOpenVehicle={(vehicleId) => pushApp({ name: 'vehicleDetail', vehicleId })}
@@ -410,6 +416,16 @@ function DriveReadyRoot() {
     );
   }
 
+  if (appRoute.name === 'refuel') {
+    return (
+      <RefuelScreen
+        onBack={popApp}
+        onSearchRefuelOptions={model.searchRefuelOptions}
+        vehicles={model.vehicles}
+      />
+    );
+  }
+
   if (appRoute.name === 'savedZones') {
     return (
       <SavedZonesScreen
@@ -452,6 +468,7 @@ interface TabbedExperienceProps {
   onOpenAlert: (alertId: string) => void;
   onOpenDocument: (documentId: string) => void;
   onOpenProfile: () => void;
+  onOpenRefuel: () => void;
   onOpenSupport: () => void;
   onOpenTripCheck: () => void;
   onOpenVehicle: (vehicleId: string) => void;
@@ -467,6 +484,7 @@ function TabbedExperience({
   onOpenAlert,
   onOpenDocument,
   onOpenProfile,
+  onOpenRefuel,
   onOpenSupport,
   onOpenTripCheck,
   onOpenVehicle,
@@ -486,6 +504,7 @@ function TabbedExperience({
       onOpenDocs={() => onTabChange('docs')}
       onUploadDocument={() => onUploadDocument(vehicle?.id)}
       onOpenTripCheck={onOpenTripCheck}
+      onOpenRefuel={onOpenRefuel}
       onOpenVehicle={onOpenVehicle}
       selectedVehicle={vehicle}
     />
@@ -791,6 +810,7 @@ function HomeScreen({
   onOpenAlerts,
   onOpenDocs,
   onUploadDocument,
+  onOpenRefuel,
   onOpenTripCheck,
   onOpenVehicle,
   selectedVehicle,
@@ -801,6 +821,7 @@ function HomeScreen({
   onOpenAlerts: () => void;
   onOpenDocs: () => void;
   onUploadDocument: () => void;
+  onOpenRefuel: () => void;
   onOpenTripCheck: () => void;
   onOpenVehicle: (vehicleId: string) => void;
   selectedVehicle: VehicleSummary | null;
@@ -828,6 +849,7 @@ function HomeScreen({
           <QuickActionCard icon="upload-file" label="Upload" onPress={onUploadDocument} />
           <QuickActionCard icon="notifications" label="Alerts" onPress={onOpenAlerts} />
           <QuickActionCard icon="map" label="Trip Check" onPress={onOpenTripCheck} />
+          <QuickActionCard icon="local-gas-station" label="Fuel / charge" onPress={onOpenRefuel} />
         </View>
 
         <SectionTitle title="Next actions" />
@@ -1931,6 +1953,236 @@ function TripCheckScreen({
   );
 }
 
+function energyTypeFromVehicle(vehicle?: VehicleSummary): RefuelEnergyType {
+  const fuelType = vehicle?.fuel_type.toLowerCase() ?? '';
+
+  if (fuelType.includes('electric')) {
+    return 'electric';
+  }
+
+  if (fuelType.includes('diesel')) {
+    return 'diesel';
+  }
+
+  return 'petrol';
+}
+
+function refuelEnergyLabel(energyType: RefuelEnergyType) {
+  if (energyType === 'electric') {
+    return 'Charging';
+  }
+
+  return energyType === 'diesel' ? 'Diesel' : 'Petrol';
+}
+
+function pricePendingTitle(energyType: RefuelEnergyType) {
+  return energyType === 'electric' ? 'Live charging tariffs pending' : 'Live pump prices pending';
+}
+
+function RefuelScreen({
+  onBack,
+  onSearchRefuelOptions,
+  vehicles,
+}: {
+  onBack: () => void;
+  onSearchRefuelOptions: (payload: Record<string, unknown>) => Promise<RefuelSearchResponse>;
+  vehicles: VehicleSummary[];
+}) {
+  const [vehicleId, setVehicleId] = useState(vehicles[0]?.id ?? '');
+  const selectedVehicle = vehicles.find((vehicle) => vehicle.id === vehicleId) ?? vehicles[0];
+  const [energyType, setEnergyType] = useState<RefuelEnergyType>(() => energyTypeFromVehicle(selectedVehicle));
+  const [sortBy, setSortBy] = useState<RefuelSortMode>('closest');
+  const [origin, setOrigin] = useState('');
+  const [originCoordinates, setOriginCoordinates] = useState<{ latitude: number; longitude: number } | null>(null);
+  const [result, setResult] = useState<RefuelSearchResponse | null>(null);
+  const [isSearching, setIsSearching] = useState(false);
+  const [originSuggestions, setOriginSuggestions] = useState<DestinationSuggestion[]>([]);
+  const [originSearchError, setOriginSearchError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const nextVehicle = vehicles.find((vehicle) => vehicle.id === vehicleId);
+    setEnergyType(energyTypeFromVehicle(nextVehicle));
+  }, [vehicleId, vehicles]);
+
+  useEffect(() => {
+    const trimmedOrigin = origin.trim();
+
+    if (trimmedOrigin.length < 3 || !hasMapboxToken()) {
+      setOriginSuggestions([]);
+      setOriginSearchError(null);
+      return;
+    }
+
+    let cancelled = false;
+    const timeoutId = setTimeout(() => {
+      void searchDestinationSuggestions(trimmedOrigin)
+        .then((suggestions) => {
+          if (cancelled) {
+            return;
+          }
+
+          setOriginSuggestions(suggestions);
+          setOriginSearchError(null);
+        })
+        .catch(() => {
+          if (cancelled) {
+            return;
+          }
+
+          setOriginSuggestions([]);
+          setOriginSearchError('Location suggestions are temporarily unavailable. You can still search by postcode or town.');
+        });
+    }, 250);
+
+    return () => {
+      cancelled = true;
+      clearTimeout(timeoutId);
+    };
+  }, [origin]);
+
+  const runSearch = async () => {
+    if (!origin.trim() && !originCoordinates) {
+      Alert.alert('Choose a search area', 'Enter a postcode, town, destination, or motorway service area.');
+      return;
+    }
+
+    setIsSearching(true);
+
+    try {
+      const searchResult = await onSearchRefuelOptions({
+        energy_type: energyType,
+        origin_query: origin,
+        sort_by: sortBy,
+        ...(originCoordinates ?? {}),
+      });
+      setResult(searchResult);
+    } catch (error) {
+      Alert.alert('Unable to search stations', getErrorMessage(error));
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  return (
+    <FormScreen
+      onBack={onBack}
+      onPrimaryAction={() => {
+        void runSearch();
+      }}
+      primaryActionLabel={isSearching ? 'Searching...' : sortBy === 'cheapest' ? 'Find cheapest' : 'Find nearest'}
+      title="Fuel & charging"
+    >
+      {vehicles.length > 0 ? (
+        <SelectionField
+          label="Vehicle"
+          onSelect={setVehicleId}
+          options={vehicles.map((vehicle) => ({
+            key: vehicle.id,
+            label: `${vehicle.nickname} · ${vehicle.fuel_type}`,
+          }))}
+          selected={vehicleId}
+        />
+      ) : null}
+      <SegmentControl
+        options={[
+          { key: 'petrol', label: 'Petrol' },
+          { key: 'diesel', label: 'Diesel' },
+          { key: 'electric', label: 'Electric' },
+        ]}
+        selected={energyType}
+        onSelect={(value) => {
+          setEnergyType(value as RefuelEnergyType);
+          setResult(null);
+        }}
+      />
+      <SegmentControl
+        options={[
+          { key: 'closest', label: 'Closest' },
+          { key: 'cheapest', label: 'Cheapest' },
+        ]}
+        selected={sortBy}
+        onSelect={(value) => {
+          setSortBy(value as RefuelSortMode);
+          setResult(null);
+        }}
+      />
+      <View style={styles.destinationInputStack}>
+        <InputField
+          label="Search near"
+          onChangeText={(value) => {
+            setOrigin(value);
+            setOriginCoordinates(null);
+            setResult(null);
+          }}
+          placeholder="Postcode, town, destination or service area"
+          value={origin}
+        />
+        <Text style={styles.fieldHelperText}>DriveReady searches nearby {energyType === 'electric' ? 'chargers' : 'filling stations'} from the backend. Prices appear after a fuel/charging price provider is connected.</Text>
+        {originSearchError ? (
+          <Text style={styles.fieldErrorText}>{originSearchError}</Text>
+        ) : null}
+        {originSuggestions.length > 0 ? (
+          <View style={styles.suggestionList}>
+            {originSuggestions.map((suggestion) => (
+              <Pressable
+                key={suggestion.id}
+                onPress={() => {
+                  setOrigin(suggestion.label);
+                  setOriginCoordinates(
+                    typeof suggestion.latitude === 'number' && typeof suggestion.longitude === 'number'
+                      ? {
+                          latitude: suggestion.latitude,
+                          longitude: suggestion.longitude,
+                        }
+                      : null,
+                  );
+                  setOriginSuggestions([]);
+                  setOriginSearchError(null);
+                  setResult(null);
+                }}
+                style={({ pressed }) => [styles.suggestionCard, pressed && styles.pressed]}
+              >
+                <Text style={styles.suggestionTitle}>{suggestion.label}</Text>
+                {suggestion.secondaryLabel ? (
+                  <Text style={styles.suggestionMeta}>{suggestion.secondaryLabel}</Text>
+                ) : null}
+              </Pressable>
+            ))}
+          </View>
+        ) : null}
+      </View>
+
+      {result ? (
+        <View style={styles.resultStack}>
+          <ListCard
+            badge={refuelEnergyLabel(result.search.energy_type)}
+            body={`${result.search.origin_label} · ${result.stations.length} result${result.stations.length === 1 ? '' : 's'} · ${formatDateTime(result.search.freshness_at)}`}
+            title={result.search.sort_by === 'cheapest' ? 'Cheapest search' : 'Closest search'}
+          />
+          {result.degraded
+            .filter((entry) => entry.code !== 'refuel_price_provider_pending' || result.stations.length === 0 || result.search.sort_by === 'cheapest')
+            .map((entry) => (
+              <ListCard key={entry.code} body={entry.message} title={entry.code === 'refuel_price_provider_pending' ? pricePendingTitle(result.search.energy_type) : 'Search note'} />
+            ))}
+          {result.stations.length > 0 ? (
+            result.stations.map((station) => <RefuelStationCard key={station.id} station={station} />)
+          ) : (
+            <ListCard
+              body="No verified station list is available yet. Set the backend Mapbox token for nearest-station search; add a fuel-price or charging-tariff provider for cheapest ranking."
+              title="Station provider pending"
+            />
+          )}
+        </View>
+      ) : (
+        <ListCard
+          body="Start with a postcode or destination. The beta can rank nearest stations after backend POI search is configured; it will not invent fuel prices or charging tariffs."
+          title="Find a stop before you drive"
+        />
+      )}
+    </FormScreen>
+  );
+}
+
 function SavedZonesScreen({
   onBack,
   onCreateZone,
@@ -2494,6 +2746,32 @@ function InputField({
         style={[styles.input, multiline && styles.inputMultiline, !editable && styles.inputDisabled]}
         value={value}
       />
+    </View>
+  );
+}
+
+function RefuelStationCard({ station }: { station: RefuelStationOption }) {
+  const distance =
+    typeof station.distance_meters === 'number'
+      ? station.distance_meters < 1000
+        ? `${Math.round(station.distance_meters)} m`
+        : `${(station.distance_meters / 1609.344).toFixed(1)} miles`
+      : 'Distance unavailable';
+
+  return (
+    <View style={styles.listCard}>
+      <View style={styles.rowBetween}>
+        <Text style={styles.cardTitle}>{station.label}</Text>
+        <StatusPill label={station.price_is_available ? 'Live price' : 'Price pending'} tone={station.price_is_available ? 'good' : 'warning'} />
+      </View>
+      <Text style={styles.cardBody}>{station.address}</Text>
+      {station.operator_name ? (
+        <Text style={styles.cardMeta}>{station.operator_name}</Text>
+      ) : null}
+      <Text style={styles.cardMeta}>{distance} · {station.price_label}</Text>
+      {station.connector_summary ? (
+        <Text style={styles.cardMeta}>{station.connector_summary}</Text>
+      ) : null}
     </View>
   );
 }

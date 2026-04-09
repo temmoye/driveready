@@ -29,6 +29,7 @@ import {
   persistUserAppData,
   supportsPerUserAppData,
 } from './persistence.js';
+import { getRefuelTargetLabel, searchRefuelOptions } from './refuel.js';
 import { buildDashboard, linkVehicleZones, summarizeAlert, summarizeDocument, summarizeVehicle } from './status.js';
 import type {
   AppData,
@@ -57,6 +58,7 @@ import {
   permissionStatesSchema,
   profilePatchSchema,
   refreshSessionSchema,
+  refuelSearchSchema,
   signInSchema,
   signUpSchema,
   tripCheckSchema,
@@ -376,6 +378,7 @@ app.get('/api/v1/health', (_request, response) => {
     ok: true,
     vehicle_enquiry: getDvlaVesTargetLabel(),
     mot: getDvsaMotTargetLabel(),
+    refuel: getRefuelTargetLabel(),
     storage: getStorageTargetLabel(),
     uploads: getUploadTargetLabel(),
   });
@@ -1271,6 +1274,25 @@ app.get('/api/v1/trip-checks/:tripCheckId', (request, response) => {
   response.json({ trip_check: tripCheck });
 });
 
+app.post('/api/v1/refuel-options', asyncRoute(async (request, response) => {
+  const parsed = parseBody(refuelSearchSchema, request.body);
+
+  if (!parsed.success) {
+    response.status(400).json(apiError(parsed.message, parsed.fields));
+    return;
+  }
+
+  const result = await searchRefuelOptions({
+    energyType: parsed.data.energy_type,
+    latitude: parsed.data.latitude,
+    longitude: parsed.data.longitude,
+    originQuery: parsed.data.origin_query,
+    sortBy: parsed.data.sort_by,
+  });
+
+  response.status(200).json(result);
+}));
+
 app.get('/api/v1/support/content', (_request, response) => {
   response.json({
     items: [
@@ -1292,7 +1314,7 @@ app.get('/api/v1/support/content', (_request, response) => {
       {
         id: 'providers',
         title: 'Live provider status',
-        body: `Vehicle enquiry: ${getDvlaVesTargetLabel()}. MOT history: ${getDvsaMotTargetLabel()}. Parking provider: pending contract/API access.`,
+        body: `Vehicle enquiry: ${getDvlaVesTargetLabel()}. MOT history: ${getDvsaMotTargetLabel()}. Refuel: ${getRefuelTargetLabel()}. Parking provider: pending contract/API access.`,
       },
     ],
   });

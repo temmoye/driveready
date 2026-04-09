@@ -4,6 +4,8 @@ export type AlertTone = 'good' | 'warning' | 'critical';
 export type DocumentStatus = 'current' | 'needs_review' | 'expired';
 export type PermissionState = 'granted' | 'not_requested' | 'denied';
 export type ParkingConfidence = 'high' | 'medium' | 'low';
+export type RefuelEnergyType = 'petrol' | 'diesel' | 'electric';
+export type RefuelSortMode = 'closest' | 'cheapest';
 export type TripInputType = 'destination' | 'saved_zone';
 export type VehicleReadiness = 'ready' | 'attention' | 'urgent';
 export type VehicleMotRecallStatus = 'Yes' | 'No' | 'Unknown' | 'Unavailable';
@@ -198,6 +200,36 @@ export interface TripCheckRecord {
   freshness_at: string;
   source_name: string;
   parking_suggestions: ParkingSuggestion[];
+}
+
+export interface RefuelStationOption {
+  id: string;
+  label: string;
+  address: string;
+  operator_name?: string;
+  energy_type: RefuelEnergyType;
+  distance_meters?: number;
+  latitude?: number;
+  longitude?: number;
+  connector_summary?: string;
+  price_label: string;
+  price_is_available: boolean;
+  price_updated_at?: string;
+  rank_reason: 'nearest' | 'cheapest' | 'provider_match';
+  source_name: string;
+  freshness_at: string;
+}
+
+export interface RefuelSearchSummary {
+  energy_type: RefuelEnergyType;
+  freshness_at: string;
+  location_status: 'resolved' | 'not_resolved';
+  origin_label: string;
+  price_status: 'live' | 'provider_pending';
+  sort_by: RefuelSortMode;
+  source_name: string;
+  latitude?: number;
+  longitude?: number;
 }
 
 export interface DashboardSnapshot {

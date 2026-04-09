@@ -74,6 +74,14 @@ export const tripCheckSchema = z.object({
   persist_result: z.boolean().optional(),
 });
 
+export const refuelSearchSchema = z.object({
+  origin_query: z.string().trim().optional(),
+  latitude: z.number().min(-90).max(90).optional(),
+  longitude: z.number().min(-180).max(180).optional(),
+  energy_type: z.enum(['petrol', 'diesel', 'electric']),
+  sort_by: z.enum(['closest', 'cheapest']).optional(),
+});
+
 export const alertPatchSchema = z.object({
   lead_days: z.number().int().nonnegative().optional(),
   muted: z.boolean().optional(),

@@ -282,6 +282,8 @@ export function useDriveReadyModel() {
     [refreshAll],
   );
 
+  const searchRefuelOptions = useCallback((payload: Record<string, unknown>) => apiClient.searchRefuelOptions(payload), []);
+
   const createZone = useCallback(
     async (payload: Record<string, unknown>) => {
       await apiClient.createZone(payload);
@@ -359,6 +361,7 @@ export function useDriveReadyModel() {
     shareDocument,
     uploadFileAsset,
     runTripCheck,
+    searchRefuelOptions,
     createZone,
     updateZone,
     deleteZone,

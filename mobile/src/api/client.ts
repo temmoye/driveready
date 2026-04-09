@@ -5,6 +5,7 @@ import type {
   DocumentSummary,
   NotificationPreferences,
   PermissionStates,
+  RefuelSearchResponse,
   SavedZone,
   SessionState,
   SupportItem,
@@ -288,6 +289,11 @@ export const apiClient = {
   tripChecks: () => request<{ trip_checks: TripCheckRecord[] }>('/trip-checks'),
   runTripCheck: (body: Record<string, unknown>) =>
     request<{ trip_check: TripCheckRecord }>('/trip-checks', {
+      method: 'POST',
+      body: JSON.stringify(body),
+    }),
+  searchRefuelOptions: (body: Record<string, unknown>) =>
+    request<RefuelSearchResponse>('/refuel-options', {
       method: 'POST',
       body: JSON.stringify(body),
     }),

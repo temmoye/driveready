@@ -56,7 +56,9 @@ DRIVEREADY_DVLA_VES_API_KEY=...
 
 Add the DVSA MOT variables later when DVSA approves access.
 
-For nearby fuel/charging station discovery, set `DRIVEREADY_MAPBOX_ACCESS_TOKEN` on the backend. This enables nearest-station POI lookup. Live petrol/diesel prices and charging tariffs still require a dedicated fuel/charging price provider.
+For fuel/charging discovery, set `DRIVEREADY_MAPBOX_ACCESS_TOKEN` on the backend. This enables origin geocoding and fallback nearby-station POI lookup.
+
+Petrol/diesel prices use supported UK retailer-published price feeds by default. Override the comma-separated feed list with `DRIVEREADY_UK_FUEL_PRICE_FEED_URLS` if you want to pin or extend sources. Charging tariffs still require a dedicated charging-price provider.
 
 Leave `DRIVEREADY_CORS_ORIGINS` empty if the app is only calling the API from native mobile clients. Set it once you add a browser-based client, for example:
 

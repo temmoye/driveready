@@ -2117,7 +2117,10 @@ function RefuelScreen({
           placeholder="Postcode, town, destination or service area"
           value={origin}
         />
-        <Text style={styles.fieldHelperText}>DriveReady searches nearby {energyType === 'electric' ? 'chargers' : 'filling stations'} from the backend. Prices appear after a fuel/charging price provider is connected.</Text>
+        <Text style={styles.fieldHelperText}>
+          DriveReady searches nearby {energyType === 'electric' ? 'chargers' : 'filling stations'} from the backend.
+          {energyType === 'electric' ? ' Charging tariffs appear after a tariff provider is connected.' : ' Petrol/diesel prices use retailer-published UK fuel feeds when available.'}
+        </Text>
         {originSearchError ? (
           <Text style={styles.fieldErrorText}>{originSearchError}</Text>
         ) : null}
@@ -2159,8 +2162,14 @@ function RefuelScreen({
             body={`${result.search.origin_label} · ${result.stations.length} result${result.stations.length === 1 ? '' : 's'} · ${formatDateTime(result.search.freshness_at)}`}
             title={result.search.sort_by === 'cheapest' ? 'Cheapest search' : 'Closest search'}
           />
+          {result.search.price_status === 'live' ? (
+            <ListCard
+              body="Prices are retailer-published pence-per-litre values from supported UK forecourt feeds. Check the pump before buying."
+              title="Live fuel prices loaded"
+            />
+          ) : null}
           {result.degraded
-            .filter((entry) => entry.code !== 'refuel_price_provider_pending' || result.stations.length === 0 || result.search.sort_by === 'cheapest')
+            .filter((entry) => result.search.price_status !== 'live' && (entry.code !== 'refuel_price_provider_pending' || result.stations.length === 0 || result.search.sort_by === 'cheapest'))
             .map((entry) => (
               <ListCard key={entry.code} body={entry.message} title={entry.code === 'refuel_price_provider_pending' ? pricePendingTitle(result.search.energy_type) : 'Search note'} />
             ))}
@@ -2168,14 +2177,14 @@ function RefuelScreen({
             result.stations.map((station) => <RefuelStationCard key={station.id} station={station} />)
           ) : (
             <ListCard
-              body="No verified station list is available yet. Set the backend Mapbox token for nearest-station search; add a fuel-price or charging-tariff provider for cheapest ranking."
+              body="No verified station list is available yet. Set the backend Mapbox token for nearest-station search; connect fuel-price or charging-tariff data for live prices."
               title="Station provider pending"
             />
           )}
         </View>
       ) : (
         <ListCard
-          body="Start with a postcode or destination. The beta can rank nearest stations after backend POI search is configured; it will not invent fuel prices or charging tariffs."
+          body="Start with a postcode or destination. Petrol/diesel prices can rank by retailer-published live feeds; charging tariffs still need a specialist tariff provider."
           title="Find a stop before you drive"
         />
       )}

@@ -47,15 +47,54 @@ interface MapboxFeatureCollection {
   features?: MapboxFeature[];
 }
 
+interface UkFuelPriceStation {
+  address?: string;
+  brand?: string;
+  location?: {
+    latitude?: number;
+    longitude?: number;
+  };
+  postcode?: string;
+  prices?: Partial<Record<UkFuelCode, number>>;
+  site_id?: string;
+}
+
+interface UkFuelPriceFeed {
+  last_updated?: string;
+  stations?: UkFuelPriceStation[];
+}
+
 interface ResolvedOrigin {
   label: string;
   latitude: number;
   longitude: number;
 }
 
+type UkFuelCode = 'E10' | 'E5' | 'B7' | 'SDV';
+
 const MAPBOX_SOURCE_NAME = 'mapbox-search';
+const PUBLIC_UK_FUEL_SOURCE_NAME = 'uk-public-fuel-price-feeds';
 const PROVIDER_PENDING_SOURCE_NAME = 'refuel-provider-pending';
+const FUEL_PRICE_CACHE_MS = 15 * 60 * 1000;
 const SEARCH_RADIUS_KILOMETERS = 10;
+const METERS_PER_MILE = 1609.344;
+const EARTH_RADIUS_METERS = 6371_000;
+const PUBLIC_UK_FUEL_PRICE_FEED_URLS = [
+  'https://storelocator.asda.com/fuel_prices_data.json',
+  'https://fuel.motorfuelgroup.com/fuel_prices_data.json',
+  'https://api.sainsburys.co.uk/v1/exports/latest/fuel_prices_data.json',
+  'https://www.tesco.com/fuel_prices/fuel_prices_data.json',
+];
+let fuelPriceCache:
+  | {
+      expiresAt: number;
+      feeds: Array<{
+        lastUpdated?: string;
+        stations: UkFuelPriceStation[];
+        url: string;
+      }>;
+    }
+  | null = null;
 
 function trimValue(value?: string) {
   return value?.trim() ?? '';
@@ -63,6 +102,19 @@ function trimValue(value?: string) {
 
 function getMapboxToken() {
   return trimValue(process.env.DRIVEREADY_MAPBOX_ACCESS_TOKEN) || trimValue(process.env.MAPBOX_ACCESS_TOKEN);
+}
+
+function getFuelPriceFeedUrls() {
+  const configured = trimValue(process.env.DRIVEREADY_UK_FUEL_PRICE_FEED_URLS);
+
+  if (!configured) {
+    return PUBLIC_UK_FUEL_PRICE_FEED_URLS;
+  }
+
+  return configured
+    .split(',')
+    .map((url) => url.trim())
+    .filter(Boolean);
 }
 
 function buildSearchSummary(input: {
@@ -94,7 +146,71 @@ function distanceLabel(distanceMeters?: number) {
     return `${Math.round(distanceMeters)} m`;
   }
 
-  return `${(distanceMeters / 1609.344).toFixed(1)} miles`;
+  return `${(distanceMeters / METERS_PER_MILE).toFixed(1)} miles`;
+}
+
+function toRadians(degrees: number) {
+  return degrees * (Math.PI / 180);
+}
+
+function distanceMetersBetween(left: { latitude: number; longitude: number }, right: { latitude: number; longitude: number }) {
+  const latDelta = toRadians(right.latitude - left.latitude);
+  const lonDelta = toRadians(right.longitude - left.longitude);
+  const leftLat = toRadians(left.latitude);
+  const rightLat = toRadians(right.latitude);
+  const a =
+    Math.sin(latDelta / 2) ** 2 +
+    Math.cos(leftLat) * Math.cos(rightLat) * Math.sin(lonDelta / 2) ** 2;
+
+  return 2 * EARTH_RADIUS_METERS * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+function fuelCodesForEnergyType(energyType: RefuelEnergyType): UkFuelCode[] {
+  if (energyType === 'diesel') {
+    return ['B7', 'SDV'];
+  }
+
+  if (energyType === 'petrol') {
+    return ['E10', 'E5'];
+  }
+
+  return [];
+}
+
+function fuelLabelForCode(fuelCode: UkFuelCode) {
+  const labels = {
+    B7: 'diesel',
+    E10: 'unleaded E10',
+    E5: 'super unleaded E5',
+    SDV: 'premium diesel',
+  } satisfies Record<UkFuelCode, string>;
+
+  return labels[fuelCode];
+}
+
+function bestPriceForStation(station: UkFuelPriceStation, energyType: RefuelEnergyType) {
+  const codes = fuelCodesForEnergyType(energyType);
+
+  return codes
+    .map((code) => ({
+      code,
+      value: station.prices?.[code],
+    }))
+    .filter((entry): entry is { code: UkFuelCode; value: number } => typeof entry.value === 'number' && Number.isFinite(entry.value))
+    .sort((left, right) => left.value - right.value)[0];
+}
+
+function parseUkFuelLastUpdated(value?: string) {
+  const match = value?.match(/^(\d{2})\/(\d{2})\/(\d{4})\s+(\d{2}):(\d{2}):(\d{2})$/);
+
+  if (!match) {
+    return undefined;
+  }
+
+  const [, day, month, year, hour, minute, second] = match;
+  const timestamp = Date.parse(`${year}-${month}-${day}T${hour}:${minute}:${second}Z`);
+
+  return Number.isFinite(timestamp) ? new Date(timestamp).toISOString() : undefined;
 }
 
 function poiCategoryForEnergyType(energyType: RefuelEnergyType) {
@@ -115,6 +231,11 @@ function pricePendingMessage(energyType: RefuelEnergyType) {
   }
 
   return 'Fuel-price provider pending';
+}
+
+function livePriceLabel(input: { distanceMeters: number; fuelCode: UkFuelCode; price: number }) {
+  const distance = distanceLabel(input.distanceMeters);
+  return `${input.price.toFixed(1)}p/L ${input.fuelCode} · ${distance} away`;
 }
 
 function stationLabel(feature: MapboxFeature, index: number) {
@@ -139,6 +260,10 @@ function stationOperator(feature: MapboxFeature) {
   }
 
   return trimValue(brand) || undefined;
+}
+
+function fuelStationAddress(station: UkFuelPriceStation) {
+  return [trimValue(station.address), trimValue(station.postcode)].filter(Boolean).join(', ') || 'Address unavailable';
 }
 
 function featureCoordinates(feature: MapboxFeature) {
@@ -240,6 +365,138 @@ function toStationOption(feature: MapboxFeature, index: number, energyType: Refu
   };
 }
 
+async function fetchFuelFeed(url: string) {
+  const response = await fetch(url, {
+    headers: {
+      accept: 'application/json',
+      'user-agent': 'DriveReady refuel price search',
+    },
+    signal: AbortSignal.timeout(5000),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Fuel price feed failed: ${response.status}`);
+  }
+
+  const payload = (await response.json()) as UkFuelPriceFeed;
+
+  return {
+    lastUpdated: payload.last_updated,
+    stations: payload.stations ?? [],
+    url,
+  };
+}
+
+async function getFuelPriceFeeds() {
+  if (fuelPriceCache && fuelPriceCache.expiresAt > Date.now()) {
+    return fuelPriceCache.feeds;
+  }
+
+  const settled = await Promise.allSettled(getFuelPriceFeedUrls().map((url) => fetchFuelFeed(url)));
+  const feeds = settled
+    .filter((entry): entry is PromiseFulfilledResult<Awaited<ReturnType<typeof fetchFuelFeed>>> => entry.status === 'fulfilled')
+    .map((entry) => entry.value);
+
+  fuelPriceCache = {
+    expiresAt: Date.now() + FUEL_PRICE_CACHE_MS,
+    feeds,
+  };
+
+  return feeds;
+}
+
+function toFuelPriceStationOption(input: {
+  distanceMeters: number;
+  energyType: RefuelEnergyType;
+  feedLastUpdated?: string;
+  fuelCode: UkFuelCode;
+  index: number;
+  price: number;
+  station: UkFuelPriceStation;
+}): RefuelStationOption {
+  const latitude = input.station.location?.latitude;
+  const longitude = input.station.location?.longitude;
+
+  return {
+    id: input.station.site_id ? `uk-fuel-${input.station.site_id}-${input.fuelCode}` : `uk-fuel-station-${input.index}`,
+    label: [trimValue(input.station.brand), trimValue(input.station.postcode)].filter(Boolean).join(' · ') || `Fuel station ${input.index + 1}`,
+    address: fuelStationAddress(input.station),
+    operator_name: trimValue(input.station.brand) || undefined,
+    energy_type: input.energyType,
+    distance_meters: input.distanceMeters,
+    latitude: typeof latitude === 'number' ? latitude : undefined,
+    longitude: typeof longitude === 'number' ? longitude : undefined,
+    price_label: livePriceLabel({
+      distanceMeters: input.distanceMeters,
+      fuelCode: input.fuelCode,
+      price: input.price,
+    }),
+    price_is_available: true,
+    price_updated_at: parseUkFuelLastUpdated(input.feedLastUpdated),
+    rank_reason: 'provider_match',
+    source_name: PUBLIC_UK_FUEL_SOURCE_NAME,
+    freshness_at: new Date().toISOString(),
+  };
+}
+
+async function findFuelPriceStations(input: {
+  energyType: RefuelEnergyType;
+  origin: ResolvedOrigin;
+  sortBy: RefuelSortMode;
+}) {
+  const feeds = await getFuelPriceFeeds();
+  const stations: RefuelStationOption[] = [];
+
+  feeds.forEach((feed) => {
+    feed.stations.forEach((station) => {
+      const latitude = station.location?.latitude;
+      const longitude = station.location?.longitude;
+
+      if (typeof latitude !== 'number' || typeof longitude !== 'number') {
+        return;
+      }
+
+      const bestPrice = bestPriceForStation(station, input.energyType);
+
+      if (!bestPrice) {
+        return;
+      }
+
+      const distanceMeters = distanceMetersBetween(input.origin, {
+        latitude,
+        longitude,
+      });
+
+      if (distanceMeters > SEARCH_RADIUS_KILOMETERS * 1000) {
+        return;
+      }
+
+      stations.push(toFuelPriceStationOption({
+        distanceMeters,
+        energyType: input.energyType,
+        feedLastUpdated: feed.lastUpdated,
+        fuelCode: bestPrice.code,
+        index: stations.length,
+        price: bestPrice.value,
+        station,
+      }));
+    });
+  });
+
+  return stations.sort((left, right) => {
+    if (input.sortBy === 'cheapest') {
+      const leftPrice = Number.parseFloat(left.price_label);
+      const rightPrice = Number.parseFloat(right.price_label);
+
+      if (Number.isFinite(leftPrice) && Number.isFinite(rightPrice) && leftPrice !== rightPrice) {
+        return leftPrice - rightPrice;
+      }
+    }
+
+    return (left.distance_meters ?? Number.MAX_SAFE_INTEGER) - (right.distance_meters ?? Number.MAX_SAFE_INTEGER);
+  });
+}
+
 export function getRefuelTargetLabel() {
   const locationSearch = getMapboxToken() ? 'Mapbox POI search configured' : 'location search not configured';
   return `Refuel (${locationSearch}; live fuel/charging prices pending provider)`;
@@ -249,10 +506,6 @@ export async function searchRefuelOptions(input: RefuelSearchInput): Promise<Ref
   const mapboxToken = getMapboxToken();
   const freshnessAt = new Date().toISOString();
   const degraded: RefuelSearchResult['degraded'] = [
-    {
-      code: 'refuel_price_provider_pending',
-      message: 'Live fuel prices and charging tariffs require a dedicated fuel/charging price provider.',
-    },
   ];
   const sortBy = input.sortBy ?? 'closest';
 
@@ -271,6 +524,12 @@ export async function searchRefuelOptions(input: RefuelSearchInput): Promise<Ref
   }
 
   if (!origin) {
+    degraded.push({
+      code: 'refuel_price_provider_pending',
+      message: input.energyType === 'electric'
+        ? 'Live charging tariffs require a dedicated charging-price provider.'
+        : 'Live petrol/diesel prices require location resolution before DriveReady can search public UK fuel-price feeds.',
+    });
     degraded.push({
       code: mapboxToken ? 'refuel_origin_not_resolved' : 'refuel_location_provider_pending',
       message: mapboxToken
@@ -294,6 +553,12 @@ export async function searchRefuelOptions(input: RefuelSearchInput): Promise<Ref
 
   if (!mapboxToken) {
     degraded.push({
+      code: 'refuel_price_provider_pending',
+      message: input.energyType === 'electric'
+        ? 'Live charging tariffs require a dedicated charging-price provider.'
+        : 'Live petrol/diesel prices require location resolution before DriveReady can search public UK fuel-price feeds.',
+    });
+    degraded.push({
       code: 'refuel_location_provider_pending',
       message: `Closest ${labelForEnergyType(input.energyType)} results require DRIVEREADY_MAPBOX_ACCESS_TOKEN on the backend.`,
     });
@@ -310,6 +575,42 @@ export async function searchRefuelOptions(input: RefuelSearchInput): Promise<Ref
       }),
       stations: [],
     };
+  }
+
+  if (input.energyType !== 'electric') {
+    const pricedStations = await findFuelPriceStations({
+      energyType: input.energyType,
+      origin,
+      sortBy,
+    });
+
+    if (pricedStations.length > 0) {
+      return {
+        degraded,
+        search: {
+          ...buildSearchSummary({
+            energyType: input.energyType,
+            freshnessAt,
+            origin,
+            originQuery: input.originQuery,
+            sortBy,
+            sourceName: PUBLIC_UK_FUEL_SOURCE_NAME,
+          }),
+          price_status: 'live',
+        },
+        stations: pricedStations,
+      };
+    }
+
+    degraded.push({
+      code: 'refuel_fuel_price_area_gap',
+      message: 'No live retailer fuel-price feed entries were found within the search radius. Showing nearest station POIs without prices instead.',
+    });
+  } else {
+    degraded.push({
+      code: 'refuel_price_provider_pending',
+      message: 'Live charging tariffs require a dedicated charging-price provider.',
+    });
   }
 
   const features = await findMapboxStations({

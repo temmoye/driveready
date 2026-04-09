@@ -1,0 +1,152 @@
+import { mkdtempSync, rmSync } from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+
+import request from 'supertest';
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
+
+let tempDir = '';
+let app: Awaited<typeof import('./server.js')>['app'];
+
+const fetchMock = vi.fn<typeof fetch>();
+
+beforeAll(async () => {
+  tempDir = mkdtempSync(path.join(os.tmpdir(), 'driveready-refuel-'));
+  process.env.NODE_ENV = 'test';
+  process.env.DRIVEREADY_DATA_FILE = path.join(tempDir, 'app-data.json');
+  process.env.DRIVEREADY_AUDIT_FILE = path.join(tempDir, 'audit.log');
+  process.env.DRIVEREADY_UPLOAD_DIR = path.join(tempDir, 'uploads');
+  process.env.DRIVEREADY_MAPBOX_ACCESS_TOKEN = 'mapbox-token';
+  process.env.DRIVEREADY_UK_FUEL_PRICE_FEED_URLS = 'https://fuel.example/feed-a.json,https://fuel.example/feed-b.json';
+
+  vi.stubGlobal('fetch', fetchMock);
+  vi.resetModules();
+  ({ app } = await import('./server.js'));
+});
+
+afterAll(() => {
+  vi.unstubAllGlobals();
+  delete process.env.DRIVEREADY_MAPBOX_ACCESS_TOKEN;
+  delete process.env.DRIVEREADY_UK_FUEL_PRICE_FEED_URLS;
+
+  if (tempDir) {
+    rmSync(tempDir, { recursive: true, force: true });
+  }
+});
+
+async function signInAndGetToken() {
+  const signIn = await request(app).post('/api/v1/auth/sign-in').send({
+    email: 'james@driveready.uk',
+    password: 'demo1234',
+  });
+
+  expect(signIn.status).toBe(200);
+
+  return signIn.body.session.token as string;
+}
+
+describe('Refuel search route', () => {
+  it('returns retailer-published fuel prices sorted by cheapest', async () => {
+    fetchMock.mockReset();
+    fetchMock
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            features: [
+              {
+                id: 'origin-leeds',
+                geometry: {
+                  coordinates: [-1.548567, 53.801277],
+                },
+                properties: {
+                  full_address: 'Leeds Station, Leeds',
+                },
+              },
+            ],
+          }),
+          {
+            status: 200,
+            headers: {
+              'content-type': 'application/json',
+            },
+          },
+        ),
+      )
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            last_updated: '09/04/2026 11:00:00',
+            stations: [
+              {
+                site_id: 'expensive-site',
+                brand: 'Example Fuel',
+                address: '1 Expensive Road',
+                postcode: 'LS1 1AA',
+                location: {
+                  latitude: 53.802,
+                  longitude: -1.55,
+                },
+                prices: {
+                  E10: 159.9,
+                  B7: 188.9,
+                },
+              },
+            ],
+          }),
+          {
+            status: 200,
+            headers: {
+              'content-type': 'application/json',
+            },
+          },
+        ),
+      )
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            last_updated: '09/04/2026 11:05:00',
+            stations: [
+              {
+                site_id: 'cheap-site',
+                brand: 'Cheaper Fuel',
+                address: '2 Value Street',
+                postcode: 'LS2 2BB',
+                location: {
+                  latitude: 53.81,
+                  longitude: -1.56,
+                },
+                prices: {
+                  E10: 149.9,
+                  B7: 181.9,
+                },
+              },
+            ],
+          }),
+          {
+            status: 200,
+            headers: {
+              'content-type': 'application/json',
+            },
+          },
+        ),
+      );
+
+    const token = await signInAndGetToken();
+    const response = await request(app)
+      .post('/api/v1/refuel-options')
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        energy_type: 'petrol',
+        origin_query: 'Leeds station',
+        sort_by: 'cheapest',
+      });
+
+    expect(response.status).toBe(200);
+    expect(response.body.search.price_status).toBe('live');
+    expect(response.body.stations).toHaveLength(2);
+    expect(response.body.stations[0].label).toContain('Cheaper Fuel');
+    expect(response.body.stations[0].price_label).toContain('149.9p/L E10');
+    expect(response.body.stations[0].price_is_available).toBe(true);
+    expect(response.body.degraded).toEqual([]);
+  });
+});

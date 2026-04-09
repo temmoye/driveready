@@ -45,8 +45,14 @@ async function signInAndGetToken() {
   return signIn.body.session.token as string;
 }
 
+async function resetRefuelState() {
+  const { resetRefuelCachesForTest } = await import('./refuel.js');
+  resetRefuelCachesForTest();
+}
+
 describe('Refuel search route', () => {
   it('returns retailer-published fuel prices sorted by cheapest', async () => {
+    await resetRefuelState();
     fetchMock.mockReset();
     fetchMock
       .mockResolvedValueOnce(
@@ -148,5 +154,104 @@ describe('Refuel search route', () => {
     expect(response.body.stations[0].price_label).toContain('149.9p/L E10');
     expect(response.body.stations[0].price_is_available).toBe(true);
     expect(response.body.degraded).toEqual([]);
+  });
+
+  it('returns retailer-published diesel prices sorted by cheapest', async () => {
+    await resetRefuelState();
+    fetchMock.mockReset();
+    fetchMock
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            features: [
+              {
+                id: 'origin-leeds',
+                geometry: {
+                  coordinates: [-1.548567, 53.801277],
+                },
+                properties: {
+                  full_address: 'Leeds Station, Leeds',
+                },
+              },
+            ],
+          }),
+          {
+            status: 200,
+            headers: {
+              'content-type': 'application/json',
+            },
+          },
+        ),
+      )
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            stations: [
+              {
+                site_id: 'premium-diesel-site',
+                brand: 'Premium Diesel',
+                address: '1 Expensive Road',
+                postcode: 'LS1 1AA',
+                location: {
+                  latitude: 53.802,
+                  longitude: -1.55,
+                },
+                prices: {
+                  B7: 191.9,
+                  SDV: 205.9,
+                },
+              },
+            ],
+          }),
+          {
+            status: 200,
+            headers: {
+              'content-type': 'application/json',
+            },
+          },
+        ),
+      )
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            stations: [
+              {
+                site_id: 'cheap-diesel-site',
+                brand: 'Cheaper Diesel',
+                address: '2 Value Street',
+                postcode: 'LS2 2BB',
+                location: {
+                  latitude: 53.81,
+                  longitude: -1.56,
+                },
+                prices: {
+                  B7: 181.9,
+                },
+              },
+            ],
+          }),
+          {
+            status: 200,
+            headers: {
+              'content-type': 'application/json',
+            },
+          },
+        ),
+      );
+
+    const token = await signInAndGetToken();
+    const response = await request(app)
+      .post('/api/v1/refuel-options')
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        energy_type: 'diesel',
+        origin_query: 'Leeds station',
+        sort_by: 'cheapest',
+      });
+
+    expect(response.status).toBe(200);
+    expect(response.body.search.price_status).toBe('live');
+    expect(response.body.stations[0].label).toContain('Cheaper Diesel');
+    expect(response.body.stations[0].price_label).toContain('181.9p/L B7');
   });
 });

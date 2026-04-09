@@ -96,6 +96,10 @@ let fuelPriceCache:
     }
   | null = null;
 
+export function resetRefuelCachesForTest() {
+  fuelPriceCache = null;
+}
+
 function trimValue(value?: string) {
   return value?.trim() ?? '';
 }

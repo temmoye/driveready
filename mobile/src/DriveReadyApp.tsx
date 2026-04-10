@@ -42,6 +42,12 @@ import type {
   VehicleSummary,
 } from './api/types';
 import type { LocalUploadAsset } from './api/client';
+import {
+  energyTypeFromFuelType,
+  getPasswordRecoveryFromUrl,
+  registerForPushNotifications,
+  type PasswordRecoveryState,
+} from './app-helpers';
 import { useDriveReadyModel } from './hooks/useDriveReadyModel';
 import { ghostBorder, shadows, theme, typeRamp } from './theme';
 
@@ -63,44 +69,6 @@ type AppRoute =
 
 const initialAppRoute: AppRoute = { name: 'tabs', tab: 'home' };
 
-interface PasswordRecoveryState {
-  access_token: string;
-  refresh_token?: string;
-  expires_at: string;
-}
-
-function readLinkParam(value: string | string[] | undefined) {
-  if (Array.isArray(value)) {
-    return value[0];
-  }
-
-  return typeof value === 'string' ? value : undefined;
-}
-
-function decodeLinkParam(value: string) {
-  try {
-    return decodeURIComponent(value);
-  } catch {
-    return value;
-  }
-}
-
-function resolveRecoveryExpiry(params: URLSearchParams) {
-  const expiresAt = Number(params.get('expires_at'));
-
-  if (Number.isFinite(expiresAt) && expiresAt > 0) {
-    return new Date(expiresAt * 1000).toISOString();
-  }
-
-  const expiresIn = Number(params.get('expires_in'));
-
-  if (Number.isFinite(expiresIn) && expiresIn > 0) {
-    return new Date(Date.now() + expiresIn * 1000).toISOString();
-  }
-
-  return new Date(Date.now() + 60 * 60 * 1000).toISOString();
-}
-
 function resolveExpoProjectId() {
   const easConfigProjectId = Constants.easConfig?.projectId;
 
@@ -120,89 +88,29 @@ function resolveExpoProjectId() {
 }
 
 async function registerForPushNotificationsAsync() {
-  if (!Device.isDevice) {
-    throw new Error('Push notifications require a physical device.');
-  }
-
-  let permission = await Notifications.getPermissionsAsync();
-
-  if (permission.status !== 'granted') {
-    permission = await Notifications.requestPermissionsAsync();
-  }
-
-  const permissionState: PermissionState =
-    permission.status === 'granted' ? 'granted' : permission.status === 'denied' ? 'denied' : 'not_requested';
-
-  if (permissionState !== 'granted') {
-    return {
-      permissionState,
-    };
-  }
-
-  if (Platform.OS === 'android') {
-    await Notifications.setNotificationChannelAsync('default', {
-      name: 'DriveReady reminders',
-      importance: Notifications.AndroidImportance.DEFAULT,
-    });
-  }
-
   const platform: 'android' | 'ios' = Platform.OS === 'android' ? 'android' : 'ios';
   const projectId = resolveExpoProjectId();
-  const token = (
-    projectId
-      ? await Notifications.getExpoPushTokenAsync({ projectId })
-      : await Notifications.getExpoPushTokenAsync()
-  ).data;
 
-  return {
-    permissionState,
+  return registerForPushNotifications({
+    getExpoPushToken: async (configuredProjectId) => {
+      const token = configuredProjectId
+        ? await Notifications.getExpoPushTokenAsync({ projectId: configuredProjectId })
+        : await Notifications.getExpoPushTokenAsync();
+
+      return token.data;
+    },
+    getPermissions: Notifications.getPermissionsAsync,
+    isDevice: Device.isDevice,
     platform,
-    token,
-  };
-}
-
-function getPasswordRecoveryFromUrl(url: string) {
-  const parsed = Linking.parse(url);
-  const params = new URLSearchParams();
-
-  Object.entries(parsed.queryParams ?? {}).forEach(([key, value]) => {
-    const normalizedValue = readLinkParam(value);
-
-    if (normalizedValue) {
-      params.set(key, normalizedValue);
-    }
+    projectId,
+    requestPermissions: Notifications.requestPermissionsAsync,
+    setAndroidChannel: async () => {
+      await Notifications.setNotificationChannelAsync('default', {
+        name: 'DriveReady reminders',
+        importance: Notifications.AndroidImportance.DEFAULT,
+      });
+    },
   });
-
-  const hashFragment = url.split('#')[1];
-
-  if (hashFragment) {
-    const hashParams = new URLSearchParams(hashFragment);
-    hashParams.forEach((value, key) => {
-      params.set(key, value);
-    });
-  }
-
-  const errorMessage = params.get('error_description') ?? params.get('error');
-
-  if (errorMessage) {
-    return {
-      error: decodeLinkParam(errorMessage),
-    };
-  }
-
-  const accessToken = params.get('access_token');
-
-  if (!accessToken || params.get('type') !== 'recovery') {
-    return null;
-  }
-
-  return {
-    recovery: {
-      access_token: accessToken,
-      refresh_token: params.get('refresh_token') ?? undefined,
-      expires_at: resolveRecoveryExpiry(params),
-    } satisfies PasswordRecoveryState,
-  };
 }
 
 function DriveReadyRoot() {
@@ -228,7 +136,7 @@ function DriveReadyRoot() {
       return;
     }
 
-    const passwordRecoveryResult = getPasswordRecoveryFromUrl(incomingUrl);
+    const passwordRecoveryResult = getPasswordRecoveryFromUrl(incomingUrl, Linking.parse);
 
     if (!passwordRecoveryResult) {
       return;
@@ -388,12 +296,12 @@ function DriveReadyRoot() {
     return (
       <VehicleDetailScreen
         enrichVehicle={model.enrichVehicle}
+        loadVehicleDetail={model.loadVehicleDetail}
         onBack={popApp}
         onEdit={() => pushApp({ name: 'editVehicle', vehicleId: appRoute.vehicleId })}
         onOpenDocument={(documentId) => pushApp({ name: 'documentDetail', documentId })}
         onRunTripCheck={() => pushApp({ name: 'tripCheck' })}
         vehicleId={appRoute.vehicleId}
-        model={model}
       />
     );
   }
@@ -517,7 +425,19 @@ function DriveReadyRoot() {
             redirect_to: profileRedirectUrl,
           });
           if (result.email_change_requested) {
-            Alert.alert('Confirm email change', result.message ?? 'Check your inbox to finish updating your email address.');
+            Alert.alert(
+              'Confirm email change',
+              result.message ?? 'Check your inbox to finish updating your email address.',
+              [
+                {
+                  text: 'OK',
+                  onPress: () => {
+                    popApp();
+                  },
+                },
+              ],
+            );
+            return;
           }
           popApp();
         }}
@@ -607,8 +527,8 @@ function TabbedExperience({
   if (activeTab === 'settings') {
     content = (
       <SettingsScreen
+        onClearPushDevices={model.clearPushDevices}
         notificationPreferences={model.notificationPreferences}
-        onDeletePushDevice={model.deletePushDevice}
         onOpenProfile={onOpenProfile}
         onOpenSupport={onOpenSupport}
         onOpenZones={onOpenZones}
@@ -1114,8 +1034,8 @@ function DocsScreen({
 }
 
 function SettingsScreen({
+  onClearPushDevices,
   notificationPreferences,
-  onDeletePushDevice,
   onOpenProfile,
   onOpenSupport,
   onOpenZones,
@@ -1126,8 +1046,8 @@ function SettingsScreen({
   permissionStates,
   pushDevices,
 }: {
+  onClearPushDevices: ReturnType<typeof useDriveReadyModel>['clearPushDevices'];
   notificationPreferences: ReturnType<typeof useDriveReadyModel>['notificationPreferences'];
-  onDeletePushDevice: ReturnType<typeof useDriveReadyModel>['deletePushDevice'];
   onOpenProfile: () => void;
   onOpenSupport: () => void;
   onOpenZones: () => void;
@@ -1138,6 +1058,8 @@ function SettingsScreen({
   permissionStates: ReturnType<typeof useDriveReadyModel>['permissionStates'];
   pushDevices: ReturnType<typeof useDriveReadyModel>['pushDevices'];
 }) {
+  const [isClearingPushDevices, setIsClearingPushDevices] = useState(false);
+
   const togglePreference = async (key: string, value: boolean) => {
     try {
       await onUpdateNotificationPreferences({
@@ -1148,9 +1070,7 @@ function SettingsScreen({
     }
   };
 
-  const cyclePermissionState = async (key: string, current: string) => {
-    const next = current === 'granted' ? 'denied' : current === 'denied' ? 'not_requested' : 'granted';
-
+  const recordPermissionState = async (key: string, next: PermissionState) => {
     try {
       await onUpdatePermissionStates({
         [key]: next,
@@ -1158,6 +1078,32 @@ function SettingsScreen({
     } catch (error) {
       Alert.alert('Unable to update permissions', getErrorMessage(error));
     }
+  };
+
+  const reviewPermissionState = (key: string, label: string, current: PermissionState) => {
+    const next = current === 'granted' ? 'denied' : current === 'denied' ? 'not_requested' : 'granted';
+
+    Alert.alert(
+      `${label} permission`,
+      'DriveReady records the current system permission for this device. Open system settings to change it, then update the recorded state here if needed.',
+      [
+        {
+          text: 'Open settings',
+          onPress: () => {
+            void Linking.openSettings().catch((error) => {
+              Alert.alert('Unable to open settings', getErrorMessage(error));
+            });
+          },
+        },
+        {
+          text: `Record ${prettyPermission(next)}`,
+          onPress: () => {
+            void recordPermissionState(key, next);
+          },
+        },
+        { text: 'Cancel', style: 'cancel' },
+      ],
+    );
   };
 
   const syncNotifications = async () => {
@@ -1184,12 +1130,18 @@ function SettingsScreen({
   };
 
   const clearPushDevices = async () => {
+    if (isClearingPushDevices || pushDevices.length === 0) {
+      return;
+    }
+
+    setIsClearingPushDevices(true);
+
     try {
-      for (const device of pushDevices) {
-        await onDeletePushDevice(device.id);
-      }
+      await onClearPushDevices(pushDevices.map((device) => device.id));
     } catch (error) {
       Alert.alert('Unable to remove devices', getErrorMessage(error));
+    } finally {
+      setIsClearingPushDevices(false);
     }
   };
 
@@ -1236,35 +1188,39 @@ function SettingsScreen({
         />
         {pushDevices.length > 0 ? (
           <ActionCard
-            onPress={() =>
+            onPress={() => {
+              if (isClearingPushDevices) {
+                return;
+              }
+
               Alert.alert('Clear registered devices', 'Stop sending DriveReady reminders to the devices currently registered on this account?', [
                 { text: 'Cancel', style: 'cancel' },
                 {
-                  text: 'Clear',
+                  text: isClearingPushDevices ? 'Clearing…' : 'Clear',
                   style: 'destructive',
                   onPress: () => {
                     void clearPushDevices();
                   },
                 },
-              ])
-            }
-            subtitle="Remove existing push tokens from this account."
-            title="Clear registered devices"
+              ]);
+            }}
+            subtitle={isClearingPushDevices ? 'Removing the push tokens registered on this account.' : 'Remove existing push tokens from this account.'}
+            title={isClearingPushDevices ? 'Clearing registered devices' : 'Clear registered devices'}
           />
         ) : null}
         <ActionCard
-          onPress={() => void cyclePermissionState('camera_state', permissionStates?.camera_state ?? 'not_requested')}
-          subtitle={`State: ${prettyPermission(permissionStates?.camera_state ?? 'not_requested')}`}
+          onPress={() => reviewPermissionState('camera_state', 'Camera', permissionStates?.camera_state ?? 'not_requested')}
+          subtitle={`State: ${prettyPermission(permissionStates?.camera_state ?? 'not_requested')} · Reflects the system permission on this device.`}
           title="Camera"
         />
         <ActionCard
-          onPress={() => void cyclePermissionState('files_state', permissionStates?.files_state ?? 'not_requested')}
-          subtitle={`State: ${prettyPermission(permissionStates?.files_state ?? 'not_requested')}`}
+          onPress={() => reviewPermissionState('files_state', 'Files', permissionStates?.files_state ?? 'not_requested')}
+          subtitle={`State: ${prettyPermission(permissionStates?.files_state ?? 'not_requested')} · Reflects the system permission on this device.`}
           title="Files"
         />
         <ActionCard
-          onPress={() => void cyclePermissionState('biometrics_state', permissionStates?.biometrics_state ?? 'not_requested')}
-          subtitle={`State: ${prettyPermission(permissionStates?.biometrics_state ?? 'not_requested')}`}
+          onPress={() => reviewPermissionState('biometrics_state', 'Biometrics', permissionStates?.biometrics_state ?? 'not_requested')}
+          subtitle={`State: ${prettyPermission(permissionStates?.biometrics_state ?? 'not_requested')} · Reflects the system permission on this device.`}
           title="Biometrics"
         />
 
@@ -1357,7 +1313,7 @@ function AddVehicleScreen({
 
 function VehicleDetailScreen({
   enrichVehicle,
-  model,
+  loadVehicleDetail,
   onBack,
   onEdit,
   onOpenDocument,
@@ -1365,14 +1321,14 @@ function VehicleDetailScreen({
   vehicleId,
 }: {
   enrichVehicle: (vehicleId: string) => Promise<{ freshness_at: string; mot_tests_synced: number; source_name: string; vehicle: VehicleSummary }>;
-  model: ReturnType<typeof useDriveReadyModel>;
+  loadVehicleDetail: ReturnType<typeof useDriveReadyModel>['loadVehicleDetail'];
   onBack: () => void;
   onEdit: () => void;
   onOpenDocument: (documentId: string) => void;
   onRunTripCheck: () => void;
   vehicleId: string;
 }) {
-  const [detail, setDetail] = useState<Awaited<ReturnType<typeof model.loadVehicleDetail>> | null>(null);
+  const [detail, setDetail] = useState<Awaited<ReturnType<typeof loadVehicleDetail>> | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isRefreshingVehicleData, setIsRefreshingVehicleData] = useState(false);
 
@@ -1380,8 +1336,7 @@ function VehicleDetailScreen({
     let alive = true;
 
     const load = () =>
-      model
-        .loadVehicleDetail(vehicleId)
+      loadVehicleDetail(vehicleId)
         .then((response) => {
           if (alive) {
             setDetail(response);
@@ -1399,7 +1354,7 @@ function VehicleDetailScreen({
     return () => {
       alive = false;
     };
-  }, [model, vehicleId]);
+  }, [loadVehicleDetail, vehicleId]);
 
   if (!detail) {
     return <LoadingState label="Loading vehicle" detail={error ?? 'Fetching the latest vehicle details.'} onBack={onBack} />;
@@ -1430,7 +1385,7 @@ function VehicleDetailScreen({
             setIsRefreshingVehicleData(true);
             void enrichVehicle(vehicle.id)
               .then(async (result) => {
-                const refreshed = await model.loadVehicleDetail(vehicle.id);
+                const refreshed = await loadVehicleDetail(vehicle.id);
                 setDetail(refreshed);
                 Alert.alert(
                   'Vehicle data updated',
@@ -1832,28 +1787,28 @@ function DocumentDetailScreen({
       <InputField label="Expiry date" onChangeText={setExpiresAt} value={expiresAt} />
       <ActionCard
         onPress={() => {
-          void DocumentPicker.getDocumentAsync({
-            copyToCacheDirectory: true,
-            multiple: false,
-            type: ['application/pdf', 'image/*'],
-          })
-            .then((result) => {
+          void (async () => {
+            try {
+              const result = await DocumentPicker.getDocumentAsync({
+                copyToCacheDirectory: true,
+                multiple: false,
+                type: ['application/pdf', 'image/*'],
+              });
+
               if (result.canceled || !result.assets[0]) {
                 return;
               }
 
-              return onReplaceFile(document.id, {
+              await onReplaceFile(document.id, {
                 uri: result.assets[0].uri,
                 name: result.assets[0].name,
                 mimeType: result.assets[0].mimeType,
               });
-            })
-            .then(() => {
               Alert.alert('File replaced', 'The document file was replaced on the backend.');
-            })
-            .catch((error) => {
+            } catch (error) {
               Alert.alert('Unable to replace file', getErrorMessage(error));
-            });
+            }
+          })();
         }}
         subtitle={document.file_name}
         title="Replace file"
@@ -2004,8 +1959,12 @@ function TripCheckScreen({
           <InputField
             label="Destination"
             onChangeText={(value) => {
+              const trimmedValue = value.trim();
               setDestination(value);
               setDestinationCoordinates(null);
+              setDestinationSuggestions([]);
+              setDestinationSearchError(null);
+              setIsSearchingDestinations(trimmedValue.length >= 3);
               setResult(null);
             }}
             value={destination}
@@ -2034,6 +1993,7 @@ function TripCheckScreen({
                     );
                     setDestinationSuggestions([]);
                     setDestinationSearchError(null);
+                    setIsSearchingDestinations(false);
                     setResult(null);
                   }}
                   style={({ pressed }) => [styles.suggestionCard, pressed && styles.pressed]}
@@ -2103,17 +2063,7 @@ function TripCheckScreen({
 }
 
 function energyTypeFromVehicle(vehicle?: VehicleSummary): RefuelEnergyType {
-  const fuelType = vehicle?.fuel_type.toLowerCase() ?? '';
-
-  if (fuelType.includes('electric')) {
-    return 'electric';
-  }
-
-  if (fuelType.includes('diesel')) {
-    return 'diesel';
-  }
-
-  return 'petrol';
+  return energyTypeFromFuelType(vehicle?.fuel_type);
 }
 
 function refuelEnergyLabel(energyType: RefuelEnergyType) {
@@ -2192,6 +2142,10 @@ function RefuelScreen({
   }, [origin, onSearchLocationSuggestions]);
 
   const runSearch = async () => {
+    if (isSearching) {
+      return;
+    }
+
     if (!origin.trim() && !originCoordinates) {
       Alert.alert('Choose a search area', 'Enter a postcode, town, destination, or motorway service area.');
       return;
@@ -2263,6 +2217,8 @@ function RefuelScreen({
           onChangeText={(value) => {
             setOrigin(value);
             setOriginCoordinates(null);
+            setOriginSuggestions([]);
+            setOriginSearchError(null);
             setResult(null);
           }}
           placeholder="Postcode, town, destination or service area"
@@ -2356,9 +2312,9 @@ function SavedZonesScreen({
   onUpdateZone: (zoneId: string, payload: Record<string, unknown>) => Promise<void>;
   zones: SavedZone[];
 }) {
-  const [name, setName] = useState('Manchester CAZ');
-  const [routeLabel, setRouteLabel] = useState('Client site');
-  const [chargeLabel, setChargeLabel] = useState('£10.00 daily charge');
+  const [name, setName] = useState('');
+  const [routeLabel, setRouteLabel] = useState('');
+  const [chargeLabel, setChargeLabel] = useState('');
 
   return (
     <ScreenScaffold onBack={onBack} title="Saved zones">
@@ -2403,9 +2359,9 @@ function SavedZonesScreen({
         ))}
 
         <SectionTitle title="Add zone" />
-        <InputField label="Zone name" onChangeText={setName} value={name} />
-        <InputField label="Route label" onChangeText={setRouteLabel} value={routeLabel} />
-        <InputField label="Charge label" onChangeText={setChargeLabel} value={chargeLabel} />
+        <InputField label="Zone name" onChangeText={setName} placeholder="Manchester CAZ" value={name} />
+        <InputField label="Route label" onChangeText={setRouteLabel} placeholder="Client site" value={routeLabel} />
+        <InputField label="Charge label" onChangeText={setChargeLabel} placeholder="GBP 10.00 daily charge" value={chargeLabel} />
         <PrimaryButton
           label="Save zone"
           onPress={() => {
@@ -2418,9 +2374,15 @@ function SavedZonesScreen({
               name,
               route_label: routeLabel,
               charge_amount_label: chargeLabel,
-            }).catch((error) => {
-              Alert.alert('Unable to create zone', getErrorMessage(error));
-            });
+            })
+              .then(() => {
+                setName('');
+                setRouteLabel('');
+                setChargeLabel('');
+              })
+              .catch((error) => {
+                Alert.alert('Unable to create zone', getErrorMessage(error));
+              });
           }}
         />
       </AppScrollView>
@@ -2442,6 +2404,14 @@ function ProfileScreen({
   const [email, setEmail] = useState(user?.email ?? '');
   const [phone, setPhone] = useState(user?.phone ?? '');
   const [address, setAddress] = useState(user?.address_line ?? '');
+
+  useEffect(() => {
+    setFirstName(user?.first_name ?? '');
+    setLastName(user?.last_name ?? '');
+    setEmail(user?.email ?? '');
+    setPhone(user?.phone ?? '');
+    setAddress(user?.address_line ?? '');
+  }, [user]);
 
   return (
     <FormScreen
@@ -2506,10 +2476,15 @@ function SupportScreen({
   };
 
   const shareExport = (downloadUrl: string) => {
-    void Share.share({
-      message: downloadUrl,
-      url: downloadUrl,
-    }).catch((error) => {
+    void Share.share(
+      Platform.OS === 'ios'
+        ? {
+            url: downloadUrl,
+          }
+        : {
+            message: downloadUrl,
+          },
+    ).catch((error) => {
       Alert.alert('Unable to share export', getErrorMessage(error));
     });
   };

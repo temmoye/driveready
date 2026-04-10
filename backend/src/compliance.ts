@@ -1,7 +1,7 @@
 import type {
   ComplianceStatus,
-  ParkingConfidence,
   SavedZone,
+  TripCheckConfidence,
   VehicleRecord,
 } from './types.js';
 
@@ -29,7 +29,7 @@ export interface ZoneMatchResult {
 
 export interface ZoneComplianceResult {
   compliance_status: ComplianceStatus;
-  confidence_label: ParkingConfidence;
+  confidence_label: TripCheckConfidence;
   reason: string;
 }
 

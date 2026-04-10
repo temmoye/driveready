@@ -179,7 +179,6 @@ export const apiClient = {
       method: 'PATCH',
       body: JSON.stringify(body),
     }),
-  pushDevices: () => request<{ devices: PushDeviceRecord[] }>('/me/push-devices'),
   registerPushDevice: (body: { label?: string; platform: PushDeviceRecord['platform']; token: string }) =>
     request<{ device: PushDeviceRecord }>('/me/push-devices', {
       method: 'POST',

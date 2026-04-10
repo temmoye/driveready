@@ -4,6 +4,7 @@ export type AlertTone = 'good' | 'warning' | 'critical';
 export type DocumentStatus = 'current' | 'needs_review' | 'expired';
 export type PermissionState = 'granted' | 'not_requested' | 'denied';
 export type ParkingConfidence = 'high' | 'medium' | 'low';
+export type TripCheckConfidence = ParkingConfidence | 'unknown';
 export type RefuelEnergyType = 'petrol' | 'diesel' | 'electric';
 export type RefuelSortMode = 'closest' | 'cheapest';
 export type TripInputType = 'destination' | 'saved_zone';
@@ -204,7 +205,7 @@ export interface TripCheckRecord {
   saved_zone_id?: string;
   compliance_status: ComplianceStatus;
   charge_amount_label: string;
-  confidence_label: ParkingConfidence;
+  confidence_label: TripCheckConfidence;
   freshness_at: string;
   source_name: string;
   parking_suggestions: ParkingSuggestion[];

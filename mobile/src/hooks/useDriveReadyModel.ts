@@ -7,6 +7,7 @@ import {
   loadStoredSession,
   storeSession,
 } from '../api/session';
+import { resolvePasswordResetSession } from '../app-helpers';
 import type {
   AlertSummary,
   DashboardSnapshot,
@@ -158,14 +159,10 @@ export function useDriveReadyModel() {
         password: payload.password,
       });
 
-      if (result.session) {
-        await storeSession(result.session);
-      } else if (payload.refresh_token) {
-        await storeSession({
-          token: payload.access_token,
-          refresh_token: payload.refresh_token,
-          expires_at: payload.expires_at,
-        });
+      const sessionToStore = resolvePasswordResetSession(result, payload);
+
+      if (sessionToStore) {
+        await storeSession(sessionToStore);
       }
 
       await refreshAll();
@@ -370,6 +367,18 @@ export function useDriveReadyModel() {
     [refreshAll],
   );
 
+  const clearPushDevices = useCallback(
+    async (deviceIds: string[]) => {
+      if (deviceIds.length === 0) {
+        return;
+      }
+
+      await Promise.all(deviceIds.map((deviceId) => apiClient.deletePushDevice(deviceId)));
+      await refreshAll();
+    },
+    [refreshAll],
+  );
+
   const exportRequest = useCallback(async () => {
     return apiClient.exportRequest();
   }, []);
@@ -410,6 +419,7 @@ export function useDriveReadyModel() {
     updatePermissionStates,
     registerPushDevice,
     deletePushDevice,
+    clearPushDevices,
     exportRequest,
   };
 }

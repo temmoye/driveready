@@ -1,4 +1,5 @@
 import type { AppData, UserProfile } from './types.js';
+import { defaultLocalAuthState } from './local-auth.js';
 
 const nowIso = new Date().toISOString();
 
@@ -23,6 +24,7 @@ export const appData: AppData = {
     phone: '+44 7700 900123',
     address_line: '31 Canalside Walk, Leeds',
   },
+  local_auth: defaultLocalAuthState(),
   notification_preferences: {
     mot_enabled: true,
     tax_enabled: true,
@@ -189,6 +191,10 @@ export const appData: AppData = {
       handled: false,
     },
   ],
+  scheduled_reminders: [],
+  push_devices: [],
+  reminder_dispatches: [],
+  data_exports: [],
   zones: [
     {
       id: 'zone-london',
@@ -283,6 +289,7 @@ export function createEmptyUserAppData(user: UserProfile): AppData {
       phone: user.phone ?? '',
       address_line: user.address_line ?? '',
     },
+    local_auth: undefined,
     notification_preferences: {
       mot_enabled: true,
       tax_enabled: true,
@@ -302,6 +309,10 @@ export function createEmptyUserAppData(user: UserProfile): AppData {
     service_history: [],
     documents: [],
     alerts: [],
+    scheduled_reminders: [],
+    push_devices: [],
+    reminder_dispatches: [],
+    data_exports: [],
     zones: [],
     trip_checks: [],
   };

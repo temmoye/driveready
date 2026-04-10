@@ -4,7 +4,7 @@ import type {
   RefuelSearchSummary,
   RefuelSortMode,
   RefuelStationOption,
-} from './types.js';
+} from './types';
 
 interface RefuelSearchInput {
   energyType: RefuelEnergyType;

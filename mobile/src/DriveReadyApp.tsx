@@ -1,6 +1,9 @@
 import React, { PropsWithChildren, useEffect, useMemo, useState } from 'react';
+import Constants from 'expo-constants';
+import * as Device from 'expo-device';
 import * as DocumentPicker from 'expo-document-picker';
 import * as Linking from 'expo-linking';
+import * as Notifications from 'expo-notifications';
 import {
   Alert,
   Image,
@@ -25,17 +28,19 @@ import type {
   ComplianceStatus,
   DocumentStatus,
   DocumentSummary,
+  LocationSuggestion,
   ParkingSuggestion,
+  PermissionState,
   RefuelEnergyType,
   RefuelSearchResponse,
   RefuelSortMode,
   RefuelStationOption,
   SavedZone,
   SupportItem,
+  TripCheckResponse,
   VehicleSummary,
 } from './api/types';
 import type { LocalUploadAsset } from './api/client';
-import { hasMapboxToken, searchDestinationSuggestions, type DestinationSuggestion } from './api/mapbox';
 import { useDriveReadyModel } from './hooks/useDriveReadyModel';
 import { ghostBorder, shadows, theme, typeRamp } from './theme';
 
@@ -93,6 +98,66 @@ function resolveRecoveryExpiry(params: URLSearchParams) {
   }
 
   return new Date(Date.now() + 60 * 60 * 1000).toISOString();
+}
+
+function resolveExpoProjectId() {
+  const easConfigProjectId = Constants.easConfig?.projectId;
+
+  if (easConfigProjectId) {
+    return easConfigProjectId;
+  }
+
+  const configExtra = Constants.expoConfig?.extra as
+    | {
+        eas?: {
+          projectId?: string;
+        };
+      }
+    | undefined;
+
+  return configExtra?.eas?.projectId ?? process.env.EXPO_PUBLIC_EXPO_PROJECT_ID?.trim() ?? undefined;
+}
+
+async function registerForPushNotificationsAsync() {
+  if (!Device.isDevice) {
+    throw new Error('Push notifications require a physical device.');
+  }
+
+  let permission = await Notifications.getPermissionsAsync();
+
+  if (permission.status !== 'granted') {
+    permission = await Notifications.requestPermissionsAsync();
+  }
+
+  const permissionState: PermissionState =
+    permission.status === 'granted' ? 'granted' : permission.status === 'denied' ? 'denied' : 'not_requested';
+
+  if (permissionState !== 'granted') {
+    return {
+      permissionState,
+    };
+  }
+
+  if (Platform.OS === 'android') {
+    await Notifications.setNotificationChannelAsync('default', {
+      name: 'DriveReady reminders',
+      importance: Notifications.AndroidImportance.DEFAULT,
+    });
+  }
+
+  const platform: 'android' | 'ios' = Platform.OS === 'android' ? 'android' : 'ios';
+  const projectId = resolveExpoProjectId();
+  const token = (
+    projectId
+      ? await Notifications.getExpoPushTokenAsync({ projectId })
+      : await Notifications.getExpoPushTokenAsync()
+  ).data;
+
+  return {
+    permissionState,
+    platform,
+    token,
+  };
 }
 
 function getPasswordRecoveryFromUrl(url: string) {
@@ -392,7 +457,7 @@ function DriveReadyRoot() {
           popApp();
         }}
         onReplaceFile={async (documentId, asset) => {
-          const uploaded = await model.uploadFileAsset(asset);
+          const uploaded = await model.replaceDocumentFile(documentId, asset);
           await model.updateDocument(documentId, {
             file_key: uploaded.upload.file_key,
             file_name: uploaded.upload.file_name,
@@ -409,6 +474,7 @@ function DriveReadyRoot() {
       <TripCheckScreen
         onBack={popApp}
         onRunTripCheck={model.runTripCheck}
+        onSearchLocationSuggestions={model.searchLocationSuggestions}
         tripChecks={model.tripChecks}
         vehicles={model.vehicles}
         zones={model.zones}
@@ -420,6 +486,7 @@ function DriveReadyRoot() {
     return (
       <RefuelScreen
         onBack={popApp}
+        onSearchLocationSuggestions={model.searchLocationSuggestions}
         onSearchRefuelOptions={model.searchRefuelOptions}
         vehicles={model.vehicles}
       />
@@ -533,13 +600,16 @@ function TabbedExperience({
     content = (
       <SettingsScreen
         notificationPreferences={model.notificationPreferences}
+        onDeletePushDevice={model.deletePushDevice}
         onOpenProfile={onOpenProfile}
         onOpenSupport={onOpenSupport}
         onOpenZones={onOpenZones}
+        onRegisterPushDevice={model.registerPushDevice}
         onSignOut={model.signOut}
         onUpdateNotificationPreferences={model.updateNotificationPreferences}
         onUpdatePermissionStates={model.updatePermissionStates}
         permissionStates={model.permissionStates}
+        pushDevices={model.pushDevices}
       />
     );
   }
@@ -1037,22 +1107,28 @@ function DocsScreen({
 
 function SettingsScreen({
   notificationPreferences,
+  onDeletePushDevice,
   onOpenProfile,
   onOpenSupport,
   onOpenZones,
+  onRegisterPushDevice,
   onSignOut,
   onUpdateNotificationPreferences,
   onUpdatePermissionStates,
   permissionStates,
+  pushDevices,
 }: {
   notificationPreferences: ReturnType<typeof useDriveReadyModel>['notificationPreferences'];
+  onDeletePushDevice: ReturnType<typeof useDriveReadyModel>['deletePushDevice'];
   onOpenProfile: () => void;
   onOpenSupport: () => void;
   onOpenZones: () => void;
+  onRegisterPushDevice: ReturnType<typeof useDriveReadyModel>['registerPushDevice'];
   onSignOut: () => Promise<void>;
   onUpdateNotificationPreferences: (payload: Record<string, unknown>) => Promise<void>;
   onUpdatePermissionStates: (payload: Record<string, unknown>) => Promise<void>;
   permissionStates: ReturnType<typeof useDriveReadyModel>['permissionStates'];
+  pushDevices: ReturnType<typeof useDriveReadyModel>['pushDevices'];
 }) {
   const togglePreference = async (key: string, value: boolean) => {
     try {
@@ -1073,6 +1149,39 @@ function SettingsScreen({
       });
     } catch (error) {
       Alert.alert('Unable to update permissions', getErrorMessage(error));
+    }
+  };
+
+  const syncNotifications = async () => {
+    try {
+      const result = await registerForPushNotificationsAsync();
+      await onUpdatePermissionStates({
+        notifications_state: result.permissionState,
+      });
+
+      if (result.permissionState !== 'granted' || !result.token || !result.platform) {
+        Alert.alert('Notifications not enabled', 'Grant notification permission on this device to receive DriveReady reminders.');
+        return;
+      }
+
+      await onRegisterPushDevice({
+        token: result.token,
+        platform: result.platform,
+        label: Device.deviceName ?? `${Platform.OS} device`,
+      });
+      Alert.alert('Notifications ready', 'This device is now registered for DriveReady reminders.');
+    } catch (error) {
+      Alert.alert('Unable to enable notifications', getErrorMessage(error));
+    }
+  };
+
+  const clearPushDevices = async () => {
+    try {
+      for (const device of pushDevices) {
+        await onDeletePushDevice(device.id);
+      }
+    } catch (error) {
+      Alert.alert('Unable to remove devices', getErrorMessage(error));
     }
   };
 
@@ -1113,10 +1222,28 @@ function SettingsScreen({
 
         <SectionTitle title="Permissions" />
         <ActionCard
-          onPress={() => void cyclePermissionState('notifications_state', permissionStates?.notifications_state ?? 'not_requested')}
-          subtitle={`State: ${prettyPermission(permissionStates?.notifications_state ?? 'not_requested')}`}
+          onPress={() => void syncNotifications()}
+          subtitle={`State: ${prettyPermission(permissionStates?.notifications_state ?? 'not_requested')} · ${pushDevices.length} device${pushDevices.length === 1 ? '' : 's'} registered`}
           title="Notifications"
         />
+        {pushDevices.length > 0 ? (
+          <ActionCard
+            onPress={() =>
+              Alert.alert('Clear registered devices', 'Stop sending DriveReady reminders to the devices currently registered on this account?', [
+                { text: 'Cancel', style: 'cancel' },
+                {
+                  text: 'Clear',
+                  style: 'destructive',
+                  onPress: () => {
+                    void clearPushDevices();
+                  },
+                },
+              ])
+            }
+            subtitle="Remove existing push tokens from this account."
+            title="Clear registered devices"
+          />
+        ) : null}
         <ActionCard
           onPress={() => void cyclePermissionState('camera_state', permissionStates?.camera_state ?? 'not_requested')}
           subtitle={`State: ${prettyPermission(permissionStates?.camera_state ?? 'not_requested')}`}
@@ -1743,12 +1870,14 @@ function DocumentDetailScreen({
 function TripCheckScreen({
   onBack,
   onRunTripCheck,
+  onSearchLocationSuggestions,
   tripChecks,
   vehicles,
   zones,
 }: {
   onBack: () => void;
-  onRunTripCheck: (payload: Record<string, unknown>) => Promise<ReturnType<typeof useDriveReadyModel>['tripChecks'][number]>;
+  onRunTripCheck: (payload: Record<string, unknown>) => Promise<TripCheckResponse>;
+  onSearchLocationSuggestions: (query: string) => Promise<LocationSuggestion[]>;
   tripChecks: ReturnType<typeof useDriveReadyModel>['tripChecks'];
   vehicles: VehicleSummary[];
   zones: SavedZone[];
@@ -1756,9 +1885,10 @@ function TripCheckScreen({
   const [vehicleId, setVehicleId] = useState(vehicles[0]?.id ?? '');
   const [mode, setMode] = useState<'destination' | 'saved_zone'>('destination');
   const [destination, setDestination] = useState('');
+  const [destinationCoordinates, setDestinationCoordinates] = useState<{ latitude: number; longitude: number } | null>(null);
   const [zoneId, setZoneId] = useState(zones[0]?.id ?? '');
-  const [result, setResult] = useState<ReturnType<typeof useDriveReadyModel>['tripChecks'][number] | null>(null);
-  const [destinationSuggestions, setDestinationSuggestions] = useState<DestinationSuggestion[]>([]);
+  const [result, setResult] = useState<TripCheckResponse | null>(null);
+  const [destinationSuggestions, setDestinationSuggestions] = useState<LocationSuggestion[]>([]);
   const [isSearchingDestinations, setIsSearchingDestinations] = useState(false);
   const [destinationSearchError, setDestinationSearchError] = useState<string | null>(null);
 
@@ -1772,7 +1902,7 @@ function TripCheckScreen({
 
     const trimmedDestination = destination.trim();
 
-    if (trimmedDestination.length < 3 || !hasMapboxToken()) {
+    if (trimmedDestination.length < 3) {
       setDestinationSuggestions([]);
       setDestinationSearchError(null);
       setIsSearchingDestinations(false);
@@ -1784,13 +1914,14 @@ function TripCheckScreen({
     setDestinationSearchError(null);
 
     const timeoutId = setTimeout(() => {
-      void searchDestinationSuggestions(trimmedDestination)
+      void onSearchLocationSuggestions(trimmedDestination)
         .then((suggestions) => {
           if (cancelled) {
             return;
           }
 
           setDestinationSuggestions(suggestions);
+          setDestinationSearchError(null);
         })
         .catch(() => {
           if (cancelled) {
@@ -1811,7 +1942,7 @@ function TripCheckScreen({
       cancelled = true;
       clearTimeout(timeoutId);
     };
-  }, [destination, mode]);
+  }, [destination, mode, onSearchLocationSuggestions]);
 
   const runCheck = async () => {
     if (!vehicleId || (mode === 'destination' && !destination.trim()) || (mode === 'saved_zone' && !zoneId)) {
@@ -1824,6 +1955,7 @@ function TripCheckScreen({
         vehicle_id: vehicleId,
         input_type: mode,
         destination_query: mode === 'destination' ? destination : undefined,
+        ...(mode === 'destination' && destinationCoordinates ? destinationCoordinates : {}),
         saved_zone_id: mode === 'saved_zone' ? zoneId : undefined,
         persist_result: true,
       });
@@ -1865,13 +1997,12 @@ function TripCheckScreen({
             label="Destination"
             onChangeText={(value) => {
               setDestination(value);
+              setDestinationCoordinates(null);
               setResult(null);
             }}
             value={destination}
           />
-          {hasMapboxToken() ? (
-            <Text style={styles.fieldHelperText}>Suggestions powered by Mapbox</Text>
-          ) : null}
+          <Text style={styles.fieldHelperText}>Suggestions are resolved by the DriveReady backend.</Text>
           {isSearchingDestinations ? (
             <Text style={styles.fieldStatusText}>Searching destinations…</Text>
           ) : null}
@@ -1885,6 +2016,14 @@ function TripCheckScreen({
                   key={suggestion.id}
                   onPress={() => {
                     setDestination(suggestion.label);
+                    setDestinationCoordinates(
+                      typeof suggestion.latitude === 'number' && typeof suggestion.longitude === 'number'
+                        ? {
+                            latitude: suggestion.latitude,
+                            longitude: suggestion.longitude,
+                          }
+                        : null,
+                    );
                     setDestinationSuggestions([]);
                     setDestinationSearchError(null);
                     setResult(null);
@@ -1892,8 +2031,8 @@ function TripCheckScreen({
                   style={({ pressed }) => [styles.suggestionCard, pressed && styles.pressed]}
                 >
                   <Text style={styles.suggestionTitle}>{suggestion.label}</Text>
-                  {suggestion.secondaryLabel ? (
-                    <Text style={styles.suggestionMeta}>{suggestion.secondaryLabel}</Text>
+                  {suggestion.secondary_label ? (
+                    <Text style={styles.suggestionMeta}>{suggestion.secondary_label}</Text>
                   ) : null}
                 </Pressable>
               ))}
@@ -1915,20 +2054,22 @@ function TripCheckScreen({
       {result ? (
         <View style={styles.resultStack}>
           <ListCard
-            badge={complianceLabel(result.compliance_status)}
-            body={`Charge-zone estimate: ${result.charge_amount_label} · Confidence ${result.confidence_label}`}
-            title={mode === 'destination' ? result.destination_query ?? 'Trip result' : 'Saved zone result'}
+            badge={complianceLabel(result.trip_check.compliance_status)}
+            body={`Charge-zone estimate: ${result.trip_check.charge_amount_label} · Confidence ${result.trip_check.confidence_label}`}
+            title={
+              mode === 'destination'
+                ? result.trip_check.destination_query ?? 'Trip result'
+                : result.matched_zone?.name ?? 'Saved zone result'
+            }
           />
-          {result.parking_suggestions.length > 0 ? (
-            result.parking_suggestions.map((parking) => (
+          {result.degraded.map((entry) => (
+            <ListCard key={entry.code} body={entry.message} title={entry.code === 'parking_provider_pending' ? 'Parking suggestions pending' : 'Trip Check note'} />
+          ))}
+          {result.trip_check.parking_suggestions.length > 0 ? (
+            result.trip_check.parking_suggestions.map((parking) => (
               <ParkingCard key={parking.id} parking={parking} />
             ))
-          ) : (
-            <ListCard
-              body="We have requested parking-provider access. Until a contract/API is connected, DriveReady will not invent parking availability, restrictions, or prices."
-              title="Parking suggestions pending"
-            />
-          )}
+          ) : null}
         </View>
       ) : null}
 
@@ -1981,10 +2122,12 @@ function pricePendingTitle(energyType: RefuelEnergyType) {
 
 function RefuelScreen({
   onBack,
+  onSearchLocationSuggestions,
   onSearchRefuelOptions,
   vehicles,
 }: {
   onBack: () => void;
+  onSearchLocationSuggestions: (query: string) => Promise<LocationSuggestion[]>;
   onSearchRefuelOptions: (payload: Record<string, unknown>) => Promise<RefuelSearchResponse>;
   vehicles: VehicleSummary[];
 }) {
@@ -1996,7 +2139,7 @@ function RefuelScreen({
   const [originCoordinates, setOriginCoordinates] = useState<{ latitude: number; longitude: number } | null>(null);
   const [result, setResult] = useState<RefuelSearchResponse | null>(null);
   const [isSearching, setIsSearching] = useState(false);
-  const [originSuggestions, setOriginSuggestions] = useState<DestinationSuggestion[]>([]);
+  const [originSuggestions, setOriginSuggestions] = useState<LocationSuggestion[]>([]);
   const [originSearchError, setOriginSearchError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -2007,7 +2150,7 @@ function RefuelScreen({
   useEffect(() => {
     const trimmedOrigin = origin.trim();
 
-    if (trimmedOrigin.length < 3 || !hasMapboxToken()) {
+    if (trimmedOrigin.length < 3) {
       setOriginSuggestions([]);
       setOriginSearchError(null);
       return;
@@ -2015,7 +2158,7 @@ function RefuelScreen({
 
     let cancelled = false;
     const timeoutId = setTimeout(() => {
-      void searchDestinationSuggestions(trimmedOrigin)
+      void onSearchLocationSuggestions(trimmedOrigin)
         .then((suggestions) => {
           if (cancelled) {
             return;
@@ -2038,7 +2181,7 @@ function RefuelScreen({
       cancelled = true;
       clearTimeout(timeoutId);
     };
-  }, [origin]);
+  }, [origin, onSearchLocationSuggestions]);
 
   const runSearch = async () => {
     if (!origin.trim() && !originCoordinates) {
@@ -2118,7 +2261,7 @@ function RefuelScreen({
           value={origin}
         />
         <Text style={styles.fieldHelperText}>
-          DriveReady searches nearby {energyType === 'electric' ? 'chargers' : 'filling stations'} from the backend.
+          DriveReady resolves the search area on the backend and then searches nearby {energyType === 'electric' ? 'chargers' : 'filling stations'}.
           {energyType === 'electric' ? ' Charging tariffs appear after a tariff provider is connected.' : ' Petrol/diesel prices use retailer-published UK fuel feeds when available.'}
         </Text>
         {originSearchError ? (
@@ -2144,10 +2287,10 @@ function RefuelScreen({
                   setResult(null);
                 }}
                 style={({ pressed }) => [styles.suggestionCard, pressed && styles.pressed]}
-              >
-                <Text style={styles.suggestionTitle}>{suggestion.label}</Text>
-                {suggestion.secondaryLabel ? (
-                  <Text style={styles.suggestionMeta}>{suggestion.secondaryLabel}</Text>
+                >
+                  <Text style={styles.suggestionTitle}>{suggestion.label}</Text>
+                {suggestion.secondary_label ? (
+                  <Text style={styles.suggestionMeta}>{suggestion.secondary_label}</Text>
                 ) : null}
               </Pressable>
             ))}
@@ -2327,7 +2470,7 @@ function SupportScreen({
   items: SupportItem[];
   onDeleteAccount: () => Promise<void>;
   onBack: () => void;
-  onExportRequest: () => Promise<void>;
+  onExportRequest: ReturnType<typeof useDriveReadyModel>['exportRequest'];
 }) {
   const confirmDeleteAccount = () => {
     Alert.alert(
@@ -2362,8 +2505,8 @@ function SupportScreen({
           label="Request data export"
           onPress={() => {
             void onExportRequest()
-              .then(() => {
-                Alert.alert('Export requested', 'A backend export request has been queued. This beta currently records the request; downloadable export delivery is still being prepared.');
+              .then((result) => {
+                Alert.alert('Export ready', result.export.download_url);
               })
               .catch((error) => {
                 Alert.alert('Unable to request export', getErrorMessage(error));

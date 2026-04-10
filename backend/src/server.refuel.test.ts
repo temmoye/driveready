@@ -338,4 +338,120 @@ describe('Refuel search route', () => {
     expect(response.body.stations[0].price_is_available).toBe(false);
     expect(response.body.degraded.map((entry: { code: string }) => entry.code)).toContain('ev_tariff_provider_pending');
   });
+
+  it('returns live electric tariffs when a tariff provider is configured', async () => {
+    process.env.DRIVEREADY_EV_TARIFF_PROVIDER = 'drive-tariffs';
+    process.env.DRIVEREADY_EV_TARIFF_API_BASE_URL = 'https://tariffs.example';
+    process.env.DRIVEREADY_EV_TARIFF_API_KEY = 'tariff-key';
+
+    await resetRefuelState();
+    fetchMock.mockReset();
+    fetchMock
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            features: [
+              {
+                id: 'origin-leeds',
+                geometry: {
+                  coordinates: [-1.548567, 53.801277],
+                },
+                properties: {
+                  full_address: 'Leeds Station, Leeds',
+                },
+              },
+            ],
+          }),
+          {
+            status: 200,
+            headers: {
+              'content-type': 'application/json',
+            },
+          },
+        ),
+      )
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            features: [
+              {
+                id: 'charger-fast',
+                properties: {
+                  name: 'Fastned Leeds',
+                  full_address: 'A1(M) Services, Leeds',
+                  distance: 1200,
+                  mapbox_id: 'charger-fast',
+                },
+                geometry: {
+                  coordinates: [-1.56, 53.81],
+                },
+              },
+              {
+                id: 'charger-slow',
+                properties: {
+                  name: 'Pod Point Retail Park',
+                  full_address: 'Retail Park, Leeds',
+                  distance: 2400,
+                  mapbox_id: 'charger-slow',
+                },
+                geometry: {
+                  coordinates: [-1.57, 53.82],
+                },
+              },
+            ],
+          }),
+          {
+            status: 200,
+            headers: {
+              'content-type': 'application/json',
+            },
+          },
+        ),
+      )
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            tariffs: [
+              {
+                station_id: 'charger-fast',
+                price_pence_per_kwh: 59,
+                connector_summary: 'CCS up to 150kW',
+                updated_at: '2026-04-09T11:10:00.000Z',
+              },
+            ],
+          }),
+          {
+            status: 200,
+            headers: {
+              'content-type': 'application/json',
+            },
+          },
+        ),
+      );
+
+    const token = await signInAndGetToken();
+    const response = await request(app)
+      .post('/api/v1/refuel-options')
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        energy_type: 'electric',
+        origin_query: 'Leeds station',
+        sort_by: 'cheapest',
+      });
+
+    delete process.env.DRIVEREADY_EV_TARIFF_PROVIDER;
+    delete process.env.DRIVEREADY_EV_TARIFF_API_BASE_URL;
+    delete process.env.DRIVEREADY_EV_TARIFF_API_KEY;
+
+    expect(response.status).toBe(200);
+    expect(response.body.search.price_status).toBe('live');
+    expect(response.body.stations[0].label).toContain('Fastned Leeds');
+    expect(response.body.stations[0].price_is_available).toBe(true);
+    expect(response.body.stations[0].price_label).toContain('59.0p/kWh');
+    expect(response.body.degraded).toEqual([
+      expect.objectContaining({
+        code: 'ev_tariff_provider_partial_match',
+      }),
+    ]);
+  });
 });

@@ -11,6 +11,7 @@ import type {
   VehicleRecord,
   VehicleSummary,
 } from './types.js';
+import { evaluateVehicleAgainstZone, getSupportedZonePolicies, mergeZoneWithPolicy } from './compliance.js';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -58,11 +59,13 @@ function toneFromDays(days: number): AlertTone {
 }
 
 export function deriveVehicleCompliance(vehicle: VehicleRecord): ComplianceStatus {
-  if (vehicle.fuel_type.toLowerCase().includes('diesel') && vehicle.registration_plate === 'VO18 XYZ') {
-    return 'charge_risk';
+  const baselineZone = getSupportedZonePolicies()[0];
+
+  if (!baselineZone) {
+    return 'unknown';
   }
 
-  return 'compliant';
+  return evaluateVehicleAgainstZone(vehicle, baselineZone).compliance_status;
 }
 
 export function summarizeVehicle(vehicle: VehicleRecord, now = new Date()): VehicleSummary {
@@ -178,9 +181,8 @@ export function buildDashboard(
 }
 
 export function linkVehicleZones(vehicle: VehicleRecord, zones: SavedZone[]) {
-  const compliance = deriveVehicleCompliance(vehicle);
   return zones.map((zone) => ({
-    ...zone,
-    compliance_status: zone.name === 'London ULEZ' && compliance === 'charge_risk' ? 'charge_risk' : 'compliant',
+    ...mergeZoneWithPolicy(zone),
+    compliance_status: evaluateVehicleAgainstZone(vehicle, zone).compliance_status,
   }));
 }

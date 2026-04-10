@@ -277,6 +277,55 @@ export async function confirmSupabasePasswordReset(input: {
   }
 }
 
+export async function updateSupabaseAuthProfile(input: {
+  userId: string;
+  email?: string;
+  first_name?: string;
+  last_name?: string;
+  existingProfile: UserProfile;
+}) {
+  const { adminClient } = requireSupabaseClients();
+  const updates: {
+    email?: string;
+    email_confirm?: boolean;
+    user_metadata?: {
+      first_name: string;
+      last_name: string;
+    };
+  } = {};
+
+  if (input.email && input.email !== input.existingProfile.email) {
+    updates.email = input.email;
+    updates.email_confirm = true;
+  }
+
+  if (
+    (input.first_name && input.first_name !== input.existingProfile.first_name) ||
+    (input.last_name && input.last_name !== input.existingProfile.last_name)
+  ) {
+    updates.user_metadata = {
+      first_name: input.first_name ?? input.existingProfile.first_name,
+      last_name: input.last_name ?? input.existingProfile.last_name,
+    };
+  }
+
+  if (Object.keys(updates).length === 0) {
+    return input.existingProfile;
+  }
+
+  const { data, error } = await adminClient.auth.admin.updateUserById(input.userId, updates);
+
+  if (error || !data.user) {
+    throw new Error(error?.message ?? 'Unable to update Supabase profile.');
+  }
+
+  return profileFromUser(data.user, {
+    ...input.existingProfile,
+    ...(updates.user_metadata ?? {}),
+    ...(updates.email ? { email: updates.email } : {}),
+  });
+}
+
 export async function deleteSupabaseAuthUser(userId: string) {
   const { adminClient } = requireSupabaseClients();
   const { error } = await adminClient.auth.admin.deleteUser(userId);

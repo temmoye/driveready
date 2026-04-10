@@ -19,6 +19,14 @@ export interface SessionState {
   expires_at: string;
 }
 
+export interface LocationSuggestion {
+  id: string;
+  label: string;
+  secondary_label?: string;
+  longitude?: number;
+  latitude?: number;
+}
+
 export interface UserProfile {
   id: string;
   first_name: string;
@@ -34,6 +42,15 @@ export interface NotificationPreferences {
   insurance_enabled: boolean;
   docs_enabled: boolean;
   zones_enabled: boolean;
+}
+
+export interface PushDeviceRecord {
+  id: string;
+  token: string;
+  platform: 'ios' | 'android';
+  label?: string;
+  created_at: string;
+  last_seen_at: string;
 }
 
 export interface PermissionStates {
@@ -193,6 +210,11 @@ export interface TripCheckRecord {
   parking_suggestions: ParkingSuggestion[];
 }
 
+export interface DegradedNote {
+  code: string;
+  message: string;
+}
+
 export interface RefuelStationOption {
   id: string;
   label: string;
@@ -269,6 +291,27 @@ export interface SupportItem {
   id: string;
   title: string;
   body: string;
+}
+
+export interface DataExportRecord {
+  id: string;
+  created_at: string;
+  file_key: string;
+  file_name: string;
+  mime_type: string;
+  download_url: string;
+  source_name: string;
+}
+
+export interface TripCheckResponse {
+  trip_check: TripCheckRecord;
+  degraded: DegradedNote[];
+  matched_zone: SavedZone | null;
+  resolved_destination: {
+    label: string;
+    latitude: number;
+    longitude: number;
+  } | null;
 }
 
 export interface ApiErrorResponse {

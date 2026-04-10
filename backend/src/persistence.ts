@@ -130,6 +130,22 @@ function createLocalStorageDriver(storageFile: string): StorageDriver {
 function createSupabaseStorageDriver(config: SupabaseConfig): StorageDriver {
   const baseUrl = config.url.replace(/\/$/, '');
 
+  function listRowIds(table: string, rows: Array<Record<string, unknown>>) {
+    return rows.map((row) => {
+      const id = typeof row.id === 'string' ? trimValue(row.id) : '';
+
+      if (!id) {
+        throw new Error(`Normalized storage row in "${table}" is missing an id.`);
+      }
+
+      return id;
+    });
+  }
+
+  function buildNotInFilter(ids: string[]) {
+    return `not.in.(${ids.map((id) => JSON.stringify(id)).join(',')})`;
+  }
+
   async function request<T>(tableName: string, method: string, searchParams: URLSearchParams, body?: unknown) {
     const endpoint = new URL(`/rest/v1/${tableName}`, baseUrl);
     endpoint.search = searchParams.toString();
@@ -276,6 +292,31 @@ function createSupabaseStorageDriver(config: SupabaseConfig): StorageDriver {
     await deleteLegacyUserState(userId);
   }
 
+  async function replaceNormalizedRows(table: string, userId: string, rows: Array<Record<string, unknown>>) {
+    const rowIds = listRowIds(table, rows);
+
+    if (rows.length > 0) {
+      await request<void>(
+        table,
+        'POST',
+        new URLSearchParams({
+          on_conflict: 'id',
+        }),
+        rows,
+      );
+    }
+
+    const deleteParams = new URLSearchParams({
+      user_id: `eq.${userId}`,
+    });
+
+    if (rowIds.length > 0) {
+      deleteParams.set('id', buildNotInFilter(rowIds));
+    }
+
+    await request<void>(table, 'DELETE', deleteParams);
+  }
+
   async function upsertNormalizedUserState(userId: string, state: AppData) {
     const writeModel = buildNormalizedWriteModel(userId, state);
     await request<void>(
@@ -287,27 +328,10 @@ function createSupabaseStorageDriver(config: SupabaseConfig): StorageDriver {
       [writeModel.profile],
     );
 
+    // PostgREST writes here are not wrapped in a cross-table transaction. Upserting before pruning stale ids
+    // keeps each repeated table retry-safe and avoids leaving a table empty if a write is interrupted.
     await Promise.all(writeModel.repeatedTables.map(async ({ rows, table }) => {
-      await request<void>(
-        table,
-        'DELETE',
-        new URLSearchParams({
-          user_id: `eq.${userId}`,
-        }),
-      );
-
-      if (rows.length === 0) {
-        return;
-      }
-
-      await request<void>(
-        table,
-        'POST',
-        new URLSearchParams({
-          on_conflict: 'id',
-        }),
-        rows,
-      );
+      await replaceNormalizedRows(table, userId, rows);
     }));
   }
 

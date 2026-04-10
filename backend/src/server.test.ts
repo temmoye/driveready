@@ -12,6 +12,7 @@ beforeAll(async () => {
   tempDir = mkdtempSync(path.join(os.tmpdir(), 'driveready-backend-'));
   process.env.NODE_ENV = 'test';
   process.env.DRIVEREADY_AUTH_REDIRECT_ALLOWLIST = 'drivereadyuk://,exp://127.0.0.1:8081';
+  process.env.DRIVEREADY_TRUST_PROXY = 'true';
   process.env.DRIVEREADY_DATA_FILE = path.join(tempDir, 'app-data.json');
   process.env.DRIVEREADY_AUDIT_FILE = path.join(tempDir, 'audit.log');
   process.env.DRIVEREADY_UPLOAD_DIR = path.join(tempDir, 'uploads');
@@ -218,6 +219,39 @@ describe('DriveReady backend', () => {
 
     expect(runJob.status).toBe(200);
     expect(runJob.body.sent_count).toBeGreaterThan(0);
+  });
+
+  it('rejects badly formed Expo push tokens', async () => {
+    const token = await signInAndGetToken();
+
+    const createDevice = await request(app)
+      .post('/api/v1/me/push-devices')
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        token: 'bad-token',
+        platform: 'ios',
+        label: 'iPhone',
+      });
+
+    expect(createDevice.status).toBe(400);
+    expect(createDevice.body.error.message).toBe('Enter a valid Expo push token.');
+  });
+
+  it('rate limits repeated internal job requests from the same source', async () => {
+    const headers = {
+      'X-Forwarded-For': '198.51.100.42',
+    };
+    const responses = [];
+
+    for (let index = 0; index < 7; index += 1) {
+      responses.push(await request(app).post('/api/v1/internal/jobs/run-reminders').set(headers).send({}));
+    }
+
+    responses.slice(0, 6).forEach((response) => {
+      expect(response.status).toBe(200);
+    });
+    expect(responses[6].status).toBe(429);
+    expect(responses[6].body.error.message).toBe('Too many internal job requests. Try again in a minute.');
   });
 
   it('deletes the local account state and clears the current session', async () => {

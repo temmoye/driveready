@@ -4,7 +4,7 @@ import type {
   RefuelSearchSummary,
   RefuelSortMode,
   RefuelStationOption,
-} from './types';
+} from './types.js';
 
 interface RefuelSearchInput {
   energyType: RefuelEnergyType;
@@ -450,7 +450,10 @@ async function findFuelPriceStations(input: {
   sortBy: RefuelSortMode;
 }) {
   const feeds = await getFuelPriceFeeds();
-  const stations: RefuelStationOption[] = [];
+  const stations: Array<{
+    sortPrice: number;
+    station: RefuelStationOption;
+  }> = [];
 
   feeds.forEach((feed) => {
     feed.stations.forEach((station) => {
@@ -476,30 +479,33 @@ async function findFuelPriceStations(input: {
         return;
       }
 
-      stations.push(toFuelPriceStationOption({
-        distanceMeters,
-        energyType: input.energyType,
-        feedLastUpdated: feed.lastUpdated,
-        fuelCode: bestPrice.code,
-        index: stations.length,
-        price: bestPrice.value,
-        station,
-      }));
+      stations.push({
+        sortPrice: bestPrice.value,
+        station: toFuelPriceStationOption({
+          distanceMeters,
+          energyType: input.energyType,
+          feedLastUpdated: feed.lastUpdated,
+          fuelCode: bestPrice.code,
+          index: stations.length,
+          price: bestPrice.value,
+          station,
+        }),
+      });
     });
   });
 
   return stations.sort((left, right) => {
     if (input.sortBy === 'cheapest') {
-      const leftPrice = Number.parseFloat(left.price_label);
-      const rightPrice = Number.parseFloat(right.price_label);
-
-      if (Number.isFinite(leftPrice) && Number.isFinite(rightPrice) && leftPrice !== rightPrice) {
-        return leftPrice - rightPrice;
+      if (left.sortPrice !== right.sortPrice) {
+        return left.sortPrice - right.sortPrice;
       }
     }
 
-    return (left.distance_meters ?? Number.MAX_SAFE_INTEGER) - (right.distance_meters ?? Number.MAX_SAFE_INTEGER);
-  });
+    return (
+      (left.station.distance_meters ?? Number.MAX_SAFE_INTEGER) -
+      (right.station.distance_meters ?? Number.MAX_SAFE_INTEGER)
+    );
+  }).map(({ station }) => station);
 }
 
 export function getRefuelTargetLabel() {

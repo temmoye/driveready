@@ -330,8 +330,9 @@ export function useDriveReadyModel() {
 
   const updateProfile = useCallback(
     async (payload: Record<string, unknown>) => {
-      await apiClient.updateProfile(payload);
+      const result = await apiClient.updateProfile(payload);
       await refreshAll();
+      return result;
     },
     [refreshAll],
   );

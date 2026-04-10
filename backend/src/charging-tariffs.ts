@@ -1,4 +1,4 @@
-import type { RefuelSortMode, RefuelStationOption } from './types';
+import type { RefuelSortMode, RefuelStationOption } from './types.js';
 
 interface ChargingTariffConfig {
   apiBaseUrl: string;
@@ -171,41 +171,51 @@ export async function resolveElectricTariffs(input: {
           const tariff = tariffByStationId.get(station.id);
 
           if (!tariff) {
-            return station;
+            return {
+              sortPricePence: null,
+              station,
+            };
           }
 
           return {
-            ...station,
-            connector_summary: tariff.connector_summary ?? station.connector_summary,
-            price_label: liveTariffLabel(station, tariff),
-            price_is_available: true,
-            price_updated_at: tariff.updated_at ?? station.price_updated_at,
-            rank_reason: 'provider_match' as const,
-            source_name: config.provider,
+            sortPricePence:
+              typeof tariff.price_pence_per_kwh === 'number' && Number.isFinite(tariff.price_pence_per_kwh)
+                ? tariff.price_pence_per_kwh
+                : null,
+            station: {
+              ...station,
+              connector_summary: tariff.connector_summary ?? station.connector_summary,
+              price_label: liveTariffLabel(station, tariff),
+              price_is_available: true,
+              price_updated_at: tariff.updated_at ?? station.price_updated_at,
+              rank_reason: 'provider_match' as const,
+              source_name: config.provider,
+            },
           };
         })
         .sort((left, right) => {
           if (input.sortBy === 'cheapest') {
-            const leftPrice = Number.parseFloat(left.price_label);
-            const rightPrice = Number.parseFloat(right.price_label);
-
             if (
-              left.price_is_available &&
-              right.price_is_available &&
-              Number.isFinite(leftPrice) &&
-              Number.isFinite(rightPrice) &&
-              leftPrice !== rightPrice
+              left.station.price_is_available &&
+              right.station.price_is_available &&
+              left.sortPricePence !== null &&
+              right.sortPricePence !== null &&
+              left.sortPricePence !== right.sortPricePence
             ) {
-              return leftPrice - rightPrice;
+              return left.sortPricePence - right.sortPricePence;
             }
 
-            if (left.price_is_available !== right.price_is_available) {
-              return left.price_is_available ? -1 : 1;
+            if (left.station.price_is_available !== right.station.price_is_available) {
+              return left.station.price_is_available ? -1 : 1;
             }
           }
 
-          return (left.distance_meters ?? Number.MAX_SAFE_INTEGER) - (right.distance_meters ?? Number.MAX_SAFE_INTEGER);
-        });
+          return (
+            (left.station.distance_meters ?? Number.MAX_SAFE_INTEGER) -
+            (right.station.distance_meters ?? Number.MAX_SAFE_INTEGER)
+          );
+        })
+        .map(({ station }) => station);
       const liveStationCount = stations.filter((station) => station.price_is_available).length;
 
       if (liveStationCount > 0) {

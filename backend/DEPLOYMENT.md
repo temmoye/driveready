@@ -12,7 +12,7 @@ There is no separate web frontend in this repo today. You do not need `app.drive
 
 ## Railway deployment
 
-Use the `backend` directory as the Railway service root. This repo now includes [backend/railway.json](/Users/tayo/Documents/laptop improvements/creating with ai/Digital Trust Product/Testing gpt 5.4/Ideas generation/backend/railway.json), so Railway will:
+Use the `backend` directory as the Railway service root. This repo now includes `backend/railway.json`, so Railway will:
 
 - build with `npm run build`
 - start with `npm run start`
@@ -65,9 +65,9 @@ DRIVEREADY_DVLA_VES_API_KEY=...
 
 Add the DVSA MOT variables later when DVSA approves access.
 
-For normalized Supabase storage, run [driveready_projection.sql](/Users/tayo/Documents/laptop improvements/creating with ai/Digital Trust Product/Testing gpt 5.4/Ideas generation/backend/supabase/driveready_projection.sql). That file now contains the primary normalized table set, including reminder dispatch history.
+For normalized Supabase storage, run `backend/supabase/driveready_projection.sql`. That file now contains the primary normalized table set, including reminder dispatch history.
 
-Only run [driveready_state.sql](/Users/tayo/Documents/laptop improvements/creating with ai/Digital Trust Product/Testing gpt 5.4/Ideas generation/backend/supabase/driveready_state.sql) and [driveready_user_state.sql](/Users/tayo/Documents/laptop improvements/creating with ai/Digital Trust Product/Testing gpt 5.4/Ideas generation/backend/supabase/driveready_user_state.sql) if you intentionally want the older JSON state storage mode.
+Only run `backend/supabase/driveready_state.sql` and `backend/supabase/driveready_user_state.sql` if you intentionally want the older JSON state storage mode.
 
 If you switch an existing deployment from JSON state storage to `DRIVEREADY_SUPABASE_STORAGE_MODE=normalized`, DriveReady will migrate any existing per-user `driveready_user_state` record into the normalized tables the first time that user is loaded.
 

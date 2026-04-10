@@ -10,6 +10,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   Pressable,
+  Share,
   StyleSheet,
   Switch,
   Text,
@@ -211,6 +212,7 @@ function DriveReadyRoot() {
   const [passwordRecovery, setPasswordRecovery] = useState<PasswordRecoveryState | null>(null);
   const incomingUrl = Linking.useURL();
   const passwordResetRedirectUrl = useMemo(() => Linking.createURL('reset-password'), []);
+  const profileRedirectUrl = useMemo(() => Linking.createURL('profile'), []);
 
   useEffect(() => {
     if (model.session) {
@@ -510,7 +512,13 @@ function DriveReadyRoot() {
       <ProfileScreen
         onBack={popApp}
         onSubmit={async (payload) => {
-          await model.updateProfile(payload);
+          const result = await model.updateProfile({
+            ...payload,
+            redirect_to: profileRedirectUrl,
+          });
+          if (result.email_change_requested) {
+            Alert.alert('Confirm email change', result.message ?? 'Check your inbox to finish updating your email address.');
+          }
           popApp();
         }}
         user={model.user}
@@ -2491,6 +2499,43 @@ function SupportScreen({
     );
   };
 
+  const openExport = (downloadUrl: string) => {
+    void Linking.openURL(downloadUrl).catch((error) => {
+      Alert.alert('Unable to open export', getErrorMessage(error));
+    });
+  };
+
+  const shareExport = (downloadUrl: string) => {
+    void Share.share({
+      message: downloadUrl,
+      url: downloadUrl,
+    }).catch((error) => {
+      Alert.alert('Unable to share export', getErrorMessage(error));
+    });
+  };
+
+  const showExportReady = (downloadUrl: string) => {
+    Alert.alert(
+      'Export ready',
+      'Open the secure download now or share the link to another app.',
+      [
+        {
+          text: 'Open',
+          onPress: () => {
+            openExport(downloadUrl);
+          },
+        },
+        {
+          text: 'Share',
+          onPress: () => {
+            shareExport(downloadUrl);
+          },
+        },
+        { text: 'Cancel', style: 'cancel' },
+      ],
+    );
+  };
+
   return (
     <ScreenScaffold onBack={onBack} title="Support & legal">
       <AppScrollView contentContainerStyle={styles.scrollContent}>
@@ -2506,7 +2551,7 @@ function SupportScreen({
           onPress={() => {
             void onExportRequest()
               .then((result) => {
-                Alert.alert('Export ready', result.export.download_url);
+                showExportReady(result.export.download_url);
               })
               .catch((error) => {
                 Alert.alert('Unable to request export', getErrorMessage(error));

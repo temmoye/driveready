@@ -164,8 +164,8 @@ export const apiClient = {
       permission_states: PermissionStates;
       push_devices?: PushDeviceRecord[];
     }>('/me'),
-  updateProfile: (body: Partial<UserProfile>) =>
-    request<{ user: UserProfile }>('/me', {
+  updateProfile: (body: Record<string, unknown>) =>
+    request<{ user: UserProfile; email_change_requested?: boolean; message?: string }>('/me', {
       method: 'PATCH',
       body: JSON.stringify(body),
     }),

@@ -421,6 +421,18 @@ function apiError(message: string, fields?: Record<string, string>) {
   };
 }
 
+const internalJobLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 6,
+  standardHeaders: true,
+  legacyHeaders: false,
+  handler: (_request, response) => {
+    response.status(429).json(apiError('Too many internal job requests. Try again in a minute.'));
+  },
+});
+
+app.use('/api/v1/internal/jobs', internalJobLimiter);
+
 async function saveState() {
   ensureLocalAuthState(appData);
   syncDerivedState(appData);
@@ -743,34 +755,63 @@ app.patch('/api/v1/me', asyncRoute(async (request, response) => {
     return;
   }
 
+  let emailChangeRequested = false;
+  let updateMessage: string | undefined;
+
   if (usesSupabaseAuth()) {
     const authUserId = getRequestUserId(response);
+    const accessToken = getBearerToken(request);
 
-    if (!authUserId) {
+    if (!authUserId || !accessToken) {
       response.status(401).json(apiError('Authentication required.'));
       return;
     }
 
-    state.user = await updateSupabaseAuthProfile({
-      userId: authUserId,
+    if (!isAllowedRedirectTarget(parsed.data.redirect_to)) {
+      response.status(400).json(apiError('Profile update redirect URL is not allowed.'));
+      return;
+    }
+
+    const result = await updateSupabaseAuthProfile({
+      accessToken,
       existingProfile: state.user,
       email: parsed.data.email,
       first_name: parsed.data.first_name,
       last_name: parsed.data.last_name,
+      redirectTo: parsed.data.redirect_to,
     });
+
+    state.user = {
+      ...state.user,
+      ...result.profile,
+      phone: parsed.data.phone ?? state.user.phone,
+      address_line: parsed.data.address_line ?? state.user.address_line,
+    };
+    emailChangeRequested = result.emailChangeRequested;
+    updateMessage = result.emailChangeRequested
+      ? 'Confirm the link sent to your new email address to finish the change.'
+      : undefined;
   } else {
     state.user = {
       ...state.user,
-      ...parsed.data,
+      first_name: parsed.data.first_name ?? state.user.first_name,
+      last_name: parsed.data.last_name ?? state.user.last_name,
+      email: parsed.data.email ?? state.user.email,
+      phone: parsed.data.phone ?? state.user.phone,
+      address_line: parsed.data.address_line ?? state.user.address_line,
     };
   }
-  state.user = {
-    ...state.user,
-    ...parsed.data,
-  };
   await saveRequestState(response);
   writeAuditEntry('profile.updated', { user_id: state.user.id });
-  response.json({ user: state.user });
+  response.json({
+    user: state.user,
+    ...(emailChangeRequested
+      ? {
+          email_change_requested: true,
+          message: updateMessage,
+        }
+      : {}),
+  });
 }));
 
 app.patch('/api/v1/me/notification-preferences', asyncRoute(async (request, response) => {

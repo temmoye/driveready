@@ -37,9 +37,13 @@ function resolveProjectionConfig(): ProjectionConfig | null {
   };
 }
 
-const config = resolveProjectionConfig();
+function getProjectionConfig() {
+  return resolveProjectionConfig();
+}
 
 async function request(table: string, method: string, searchParams: URLSearchParams, body?: unknown) {
+  const config = getProjectionConfig();
+
   if (!config) {
     return;
   }
@@ -63,39 +67,57 @@ async function request(table: string, method: string, searchParams: URLSearchPar
   }
 }
 
+function listRowIds(table: string, rows: Array<Record<string, unknown>>) {
+  return rows.map((row) => {
+    const id = typeof row.id === 'string' ? trimValue(row.id) : '';
+
+    if (!id) {
+      throw new Error(`Projection row in "${table}" is missing an id.`);
+    }
+
+    return id;
+  });
+}
+
+function buildNotInFilter(ids: string[]) {
+  return `not.in.(${ids.map((id) => JSON.stringify(id)).join(',')})`;
+}
+
 async function replaceRows(table: string, userId: string, rows: Array<Record<string, unknown>>, conflictKey = 'id') {
-  if (!config) {
-    return;
+  const rowIds = conflictKey === 'id' ? listRowIds(table, rows) : [];
+
+  if (rows.length > 0) {
+    await request(
+      table,
+      'POST',
+      new URLSearchParams({
+        on_conflict: conflictKey,
+      }),
+      rows,
+    );
+  }
+
+  const deleteParams = new URLSearchParams({
+    user_id: `eq.${userId}`,
+  });
+
+  if (rowIds.length > 0) {
+    deleteParams.set('id', buildNotInFilter(rowIds));
   }
 
   await request(
     table,
     'DELETE',
-    new URLSearchParams({
-      user_id: `eq.${userId}`,
-    }),
-  );
-
-  if (rows.length === 0) {
-    return;
-  }
-
-  await request(
-    table,
-    'POST',
-    new URLSearchParams({
-      on_conflict: conflictKey,
-    }),
-    rows,
+    deleteParams,
   );
 }
 
 export function normalizedProjectionEnabled() {
-  return Boolean(config?.enabled);
+  return Boolean(getProjectionConfig()?.enabled);
 }
 
 export async function deleteProjectedUserData(userId: string) {
-  if (!config) {
+  if (!getProjectionConfig()) {
     return;
   }
 
@@ -113,7 +135,7 @@ export async function deleteProjectedUserData(userId: string) {
 }
 
 export async function projectUserAppData(userId: string, state: AppData) {
-  if (!config) {
+  if (!getProjectionConfig()) {
     return;
   }
 
@@ -127,6 +149,8 @@ export async function projectUserAppData(userId: string, state: AppData) {
     [writeModel.profile],
   );
 
+  // Projection writes use the same upsert-then-prune pattern as primary normalized storage so retries can
+  // repair an interrupted write without first deleting the user's existing rows.
   await Promise.all(
     writeModel.repeatedTables.map(({ rows, table }) => replaceRows(table, userId, rows)),
   );

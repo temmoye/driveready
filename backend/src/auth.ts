@@ -141,8 +141,8 @@ const supabaseAdminClient = supabaseConfig
     })
   : null;
 
-function requireSupabaseClients() {
-  if (!supabaseAuthClient || !supabaseAdminClient) {
+function requireSupabaseConfig() {
+  if (!supabaseConfig) {
     throw new Error('Supabase auth is not configured.');
   }
 
@@ -150,9 +150,20 @@ function requireSupabaseClients() {
     throw new Error('Supabase auth requires DRIVEREADY_STORAGE_BACKEND=supabase.');
   }
 
+  return supabaseConfig;
+}
+
+function requireSupabaseClients() {
+  const config = requireSupabaseConfig();
+
+  if (!supabaseAuthClient || !supabaseAdminClient) {
+    throw new Error('Supabase auth is not configured.');
+  }
+
   return {
     authClient: supabaseAuthClient,
     adminClient: supabaseAdminClient,
+    config,
   };
 }
 
@@ -278,52 +289,80 @@ export async function confirmSupabasePasswordReset(input: {
 }
 
 export async function updateSupabaseAuthProfile(input: {
-  userId: string;
+  accessToken: string;
   email?: string;
   first_name?: string;
   last_name?: string;
+  redirectTo?: string;
   existingProfile: UserProfile;
 }) {
-  const { adminClient } = requireSupabaseClients();
+  const config = requireSupabaseConfig();
+  const nextFirstName = input.first_name ?? input.existingProfile.first_name;
+  const nextLastName = input.last_name ?? input.existingProfile.last_name;
+  const emailChanged = Boolean(input.email && input.email !== input.existingProfile.email);
+  const metadataChanged =
+    nextFirstName !== input.existingProfile.first_name ||
+    nextLastName !== input.existingProfile.last_name;
   const updates: {
     email?: string;
-    email_confirm?: boolean;
-    user_metadata?: {
+    data?: {
       first_name: string;
       last_name: string;
     };
   } = {};
 
-  if (input.email && input.email !== input.existingProfile.email) {
+  if (emailChanged && input.email) {
     updates.email = input.email;
-    updates.email_confirm = true;
   }
 
-  if (
-    (input.first_name && input.first_name !== input.existingProfile.first_name) ||
-    (input.last_name && input.last_name !== input.existingProfile.last_name)
-  ) {
-    updates.user_metadata = {
-      first_name: input.first_name ?? input.existingProfile.first_name,
-      last_name: input.last_name ?? input.existingProfile.last_name,
+  if (metadataChanged) {
+    updates.data = {
+      first_name: nextFirstName,
+      last_name: nextLastName,
     };
   }
 
   if (Object.keys(updates).length === 0) {
-    return input.existingProfile;
+    return {
+      emailChangeRequested: false,
+      profile: input.existingProfile,
+    };
   }
 
-  const { data, error } = await adminClient.auth.admin.updateUserById(input.userId, updates);
+  const endpoint = new URL('/auth/v1/user', config.url);
 
-  if (error || !data.user) {
-    throw new Error(error?.message ?? 'Unable to update Supabase profile.');
+  if (input.redirectTo) {
+    endpoint.searchParams.set('redirect_to', input.redirectTo);
   }
 
-  return profileFromUser(data.user, {
-    ...input.existingProfile,
-    ...(updates.user_metadata ?? {}),
-    ...(updates.email ? { email: updates.email } : {}),
+  const response = await fetch(endpoint, {
+    method: 'PUT',
+    headers: {
+      apikey: config.publishableKey,
+      authorization: `Bearer ${input.accessToken}`,
+      'content-type': 'application/json',
+    },
+    body: JSON.stringify(updates),
   });
+
+  const payload = (await response.json().catch(() => null)) as {
+    error_description?: string;
+    message?: string;
+    msg?: string;
+    user?: User | null;
+  } | null;
+
+  if (!response.ok || !payload?.user) {
+    throw new Error(payload?.msg ?? payload?.message ?? payload?.error_description ?? 'Unable to update Supabase profile.');
+  }
+
+  return {
+    emailChangeRequested: emailChanged,
+    profile: profileFromUser(payload.user, {
+      ...input.existingProfile,
+      ...(updates.data ?? {}),
+    }),
+  };
 }
 
 export async function deleteSupabaseAuthUser(userId: string) {

@@ -96,6 +96,7 @@ export const profilePatchSchema = z.object({
   email: z.string().email().optional(),
   phone: z.string().optional(),
   address_line: z.string().optional(),
+  redirect_to: z.string().trim().min(1, 'Redirect URL is required.').optional(),
 });
 
 export const notificationPreferencesSchema = z.object({
@@ -117,8 +118,10 @@ export const querySchema = z.object({
   q: z.string().trim().min(3, 'Enter at least 3 characters to search.'),
 });
 
+const expoPushTokenPattern = /^(Exponent|Expo)PushToken\[[^\]\s]{8,}\]$/;
+
 export const pushDeviceSchema = z.object({
-  token: z.string().trim().min(8, 'A push token is required.'),
+  token: z.string().trim().regex(expoPushTokenPattern, 'Enter a valid Expo push token.'),
   platform: z.enum(['ios', 'android']),
   label: z.string().trim().optional(),
 });

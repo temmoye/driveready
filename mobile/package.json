@@ -4,9 +4,15 @@
   "main": "index.ts",
   "scripts": {
     "start": "expo start",
+    "start:dev-client": "expo start --dev-client",
     "android": "expo run:android",
     "ios": "expo run:ios",
     "web": "expo start --web",
+    "eas:build:ios:development": "npx eas-cli build --platform ios --profile development",
+    "eas:build:ios:preview": "npx eas-cli build --platform ios --profile preview",
+    "eas:build:ios": "npx eas-cli build --platform ios --profile production",
+    "eas:submit:ios": "npx eas-cli submit --platform ios --profile production",
+    "eas:metadata:push": "npx eas-cli metadata:push --profile production",
     "typecheck": "tsc --noEmit",
     "test": "vitest run"
   },
@@ -16,6 +22,7 @@
     "expo": "~55.0.11",
     "expo-blur": "~55.0.12",
     "expo-constants": "~55.0.13",
+    "expo-dev-client": "~55.0.27",
     "expo-device": "~55.0.14",
     "expo-document-picker": "^55.0.11",
     "expo-font": "~55.0.6",
@@ -24,9 +31,11 @@
     "expo-notifications": "~55.0.18",
     "expo-status-bar": "~55.0.5",
     "react": "19.2.0",
+    "react-dom": "19.2.0",
     "react-native": "0.83.4",
     "react-native-gesture-handler": "~2.30.0",
-    "react-native-safe-area-context": "~5.6.2"
+    "react-native-safe-area-context": "~5.6.2",
+    "react-native-web": "^0.21.0"
   },
   "devDependencies": {
     "@types/react": "~19.2.2",

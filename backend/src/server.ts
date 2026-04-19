@@ -40,6 +40,7 @@ import {
 } from './persistence.js';
 import { deleteProjectedUserData, normalizedProjectionEnabled, projectUserAppData } from './projection.js';
 import { getRefuelTargetLabel, searchRefuelOptions } from './refuel.js';
+import { getRuntimeConfigChecks, validateRuntimeConfigOrThrow } from './runtime-config.js';
 import { buildDashboard, linkVehicleZones, summarizeAlert, summarizeDocument, summarizeVehicle } from './status.js';
 import { buildTripCheck } from './trip-check.js';
 import type {
@@ -108,6 +109,20 @@ const uploadSessions = new Map<string, { createdAt: string; replacesDocumentId?:
 
 function trimValue(value?: string) {
   return value?.trim() ?? '';
+}
+
+function defaultLegalDocsBaseUrl() {
+  return 'https://github.com/temmoye/driveready/blob/codex/driveready-review/legal';
+}
+
+function legalDocUrl(fileName: string, explicit?: string) {
+  const configured = trimValue(explicit);
+
+  if (configured) {
+    return configured;
+  }
+
+  return `${trimValue(process.env.DRIVEREADY_PUBLIC_DOCS_BASE_URL) || defaultLegalDocsBaseUrl()}/${fileName}`;
 }
 
 function resolveCorsOrigins() {
@@ -465,6 +480,7 @@ async function deleteDocumentFilesForState(state: AppData) {
 
 app.get('/api/v1/health', (_request, response) => {
   const reminderSummary = summarizeReminderSchedule(appData);
+  const runtimeChecks = getRuntimeConfigChecks();
 
   response.json({
     ok: true,
@@ -478,6 +494,10 @@ app.get('/api/v1/health', (_request, response) => {
     normalized_storage: usesNormalizedSupabaseStorage(),
     normalized_projection: normalizedProjectionEnabled(),
     background_jobs: getBackgroundJobStatus(),
+    configuration: {
+      errors: runtimeChecks.filter((entry) => entry.level === 'error'),
+      warnings: runtimeChecks.filter((entry) => entry.level === 'warning'),
+    },
     reminders: {
       next_scheduled_for: reminderSummary.nextScheduled?.scheduled_for ?? null,
       scheduled_count: reminderSummary.scheduledCount,
@@ -1626,6 +1646,9 @@ app.post('/api/v1/internal/jobs/refresh-vehicle-data', asyncRoute(async (request
 app.get('/api/v1/support/content', (_request, response) => {
   const state = getRequestState(response);
   const reminderSummary = summarizeReminderSchedule(state);
+  const supportUrl = legalDocUrl('support.md', process.env.DRIVEREADY_SUPPORT_URL);
+  const privacyPolicyUrl = legalDocUrl('privacy-policy.md', process.env.DRIVEREADY_PRIVACY_POLICY_URL);
+  const termsUrl = legalDocUrl('terms-of-use.md', process.env.DRIVEREADY_TERMS_URL);
 
   response.json({
     items: [
@@ -1633,21 +1656,27 @@ app.get('/api/v1/support/content', (_request, response) => {
         id: 'help',
         title: 'Help Centre',
         body: 'Need help? Contact DriveReady support with your account email, vehicle registration, the screen you were using, and the error message you saw.',
+        action_label: 'Open support',
+        url: supportUrl,
       },
       {
         id: 'privacy',
         title: 'Privacy',
         body: 'DriveReady stores your account profile, vehicles, reminder preferences, uploaded document metadata, and private document files. Vehicle lookups are sent from our backend to configured providers such as DVLA VES and, after approval, DVSA MOT History.',
+        action_label: 'Open policy',
+        url: privacyPolicyUrl,
       },
       {
         id: 'terms',
         title: 'Terms',
         body: 'DriveReady is an organisation and reminder tool, not legal, insurance, tax, parking, or roadworthiness advice. Always verify MOT, tax, insurance, parking, charge-zone, and restriction decisions with the official provider before driving.',
+        action_label: 'Open terms',
+        url: termsUrl,
       },
       {
         id: 'providers',
         title: 'Live provider status',
-        body: `Vehicle enquiry: ${getDvlaVesTargetLabel()}. MOT history: ${getDvsaMotTargetLabel()}. Location search: ${getLocationSearchTargetLabel()}. Notifications: ${getNotificationTargetLabel()}. Refuel: ${getRefuelTargetLabel()}. Parking provider: pending contract/API access.`,
+        body: `Vehicle enquiry: ${getDvlaVesTargetLabel()}. MOT history: ${getDvsaMotTargetLabel()}. Location search: ${getLocationSearchTargetLabel()}. Notifications: ${getNotificationTargetLabel()}. Refuel: ${getRefuelTargetLabel()}. Parking guidance: coming soon.`,
       },
       {
         id: 'reminders',
@@ -1701,6 +1730,7 @@ app.use((error: unknown, _request: Request, response: Response, _next: NextFunct
 export { app };
 
 if (process.env.NODE_ENV !== 'test') {
+  validateRuntimeConfigOrThrow();
   startBackgroundJobs(appData);
   app.listen(port, () => {
     console.log(`DriveReady backend listening on http://localhost:${port}`);

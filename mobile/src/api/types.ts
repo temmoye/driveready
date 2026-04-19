@@ -292,6 +292,8 @@ export interface SupportItem {
   id: string;
   title: string;
   body: string;
+  action_label?: string;
+  url?: string;
 }
 
 export interface DataExportRecord {

@@ -49,6 +49,11 @@ DRIVEREADY_PROJECTION_ENABLED=false
 DRIVEREADY_NOTIFICATION_PROVIDER=expo
 DRIVEREADY_JOB_SECRET=...
 DRIVEREADY_FILE_URL_SECRET=...
+DRIVEREADY_STRICT_STARTUP=true
+DRIVEREADY_PUBLIC_DOCS_BASE_URL=https://github.com/temmoye/driveready/blob/codex/driveready-review/legal
+DRIVEREADY_SUPPORT_URL=
+DRIVEREADY_PRIVACY_POLICY_URL=
+DRIVEREADY_TERMS_URL=
 DRIVEREADY_REMINDER_RUNNER_ENABLED=true
 DRIVEREADY_REMINDER_RUNNER_INTERVAL_MINUTES=15
 DRIVEREADY_PROVIDER_REFRESH_RUNNER_ENABLED=true
@@ -64,6 +69,10 @@ DRIVEREADY_DVLA_VES_API_KEY=...
 ```
 
 Add the DVSA MOT variables later when DVSA approves access.
+
+In production, DriveReady now performs fail-fast startup validation for public base URL, job secret, Supabase redirect allowlist, and local upload signing. Keep `DRIVEREADY_STRICT_STARTUP=true`.
+
+DriveReady also exposes support, privacy, and terms links in-app. Set explicit URLs if you have your own public site. If you leave them empty, the deployment can fall back to the public repo-hosted legal pages.
 
 For normalized Supabase storage, run `backend/supabase/driveready_projection.sql`. That file now contains the primary normalized table set, including reminder dispatch history.
 
@@ -146,6 +155,7 @@ DRIVEREADY_AUTH_REDIRECT_ALLOWLIST=drivereadyuk://,exp://127.0.0.1:8081,exp://lo
 ## Smoke test after deploy
 
 1. `GET /api/v1/health`
+   - Confirm `configuration.errors` is empty
 2. Sign up a fresh account from the app
 3. Sign in
 4. Request password reset

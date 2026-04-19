@@ -598,7 +598,7 @@ function FeaturesScreen({
       <Text style={styles.authTitle}>What DriveReady actually does</Text>
       <View style={styles.featureStack}>
         <FeatureCard icon="notifications-active" title="Stay road-ready" body="Date-driven reminders for MOT, tax, insurance, and expiring docs." />
-        <FeatureCard icon="map" title="Check trips before you leave" body="See likely charge-zone impact and lower-cost parking suggestions for a chosen vehicle." />
+        <FeatureCard icon="map" title="Check trips before you leave" body="See likely charge-zone impact for a chosen vehicle before you leave." />
         <FeatureCard icon="folder-open" title="Keep records together" body="Store vehicle files, spot missing paperwork, and open detail screens from one garage." />
       </View>
       <View style={styles.authButtonStack}>
@@ -2031,7 +2031,7 @@ function TripCheckScreen({
             }
           />
           {result.degraded.map((entry) => (
-            <ListCard key={entry.code} body={entry.message} title={entry.code === 'parking_provider_pending' ? 'Parking suggestions pending' : 'Trip Check note'} />
+            <ListCard key={entry.code} body={entry.message} title={entry.code === 'parking_provider_pending' ? 'Parking coming soon' : 'Trip Check note'} />
           ))}
           {result.trip_check.parking_suggestions.length > 0 ? (
             result.trip_check.parking_suggestions.map((parking) => (
@@ -2043,7 +2043,7 @@ function TripCheckScreen({
 
       <SectionTitle title="Recent Trip Checks" />
       {tripChecks.length === 0 ? (
-        <ListCard body="Run a trip check to save recent charge-zone results. Live parking will appear after a provider is connected." title="No Trip Check history" />
+        <ListCard body="Run a trip check to save recent charge-zone results. Parking guidance will be added in a future update." title="No Trip Check history" />
       ) : (
         tripChecks.slice(0, 4).map((tripCheck) => (
           <ListCard
@@ -2519,7 +2519,21 @@ function SupportScreen({
           title="Privacy controls"
         />
         {items.map((item) => (
-          <ListCard key={item.id} body={item.body} title={item.title} />
+          <ListCard
+            key={item.id}
+            actionLabel={item.action_label}
+            body={item.body}
+            onActionPress={
+              item.url
+                ? () => {
+                    void Linking.openURL(item.url!).catch((error) => {
+                      Alert.alert('Unable to open link', getErrorMessage(error));
+                    });
+                  }
+                : undefined
+            }
+            title={item.title}
+          />
         ))}
         <PrimaryButton
           label="Request data export"
@@ -2818,12 +2832,16 @@ function ActionCard({
 }
 
 function ListCard({
+  actionLabel,
   badge,
   body,
+  onActionPress,
   title,
 }: {
+  actionLabel?: string;
   badge?: string;
   body: string;
+  onActionPress?: () => void;
   title: string;
 }) {
   return (
@@ -2833,6 +2851,11 @@ function ListCard({
         {badge ? <MiniPill label={badge} /> : null}
       </View>
       <Text style={styles.cardBody}>{body}</Text>
+      {actionLabel && onActionPress ? (
+        <Pressable onPress={onActionPress}>
+          <Text style={styles.textLink}>{actionLabel}</Text>
+        </Pressable>
+      ) : null}
     </View>
   );
 }

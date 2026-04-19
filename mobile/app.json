@@ -14,9 +14,15 @@
     },
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.tayo.drivereadyuk"
+      "bundleIdentifier": "com.tayo.drivereadyuk",
+      "buildNumber": "1",
+      "config": {
+        "usesNonExemptEncryption": false
+      }
     },
     "android": {
+      "package": "com.tayo.drivereadyuk",
+      "versionCode": 1,
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/android-icon-foreground.png",
@@ -30,7 +36,19 @@
     },
     "plugins": [
       "expo-font",
-      "expo-notifications"
-    ]
+      [
+        "expo-notifications",
+        {
+          "color": "#0A7EA4",
+          "icon": "./assets/android-icon-monochrome.png"
+        }
+      ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "bab841c9-565f-45b1-bb20-c54231db902d"
+      }
+    },
+    "owner": "temmoye"
   }
 }

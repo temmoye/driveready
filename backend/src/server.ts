@@ -14,12 +14,20 @@ import {
   requestSupabasePasswordReset,
   signInWithSupabasePassword,
   signUpWithSupabasePassword,
+  updateSupabaseAuthProfile,
   usesSupabaseAuth,
 } from './auth.js';
 import { writeAuditEntry } from './audit.js';
+import { syncDerivedState, summarizeReminderSchedule } from './derived-state.js';
 import { appData, createEmptyUserAppData } from './data.js';
 import { DvlaVesError, enrichVehicleWithDvlaVes, getDvlaVesTargetLabel, usesDvlaVes } from './dvla-ves.js';
 import { DvsaMotError, enrichVehicleWithDvsaMot, getDvsaMotTargetLabel, hasDvsaMotSetup } from './dvsa-mot.js';
+import { generateUserDataExport } from './exports.js';
+import { getBackgroundJobStatus, runReminderDispatchJob, runVehicleRefreshJob, startBackgroundJobs } from './jobs.js';
+import { createLocalAuthState, defaultLocalAuthState, verifyLocalPassword } from './local-auth.js';
+import { getLocationSearchTargetLabel, searchLocationSuggestions } from './location-search.js';
+import { metricsSnapshot, recordJobMetric, recordProviderMetric, recordRequestMetric } from './metrics.js';
+import { getNotificationTargetLabel, removePushDevice, upsertPushDevice } from './notifications.js';
 import {
   deleteUserAppData,
   getStorageTargetLabel,
@@ -28,22 +36,24 @@ import {
   persistAppData,
   persistUserAppData,
   supportsPerUserAppData,
+  usesNormalizedSupabaseStorage,
 } from './persistence.js';
+import { deleteProjectedUserData, normalizedProjectionEnabled, projectUserAppData } from './projection.js';
 import { getRefuelTargetLabel, searchRefuelOptions } from './refuel.js';
+import { getRuntimeConfigChecks, validateRuntimeConfigOrThrow } from './runtime-config.js';
 import { buildDashboard, linkVehicleZones, summarizeAlert, summarizeDocument, summarizeVehicle } from './status.js';
+import { buildTripCheck } from './trip-check.js';
 import type {
   AppData,
   DocumentRecord,
-  ParkingSuggestion,
   SavedZone,
-  TripCheckRecord,
   VehicleRecord,
 } from './types.js';
 import {
   createDocumentShareUrl,
   deleteStoredDocument,
   getUploadTargetLabel,
-  getUploadsDir,
+  resolveLocalDownloadFile,
   storeUploadedDocument,
   uploadMiddleware,
   usesSupabaseUploads,
@@ -51,12 +61,15 @@ import {
 import {
   alertPatchSchema,
   documentSchema,
+  jobRunSchema,
   notificationPreferencesSchema,
   parseBody,
   passwordResetConfirmSchema,
   passwordResetRequestSchema,
   permissionStatesSchema,
   profilePatchSchema,
+  pushDeviceSchema,
+  querySchema,
   refreshSessionSchema,
   refuelSearchSchema,
   signInSchema,
@@ -73,6 +86,8 @@ const app = express();
 const port = Number(process.env.PORT ?? 4000);
 const publicPaths = new Set([
   '/health',
+  '/metrics',
+  '/files/download',
   '/auth/sign-in',
   '/auth/sign-up',
   '/auth/sign-out',
@@ -81,16 +96,33 @@ const publicPaths = new Set([
   '/auth/refresh',
   '/auth/session',
 ]);
+const publicPathPrefixes = [
+  '/internal/jobs/',
+];
 const authLimiter = rateLimit({
   windowMs: 10 * 60 * 1000,
   max: 20,
   standardHeaders: true,
   legacyHeaders: false,
 });
-const uploadSessions = new Map<string, { createdAt: string }>();
+const uploadSessions = new Map<string, { createdAt: string; replacesDocumentId?: string }>();
 
 function trimValue(value?: string) {
   return value?.trim() ?? '';
+}
+
+function defaultLegalDocsBaseUrl() {
+  return 'https://github.com/temmoye/driveready/blob/codex/driveready-review/legal';
+}
+
+function legalDocUrl(fileName: string, explicit?: string) {
+  const configured = trimValue(explicit);
+
+  if (configured) {
+    return configured;
+  }
+
+  return `${trimValue(process.env.DRIVEREADY_PUBLIC_DOCS_BASE_URL) || defaultLegalDocsBaseUrl()}/${fileName}`;
 }
 
 function resolveCorsOrigins() {
@@ -143,6 +175,10 @@ function resolveTrustProxy() {
   return configured;
 }
 
+function getJobSecret() {
+  return trimValue(process.env.DRIVEREADY_JOB_SECRET);
+}
+
 const allowedCorsOrigins = resolveCorsOrigins();
 const allowedRedirectPrefixes = resolveRedirectAllowlist();
 
@@ -156,6 +192,10 @@ function isAllowedRedirectTarget(redirectTo?: string) {
   }
 
   return allowedRedirectPrefixes.some((prefix) => redirectTo.startsWith(prefix));
+}
+
+function isPublicPath(requestPath: string) {
+  return publicPaths.has(requestPath) || publicPathPrefixes.some((prefix) => requestPath.startsWith(prefix));
 }
 
 function getBearerToken(request: Request) {
@@ -193,6 +233,23 @@ function getRequestUserId(response: Response) {
   return response.locals.authUserId as string | undefined;
 }
 
+function ensureLocalAuthState(state: AppData) {
+  if (usesSupabaseAuth()) {
+    return false;
+  }
+
+  if (!trimValue(state.user.email)) {
+    return false;
+  }
+
+  if (state.local_auth) {
+    return false;
+  }
+
+  state.local_auth = defaultLocalAuthState();
+  return true;
+}
+
 function mergeUserProfile(state: AppData, nextProfile: AppData['user']) {
   const current = state.user;
   const merged = {
@@ -225,7 +282,10 @@ async function loadSupabaseAppStateForUser(user: AppData['user']) {
   const state = createEmptyUserAppData(user);
   await hydrateUserAppData(user.id, state);
 
-  if (mergeUserProfile(state, user)) {
+  const profileChanged = mergeUserProfile(state, user);
+  const derivedStateChanged = syncDerivedState(state);
+
+  if (profileChanged || derivedStateChanged) {
     await persistUserAppData(user.id, state);
   }
 
@@ -246,10 +306,24 @@ app.use(
   }),
 );
 app.use(morgan('dev'));
+app.use((request, response, next) => {
+  const requestId = randomUUID();
+  const startedAt = Date.now();
+
+  response.locals.requestId = requestId;
+  response.setHeader('x-request-id', requestId);
+  response.on('finish', () => {
+    recordRequestMetric({
+      durationMs: Date.now() - startedAt,
+      method: request.method,
+      route: request.path,
+      statusCode: response.statusCode,
+    });
+  });
+
+  next();
+});
 app.use(express.json());
-if (!usesSupabaseUploads()) {
-  app.use('/uploads', express.static(getUploadsDir()));
-}
 app.use(
   [
     '/api/v1/auth/sign-in',
@@ -261,7 +335,7 @@ app.use(
 );
 app.use('/api/v1', (request, response, next) => {
   void (async () => {
-    if (publicPaths.has(request.path)) {
+    if (isPublicPath(request.path)) {
       next();
       return;
     }
@@ -293,6 +367,9 @@ app.use('/api/v1', (request, response, next) => {
     }
 
     response.locals.appData = appData;
+    if (syncDerivedState(appData)) {
+      await persistAppData(appData);
+    }
     next();
   })().catch(next);
 });
@@ -307,6 +384,12 @@ function asyncRoute(handler: AsyncRouteHandler) {
 
 if (!usesSupabaseAuth()) {
   await hydrateAppData(appData);
+  const authChanged = ensureLocalAuthState(appData);
+  const derivedStateChanged = syncDerivedState(appData);
+
+  if (authChanged || derivedStateChanged) {
+    await persistAppData(appData);
+  }
 }
 
 function generateId(prefix: string) {
@@ -353,7 +436,21 @@ function apiError(message: string, fields?: Record<string, string>) {
   };
 }
 
+const internalJobLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 6,
+  standardHeaders: true,
+  legacyHeaders: false,
+  handler: (_request, response) => {
+    response.status(429).json(apiError('Too many internal job requests. Try again in a minute.'));
+  },
+});
+
+app.use('/api/v1/internal/jobs', internalJobLimiter);
+
 async function saveState() {
+  ensureLocalAuthState(appData);
+  syncDerivedState(appData);
   await persistAppData(appData);
 }
 
@@ -361,8 +458,16 @@ async function saveRequestState(response: Response) {
   const authUserId = getRequestUserId(response);
   const state = getRequestState(response);
 
+  if (!authUserId) {
+    ensureLocalAuthState(state);
+  }
+  syncDerivedState(state);
+
   if (authUserId) {
     await persistUserAppData(authUserId, state);
+    if (normalizedProjectionEnabled()) {
+      await projectUserAppData(authUserId, state);
+    }
     return;
   }
 
@@ -374,13 +479,69 @@ async function deleteDocumentFilesForState(state: AppData) {
 }
 
 app.get('/api/v1/health', (_request, response) => {
+  const reminderSummary = summarizeReminderSchedule(appData);
+  const runtimeChecks = getRuntimeConfigChecks();
+
   response.json({
     ok: true,
     vehicle_enquiry: getDvlaVesTargetLabel(),
     mot: getDvsaMotTargetLabel(),
+    location_search: getLocationSearchTargetLabel(),
+    notifications: getNotificationTargetLabel(),
     refuel: getRefuelTargetLabel(),
     storage: getStorageTargetLabel(),
     uploads: getUploadTargetLabel(),
+    normalized_storage: usesNormalizedSupabaseStorage(),
+    normalized_projection: normalizedProjectionEnabled(),
+    background_jobs: getBackgroundJobStatus(),
+    configuration: {
+      errors: runtimeChecks.filter((entry) => entry.level === 'error'),
+      warnings: runtimeChecks.filter((entry) => entry.level === 'warning'),
+    },
+    reminders: {
+      next_scheduled_for: reminderSummary.nextScheduled?.scheduled_for ?? null,
+      scheduled_count: reminderSummary.scheduledCount,
+      suppressed_count: reminderSummary.suppressedCount,
+      delivered_count: reminderSummary.deliveredCount,
+      failed_count: reminderSummary.failedCount,
+    },
+    metrics: metricsSnapshot(),
+  });
+});
+
+app.get('/api/v1/metrics', (_request, response) => {
+  response.json(metricsSnapshot());
+});
+
+app.get('/api/v1/files/download', (request, response) => {
+  if (usesSupabaseUploads()) {
+    response.status(404).json(apiError('Local download route is not available for Supabase uploads.'));
+    return;
+  }
+
+  const fileKey = trimValue(String(request.query.key ?? ''));
+  const expires = trimValue(String(request.query.expires ?? ''));
+  const signature = trimValue(String(request.query.signature ?? ''));
+  const filePath = resolveLocalDownloadFile({
+    expires,
+    fileKey,
+    signature,
+  });
+
+  if (!filePath) {
+    response.status(401).json(apiError('Download link is invalid or has expired.'));
+    return;
+  }
+
+  response.setHeader('Cache-Control', 'private, no-store');
+  response.sendFile(filePath, (error) => {
+    if (!error) {
+      return;
+    }
+
+    if (!response.headersSent) {
+      response.status(404).json(apiError('File not found.'));
+    }
   });
 });
 
@@ -403,10 +564,20 @@ app.post('/api/v1/auth/sign-in', asyncRoute(async (request, response) => {
     return;
   }
 
-  const { email } = parsed.data;
+  ensureLocalAuthState(appData);
+  const { email, password } = parsed.data;
+
+  if (!appData.user.email || appData.user.email.toLowerCase() !== email.toLowerCase()) {
+    response.status(401).json(apiError('Incorrect email or password.'));
+    return;
+  }
+
+  if (!verifyLocalPassword(password, appData.local_auth)) {
+    response.status(401).json(apiError('Incorrect email or password.'));
+    return;
+  }
 
   appData.session = createSession();
-  appData.user.email = email;
   await saveState();
   writeAuditEntry('auth.sign_in', { email });
 
@@ -435,7 +606,7 @@ app.post('/api/v1/auth/sign-up', asyncRoute(async (request, response) => {
     return;
   }
 
-  const { first_name, last_name, email } = parsed.data;
+  const { first_name, last_name, email, password } = parsed.data;
 
   appData.user = {
     ...appData.user,
@@ -443,6 +614,7 @@ app.post('/api/v1/auth/sign-up', asyncRoute(async (request, response) => {
     last_name,
     email,
   };
+  appData.local_auth = createLocalAuthState(password);
   appData.session = createSession();
   await saveState();
   writeAuditEntry('auth.sign_up', { email });
@@ -510,10 +682,21 @@ app.post('/api/v1/auth/password-reset/confirm', asyncRoute(async (request, respo
       response.status(400).json(apiError(error instanceof Error ? error.message : 'Unable to update password.'));
       return;
     }
+
+    response.status(200).json({
+      message: 'Password updated.',
+    });
+    return;
   }
+
+  appData.local_auth = createLocalAuthState(parsed.data.password);
+  appData.session = createSession();
+  await saveState();
 
   response.status(200).json({
     message: 'Password updated.',
+    user: appData.user,
+    session: appData.session,
   });
 }));
 
@@ -579,6 +762,7 @@ app.get('/api/v1/me', (_request, response) => {
     user: state.user,
     notification_preferences: state.notification_preferences,
     permission_states: state.permission_states,
+    push_devices: state.push_devices,
   });
 });
 
@@ -591,18 +775,63 @@ app.patch('/api/v1/me', asyncRoute(async (request, response) => {
     return;
   }
 
-  if (usesSupabaseAuth() && parsed.data.email && parsed.data.email !== state.user.email) {
-    response.status(400).json(apiError('Email changes are not supported yet when Supabase auth is enabled.'));
-    return;
-  }
+  let emailChangeRequested = false;
+  let updateMessage: string | undefined;
 
-  state.user = {
-    ...state.user,
-    ...parsed.data,
-  };
+  if (usesSupabaseAuth()) {
+    const authUserId = getRequestUserId(response);
+    const accessToken = getBearerToken(request);
+
+    if (!authUserId || !accessToken) {
+      response.status(401).json(apiError('Authentication required.'));
+      return;
+    }
+
+    if (!isAllowedRedirectTarget(parsed.data.redirect_to)) {
+      response.status(400).json(apiError('Profile update redirect URL is not allowed.'));
+      return;
+    }
+
+    const result = await updateSupabaseAuthProfile({
+      accessToken,
+      existingProfile: state.user,
+      email: parsed.data.email,
+      first_name: parsed.data.first_name,
+      last_name: parsed.data.last_name,
+      redirectTo: parsed.data.redirect_to,
+    });
+
+    state.user = {
+      ...state.user,
+      ...result.profile,
+      phone: parsed.data.phone ?? state.user.phone,
+      address_line: parsed.data.address_line ?? state.user.address_line,
+    };
+    emailChangeRequested = result.emailChangeRequested;
+    updateMessage = result.emailChangeRequested
+      ? 'Confirm the link sent to your new email address to finish the change.'
+      : undefined;
+  } else {
+    state.user = {
+      ...state.user,
+      first_name: parsed.data.first_name ?? state.user.first_name,
+      last_name: parsed.data.last_name ?? state.user.last_name,
+      email: parsed.data.email ?? state.user.email,
+      phone: parsed.data.phone ?? state.user.phone,
+      address_line: parsed.data.address_line ?? state.user.address_line,
+    };
+  }
   await saveRequestState(response);
   writeAuditEntry('profile.updated', { user_id: state.user.id });
-  response.json({ user: state.user });
+  response.json({
+    user: state.user,
+    ...(emailChangeRequested
+      ? {
+          email_change_requested: true,
+          message: updateMessage,
+        }
+      : {}),
+  });
 }));
 
 app.patch('/api/v1/me/notification-preferences', asyncRoute(async (request, response) => {
@@ -639,6 +868,40 @@ app.patch('/api/v1/me/permission-states', asyncRoute(async (request, response) =
   response.json({ permission_states: state.permission_states });
 }));
 
+app.get('/api/v1/me/push-devices', (_request, response) => {
+  const state = getRequestState(response);
+  response.json({ devices: state.push_devices });
+});
+
+app.post('/api/v1/me/push-devices', asyncRoute(async (request, response) => {
+  const state = getRequestState(response);
+  const parsed = parseBody(pushDeviceSchema, request.body);
+
+  if (!parsed.success) {
+    response.status(400).json(apiError(parsed.message, parsed.fields));
+    return;
+  }
+
+  const device = upsertPushDevice(state, parsed.data);
+  await saveRequestState(response);
+  writeAuditEntry('push_device.upserted', { device_id: device.id, platform: device.platform });
+  response.status(201).json({ device });
+}));
+
+app.delete('/api/v1/me/push-devices/:deviceId', asyncRoute(async (request, response) => {
+  const state = getRequestState(response);
+  const removed = removePushDevice(state, String(request.params.deviceId));
+
+  if (!removed) {
+    response.status(404).json(apiError('Push device not found.'));
+    return;
+  }
+
+  await saveRequestState(response);
+  writeAuditEntry('push_device.deleted', { device_id: removed.id });
+  response.status(204).send();
+}));
+
 app.delete('/api/v1/me', asyncRoute(async (_request, response) => {
   const state = getRequestState(response);
   const authUserId = getRequestUserId(response);
@@ -652,6 +915,7 @@ app.delete('/api/v1/me', asyncRoute(async (_request, response) => {
     }
 
     await deleteUserAppData(authUserId);
+    await deleteProjectedUserData(authUserId);
     await deleteSupabaseAuthUser(authUserId);
     writeAuditEntry('account.deleted', { user_id: authUserId, email: state.user.email, auth_backend: 'supabase' });
     response.status(204).send();
@@ -982,6 +1246,7 @@ app.post('/api/v1/documents/upload-binary/:uploadId', uploadMiddleware.single('f
   response.status(201).json({
     upload: {
       upload_id: uploadId,
+      ...(uploadSession.replacesDocumentId ? { replaces_document_id: uploadSession.replacesDocumentId } : {}),
       file_key: storedUpload.fileKey,
       file_name: storedUpload.fileName,
       mime_type: storedUpload.mimeType,
@@ -1075,11 +1340,18 @@ app.post('/api/v1/documents/:documentId/replace-init', (request, response) => {
     return;
   }
 
+  const uploadId = generateId('replace');
+  uploadSessions.set(uploadId, {
+    createdAt: new Date().toISOString(),
+    replacesDocumentId: document.id,
+  });
+
   response.status(201).json({
     upload: {
-      upload_id: generateId('replace'),
+      upload_id: uploadId,
       replaces_document_id: document.id,
       status: 'ready',
+      upload_url: `/api/v1/documents/upload-binary/${uploadId}`,
     },
   });
 });
@@ -1190,6 +1462,18 @@ app.delete('/api/v1/zones/:zoneId', asyncRoute(async (request, response) => {
   response.status(204).send();
 }));
 
+app.get('/api/v1/location-suggestions', asyncRoute(async (request, response) => {
+  const parsed = parseBody(querySchema, request.query);
+
+  if (!parsed.success) {
+    response.status(400).json(apiError(parsed.message, parsed.fields));
+    return;
+  }
+
+  const suggestions = await searchLocationSuggestions(parsed.data.q);
+  response.json({ suggestions });
+}));
+
 app.post('/api/v1/trip-checks', asyncRoute(async (request, response) => {
   const state = getRequestState(response);
   const parsed = parseBody(tripCheckSchema, request.body);
@@ -1199,7 +1483,15 @@ app.post('/api/v1/trip-checks', asyncRoute(async (request, response) => {
     return;
   }
 
-  const { vehicle_id, input_type, destination_query, saved_zone_id, persist_result } = parsed.data;
+  const {
+    vehicle_id,
+    input_type,
+    destination_query,
+    latitude,
+    longitude,
+    saved_zone_id,
+    persist_result,
+  } = parsed.data;
 
   if (input_type === 'destination' && !destination_query?.trim()) {
     response.status(400).json(apiError('Enter a destination for this trip check.', {
@@ -1222,38 +1514,38 @@ app.post('/api/v1/trip-checks', asyncRoute(async (request, response) => {
     return;
   }
 
-  const compliance = vehicle.fuel_type.toLowerCase().includes('diesel') ? 'charge_risk' : 'compliant';
-  const zone = state.zones.find((entry) => entry.id === saved_zone_id) ?? state.zones[0];
-  const destinationLabel = destination_query ?? zone.name;
-  const freshness = new Date().toISOString();
-  const parkingSuggestions: ParkingSuggestion[] = [];
+  const savedZone = state.zones.find((entry) => entry.id === saved_zone_id);
 
-  const tripCheck: TripCheckRecord = {
-    id: generateId('trip'),
-    vehicle_id,
-    input_type,
-    destination_query,
-    saved_zone_id,
-    compliance_status: compliance,
-    charge_amount_label: compliance === 'charge_risk' ? zone.charge_amount_label : '£0.00',
-    confidence_label: 'medium',
-    freshness_at: freshness,
-    source_name: 'trip-check-beta',
-    parking_suggestions: parkingSuggestions,
-  };
+  if (input_type === 'saved_zone' && !savedZone) {
+    response.status(404).json(apiError('Saved zone not found.'));
+    return;
+  }
+
+  const result = await buildTripCheck({
+    destinationQuery: destination_query,
+    inputType: input_type,
+    latitude,
+    longitude,
+    savedZone,
+    vehicle,
+  });
 
   if (persist_result) {
-    state.trip_checks.unshift(tripCheck);
+    state.trip_checks.unshift(result.trip_check);
     await saveRequestState(response);
   }
-  writeAuditEntry('trip_check.ran', { trip_check_id: tripCheck.id, vehicle_id });
+  writeAuditEntry('trip_check.ran', {
+    trip_check_id: result.trip_check.id,
+    vehicle_id,
+    compliance_status: result.trip_check.compliance_status,
+    matched_zone: result.matched_zone?.name ?? null,
+  });
 
   response.status(201).json({
-    trip_check: tripCheck,
-    degraded: {
-      code: 'parking_provider_pending',
-      message: 'Parking suggestions are unavailable until a parking data provider is connected.',
-    },
+    trip_check: result.trip_check,
+    degraded: result.degraded,
+    matched_zone: result.matched_zone,
+    resolved_destination: result.resolved_destination,
   });
 }));
 
@@ -1293,52 +1585,153 @@ app.post('/api/v1/refuel-options', asyncRoute(async (request, response) => {
   response.status(200).json(result);
 }));
 
+app.post('/api/v1/internal/jobs/run-reminders', asyncRoute(async (request, response) => {
+  const secret = getJobSecret();
+
+  if (secret && request.header('x-driveready-job-secret') !== secret) {
+    response.status(401).json(apiError('Invalid job secret.'));
+    return;
+  }
+
+  const parsed = parseBody(jobRunSchema, request.body);
+
+  if (!parsed.success) {
+    response.status(400).json(apiError(parsed.message, parsed.fields));
+    return;
+  }
+
+  const result = await runReminderDispatchJob({
+    dryRun: parsed.data.dry_run,
+    localState: appData,
+  });
+  if (result.sent_count > 0) {
+    recordProviderMetric(getNotificationTargetLabel(), 'success');
+  }
+  if (result.failed_count > 0) {
+    recordProviderMetric(getNotificationTargetLabel(), 'failure');
+  }
+  writeAuditEntry('job.run_reminders', {
+    sent_count: result.sent_count,
+    failed_count: result.failed_count,
+  });
+  response.json(result);
+}));
+
+app.post('/api/v1/internal/jobs/refresh-vehicle-data', asyncRoute(async (request, response) => {
+  const secret = getJobSecret();
+
+  if (secret && request.header('x-driveready-job-secret') !== secret) {
+    response.status(401).json(apiError('Invalid job secret.'));
+    return;
+  }
+
+  const parsed = parseBody(jobRunSchema, request.body);
+
+  if (!parsed.success) {
+    response.status(400).json(apiError(parsed.message, parsed.fields));
+    return;
+  }
+
+  const result = await runVehicleRefreshJob({
+    dryRun: parsed.data.dry_run,
+    localState: appData,
+  });
+  writeAuditEntry('job.refresh_vehicle_data', {
+    refreshed_count: result.refreshed_count,
+    failed_count: result.failed_count,
+  });
+  response.json(result);
+}));
+
 app.get('/api/v1/support/content', (_request, response) => {
+  const state = getRequestState(response);
+  const reminderSummary = summarizeReminderSchedule(state);
+  const supportUrl = legalDocUrl('support.md', process.env.DRIVEREADY_SUPPORT_URL);
+  const privacyPolicyUrl = legalDocUrl('privacy-policy.md', process.env.DRIVEREADY_PRIVACY_POLICY_URL);
+  const termsUrl = legalDocUrl('terms-of-use.md', process.env.DRIVEREADY_TERMS_URL);
+
   response.json({
     items: [
       {
         id: 'help',
         title: 'Help Centre',
         body: 'Need help? Contact DriveReady support with your account email, vehicle registration, the screen you were using, and the error message you saw.',
+        action_label: 'Open support',
+        url: supportUrl,
       },
       {
         id: 'privacy',
         title: 'Privacy',
         body: 'DriveReady stores your account profile, vehicles, reminder preferences, uploaded document metadata, and private document files. Vehicle lookups are sent from our backend to configured providers such as DVLA VES and, after approval, DVSA MOT History.',
+        action_label: 'Open policy',
+        url: privacyPolicyUrl,
       },
       {
         id: 'terms',
         title: 'Terms',
         body: 'DriveReady is an organisation and reminder tool, not legal, insurance, tax, parking, or roadworthiness advice. Always verify MOT, tax, insurance, parking, charge-zone, and restriction decisions with the official provider before driving.',
+        action_label: 'Open terms',
+        url: termsUrl,
       },
       {
         id: 'providers',
         title: 'Live provider status',
-        body: `Vehicle enquiry: ${getDvlaVesTargetLabel()}. MOT history: ${getDvsaMotTargetLabel()}. Refuel: ${getRefuelTargetLabel()}. Parking provider: pending contract/API access.`,
+        body: `Vehicle enquiry: ${getDvlaVesTargetLabel()}. MOT history: ${getDvsaMotTargetLabel()}. Location search: ${getLocationSearchTargetLabel()}. Notifications: ${getNotificationTargetLabel()}. Refuel: ${getRefuelTargetLabel()}. Parking guidance: coming soon.`,
+      },
+      {
+        id: 'reminders',
+        title: 'Reminder scheduler',
+        body: reminderSummary.nextScheduled
+          ? `${reminderSummary.scheduledCount} reminders are scheduled. Next reminder: ${reminderSummary.nextScheduled.alert_title} at ${reminderSummary.nextScheduled.scheduled_for}. ${reminderSummary.deliveredCount} have been delivered, ${reminderSummary.failedCount} failed, and ${reminderSummary.suppressedCount} are currently suppressed by permissions or settings.`
+          : `${reminderSummary.scheduledCount} reminders are scheduled. ${reminderSummary.deliveredCount} have been delivered, ${reminderSummary.failedCount} failed, and ${reminderSummary.suppressedCount} are currently suppressed by permissions or settings.`,
       },
     ],
   });
 });
 
-app.post('/api/v1/support/export-request', (_request, response) => {
-  response.status(202).json({
-    message: 'Export request queued.',
-  });
+app.get('/api/v1/support/exports', (_request, response) => {
+  const state = getRequestState(response);
+  response.json({ exports: state.data_exports });
 });
 
+app.post('/api/v1/support/export-request', asyncRoute(async (_request, response) => {
+  const state = getRequestState(response);
+  const exportRecord = await generateUserDataExport({
+    state,
+    userId: getRequestUserId(response),
+  });
+  state.data_exports.unshift(exportRecord);
+  await saveRequestState(response);
+  recordJobMetric('data_exports_generated');
+  writeAuditEntry('support.export_generated', { export_id: exportRecord.id });
+
+  response.status(201).json({
+    message: 'Export generated.',
+    export: exportRecord,
+  });
+}));
+
 app.use((error: unknown, _request: Request, response: Response, _next: NextFunction) => {
-  console.error('DriveReady backend error', error);
+  console.error('DriveReady backend error', {
+    error,
+    request_id: response.locals.requestId,
+  });
 
   if (response.headersSent) {
     return;
   }
 
-  response.status(500).json(apiError('Internal server error.'));
+  response.status(500).json({
+    ...apiError('Internal server error.'),
+    request_id: response.locals.requestId,
+  });
 });
 
 export { app };
 
 if (process.env.NODE_ENV !== 'test') {
+  validateRuntimeConfigOrThrow();
+  startBackgroundJobs(appData);
   app.listen(port, () => {
     console.log(`DriveReady backend listening on http://localhost:${port}`);
     console.log(`DriveReady storage: ${getStorageTargetLabel()}`);

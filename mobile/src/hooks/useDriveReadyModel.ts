@@ -7,15 +7,18 @@ import {
   loadStoredSession,
   storeSession,
 } from '../api/session';
+import { resolvePasswordResetSession } from '../app-helpers';
 import type {
   AlertSummary,
   DashboardSnapshot,
   DocumentSummary,
   NotificationPreferences,
   PermissionStates,
+  PushDeviceRecord,
   SavedZone,
   SessionState,
   SupportItem,
+  TripCheckResponse,
   TripCheckRecord,
   UserProfile,
   VehicleDetailResponse,
@@ -34,6 +37,7 @@ interface LoadableState {
   tripChecks: TripCheckRecord[];
   notificationPreferences: NotificationPreferences | null;
   permissionStates: PermissionStates | null;
+  pushDevices: PushDeviceRecord[];
   supportItems: SupportItem[];
 }
 
@@ -49,6 +53,7 @@ const initialState: LoadableState = {
   tripChecks: [],
   notificationPreferences: null,
   permissionStates: null,
+  pushDevices: [],
   supportItems: [],
 };
 
@@ -105,6 +110,7 @@ export function useDriveReadyModel() {
         tripChecks: tripCheckResult.trip_checks,
         notificationPreferences: meResult.notification_preferences,
         permissionStates: meResult.permission_states,
+        pushDevices: meResult.push_devices ?? [],
         supportItems: supportResult.items,
       });
     } catch (caughtError) {
@@ -148,15 +154,17 @@ export function useDriveReadyModel() {
 
   const confirmPasswordReset = useCallback(
     async (payload: { access_token: string; refresh_token?: string; expires_at: string; password: string }) => {
-      await apiClient.confirmPasswordReset({
+      const result = await apiClient.confirmPasswordReset({
         access_token: payload.access_token,
         password: payload.password,
       });
-      await storeSession({
-        token: payload.access_token,
-        refresh_token: payload.refresh_token,
-        expires_at: payload.expires_at,
-      });
+
+      const sessionToStore = resolvePasswordResetSession(result, payload);
+
+      if (sessionToStore) {
+        await storeSession(sessionToStore);
+      }
+
       await refreshAll();
     },
     [refreshAll],
@@ -272,15 +280,24 @@ export function useDriveReadyModel() {
     const uploadInit = await apiClient.initDocumentUpload();
     return apiClient.uploadDocumentBinary(uploadInit.upload.upload_id, asset);
   }, []);
+  const replaceDocumentFile = useCallback(async (documentId: string, asset: LocalUploadAsset) => {
+    const uploadInit = await apiClient.initDocumentReplacement(documentId);
+    return apiClient.uploadDocumentBinary(uploadInit.upload.upload_id, asset);
+  }, []);
 
   const runTripCheck = useCallback(
     async (payload: Record<string, unknown>) => {
       const result = await apiClient.runTripCheck(payload);
       await refreshAll();
-      return result.trip_check;
+      return result;
     },
     [refreshAll],
   );
+
+  const searchLocationSuggestions = useCallback(async (query: string) => {
+    const result = await apiClient.searchLocationSuggestions(query);
+    return result.suggestions;
+  }, []);
 
   const searchRefuelOptions = useCallback((payload: Record<string, unknown>) => apiClient.searchRefuelOptions(payload), []);
 
@@ -310,8 +327,9 @@ export function useDriveReadyModel() {
 
   const updateProfile = useCallback(
     async (payload: Record<string, unknown>) => {
-      await apiClient.updateProfile(payload);
+      const result = await apiClient.updateProfile(payload);
       await refreshAll();
+      return result;
     },
     [refreshAll],
   );
@@ -332,8 +350,37 @@ export function useDriveReadyModel() {
     [refreshAll],
   );
 
+  const registerPushDevice = useCallback(
+    async (payload: { label?: string; platform: PushDeviceRecord['platform']; token: string }) => {
+      const result = await apiClient.registerPushDevice(payload);
+      await refreshAll();
+      return result.device;
+    },
+    [refreshAll],
+  );
+
+  const deletePushDevice = useCallback(
+    async (deviceId: string) => {
+      await apiClient.deletePushDevice(deviceId);
+      await refreshAll();
+    },
+    [refreshAll],
+  );
+
+  const clearPushDevices = useCallback(
+    async (deviceIds: string[]) => {
+      if (deviceIds.length === 0) {
+        return;
+      }
+
+      await Promise.all(deviceIds.map((deviceId) => apiClient.deletePushDevice(deviceId)));
+      await refreshAll();
+    },
+    [refreshAll],
+  );
+
   const exportRequest = useCallback(async () => {
-    await apiClient.exportRequest();
+    return apiClient.exportRequest();
   }, []);
 
   return {
@@ -360,7 +407,9 @@ export function useDriveReadyModel() {
     loadDocument,
     shareDocument,
     uploadFileAsset,
+    replaceDocumentFile,
     runTripCheck,
+    searchLocationSuggestions,
     searchRefuelOptions,
     createZone,
     updateZone,
@@ -368,6 +417,9 @@ export function useDriveReadyModel() {
     updateProfile,
     updateNotificationPreferences,
     updatePermissionStates,
+    registerPushDevice,
+    deletePushDevice,
+    clearPushDevices,
     exportRequest,
   };
 }

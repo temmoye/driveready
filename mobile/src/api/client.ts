@@ -1,14 +1,18 @@
 import type {
   AlertSummary,
+  DataExportRecord,
   DashboardResponse,
+  LocationSuggestion,
   DocumentDetailResponse,
   DocumentSummary,
   NotificationPreferences,
   PermissionStates,
+  PushDeviceRecord,
   RefuelSearchResponse,
   SavedZone,
   SessionState,
   SupportItem,
+  TripCheckResponse,
   TripCheckRecord,
   UserProfile,
   VehicleDetailResponse,
@@ -145,7 +149,7 @@ export const apiClient = {
       body: JSON.stringify(body),
     }),
   confirmPasswordReset: (body: { access_token: string; password: string }) =>
-    request<{ message: string }>('/auth/password-reset/confirm', {
+    request<{ message: string; user?: UserProfile; session?: SessionState }>('/auth/password-reset/confirm', {
       method: 'POST',
       body: JSON.stringify(body),
     }),
@@ -158,9 +162,10 @@ export const apiClient = {
       user: UserProfile;
       notification_preferences: NotificationPreferences;
       permission_states: PermissionStates;
+      push_devices?: PushDeviceRecord[];
     }>('/me'),
-  updateProfile: (body: Partial<UserProfile>) =>
-    request<{ user: UserProfile }>('/me', {
+  updateProfile: (body: Record<string, unknown>) =>
+    request<{ user: UserProfile; email_change_requested?: boolean; message?: string }>('/me', {
       method: 'PATCH',
       body: JSON.stringify(body),
     }),
@@ -173,6 +178,15 @@ export const apiClient = {
     request<{ permission_states: PermissionStates }>('/me/permission-states', {
       method: 'PATCH',
       body: JSON.stringify(body),
+    }),
+  registerPushDevice: (body: { label?: string; platform: PushDeviceRecord['platform']; token: string }) =>
+    request<{ device: PushDeviceRecord }>('/me/push-devices', {
+      method: 'POST',
+      body: JSON.stringify(body),
+    }),
+  deletePushDevice: (deviceId: string) =>
+    request<void>(`/me/push-devices/${deviceId}`, {
+      method: 'DELETE',
     }),
   deleteAccount: () =>
     request<void>('/me', {
@@ -253,6 +267,10 @@ export const apiClient = {
       };
     };
   },
+  initDocumentReplacement: (documentId: string) =>
+    request<{ upload: { upload_id: string; status: string; replaces_document_id: string } }>(`/documents/${documentId}/replace-init`, {
+      method: 'POST',
+    }),
   createDocument: (body: Record<string, unknown>) =>
     request<{ document: DocumentSummary }>('/documents', {
       method: 'POST',
@@ -288,10 +306,12 @@ export const apiClient = {
     }),
   tripChecks: () => request<{ trip_checks: TripCheckRecord[] }>('/trip-checks'),
   runTripCheck: (body: Record<string, unknown>) =>
-    request<{ trip_check: TripCheckRecord }>('/trip-checks', {
+    request<TripCheckResponse>('/trip-checks', {
       method: 'POST',
       body: JSON.stringify(body),
     }),
+  searchLocationSuggestions: (query: string) =>
+    request<{ suggestions: LocationSuggestion[] }>(`/location-suggestions?q=${encodeURIComponent(query)}`),
   searchRefuelOptions: (body: Record<string, unknown>) =>
     request<RefuelSearchResponse>('/refuel-options', {
       method: 'POST',
@@ -299,7 +319,7 @@ export const apiClient = {
     }),
   supportContent: () => request<{ items: SupportItem[] }>('/support/content'),
   exportRequest: () =>
-    request<{ message: string }>('/support/export-request', {
+    request<{ message: string; export: DataExportRecord }>('/support/export-request', {
       method: 'POST',
     }),
 };

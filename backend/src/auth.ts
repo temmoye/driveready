@@ -141,8 +141,8 @@ const supabaseAdminClient = supabaseConfig
     })
   : null;
 
-function requireSupabaseClients() {
-  if (!supabaseAuthClient || !supabaseAdminClient) {
+function requireSupabaseConfig() {
+  if (!supabaseConfig) {
     throw new Error('Supabase auth is not configured.');
   }
 
@@ -150,9 +150,20 @@ function requireSupabaseClients() {
     throw new Error('Supabase auth requires DRIVEREADY_STORAGE_BACKEND=supabase.');
   }
 
+  return supabaseConfig;
+}
+
+function requireSupabaseClients() {
+  const config = requireSupabaseConfig();
+
+  if (!supabaseAuthClient || !supabaseAdminClient) {
+    throw new Error('Supabase auth is not configured.');
+  }
+
   return {
     authClient: supabaseAuthClient,
     adminClient: supabaseAdminClient,
+    config,
   };
 }
 
@@ -275,6 +286,83 @@ export async function confirmSupabasePasswordReset(input: {
   if (error) {
     throw new Error(error.message);
   }
+}
+
+export async function updateSupabaseAuthProfile(input: {
+  accessToken: string;
+  email?: string;
+  first_name?: string;
+  last_name?: string;
+  redirectTo?: string;
+  existingProfile: UserProfile;
+}) {
+  const config = requireSupabaseConfig();
+  const nextFirstName = input.first_name ?? input.existingProfile.first_name;
+  const nextLastName = input.last_name ?? input.existingProfile.last_name;
+  const emailChanged = Boolean(input.email && input.email !== input.existingProfile.email);
+  const metadataChanged =
+    nextFirstName !== input.existingProfile.first_name ||
+    nextLastName !== input.existingProfile.last_name;
+  const updates: {
+    email?: string;
+    data?: {
+      first_name: string;
+      last_name: string;
+    };
+  } = {};
+
+  if (emailChanged && input.email) {
+    updates.email = input.email;
+  }
+
+  if (metadataChanged) {
+    updates.data = {
+      first_name: nextFirstName,
+      last_name: nextLastName,
+    };
+  }
+
+  if (Object.keys(updates).length === 0) {
+    return {
+      emailChangeRequested: false,
+      profile: input.existingProfile,
+    };
+  }
+
+  const endpoint = new URL('/auth/v1/user', config.url);
+
+  if (input.redirectTo) {
+    endpoint.searchParams.set('redirect_to', input.redirectTo);
+  }
+
+  const response = await fetch(endpoint, {
+    method: 'PUT',
+    headers: {
+      apikey: config.publishableKey,
+      authorization: `Bearer ${input.accessToken}`,
+      'content-type': 'application/json',
+    },
+    body: JSON.stringify(updates),
+  });
+
+  const payload = (await response.json().catch(() => null)) as {
+    error_description?: string;
+    message?: string;
+    msg?: string;
+    user?: User | null;
+  } | null;
+
+  if (!response.ok || !payload?.user) {
+    throw new Error(payload?.msg ?? payload?.message ?? payload?.error_description ?? 'Unable to update Supabase profile.');
+  }
+
+  return {
+    emailChangeRequested: emailChanged,
+    profile: profileFromUser(payload.user, {
+      ...input.existingProfile,
+      ...(updates.data ?? {}),
+    }),
+  };
 }
 
 export async function deleteSupabaseAuthUser(userId: string) {

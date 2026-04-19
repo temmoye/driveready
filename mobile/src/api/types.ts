@@ -4,6 +4,7 @@ export type AlertTone = 'good' | 'warning' | 'critical';
 export type DocumentStatus = 'current' | 'needs_review' | 'expired';
 export type PermissionState = 'granted' | 'not_requested' | 'denied';
 export type ParkingConfidence = 'high' | 'medium' | 'low';
+export type TripCheckConfidence = ParkingConfidence | 'unknown';
 export type RefuelEnergyType = 'petrol' | 'diesel' | 'electric';
 export type RefuelSortMode = 'closest' | 'cheapest';
 export type TripInputType = 'destination' | 'saved_zone';
@@ -17,6 +18,14 @@ export interface SessionState {
   token: string;
   refresh_token?: string;
   expires_at: string;
+}
+
+export interface LocationSuggestion {
+  id: string;
+  label: string;
+  secondary_label?: string;
+  longitude?: number;
+  latitude?: number;
 }
 
 export interface UserProfile {
@@ -34,6 +43,15 @@ export interface NotificationPreferences {
   insurance_enabled: boolean;
   docs_enabled: boolean;
   zones_enabled: boolean;
+}
+
+export interface PushDeviceRecord {
+  id: string;
+  token: string;
+  platform: 'ios' | 'android';
+  label?: string;
+  created_at: string;
+  last_seen_at: string;
 }
 
 export interface PermissionStates {
@@ -187,10 +205,15 @@ export interface TripCheckRecord {
   saved_zone_id?: string;
   compliance_status: ComplianceStatus;
   charge_amount_label: string;
-  confidence_label: ParkingConfidence;
+  confidence_label: TripCheckConfidence;
   freshness_at: string;
   source_name: string;
   parking_suggestions: ParkingSuggestion[];
+}
+
+export interface DegradedNote {
+  code: string;
+  message: string;
 }
 
 export interface RefuelStationOption {
@@ -269,6 +292,29 @@ export interface SupportItem {
   id: string;
   title: string;
   body: string;
+  action_label?: string;
+  url?: string;
+}
+
+export interface DataExportRecord {
+  id: string;
+  created_at: string;
+  file_key: string;
+  file_name: string;
+  mime_type: string;
+  download_url: string;
+  source_name: string;
+}
+
+export interface TripCheckResponse {
+  trip_check: TripCheckRecord;
+  degraded: DegradedNote[];
+  matched_zone: SavedZone | null;
+  resolved_destination: {
+    label: string;
+    latitude: number;
+    longitude: number;
+  } | null;
 }
 
 export interface ApiErrorResponse {

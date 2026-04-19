@@ -4,6 +4,7 @@ export type AlertTone = 'good' | 'warning' | 'critical';
 export type DocumentStatus = 'current' | 'needs_review' | 'expired';
 export type PermissionState = 'granted' | 'not_requested' | 'denied';
 export type ParkingConfidence = 'high' | 'medium' | 'low';
+export type TripCheckConfidence = ParkingConfidence | 'unknown';
 export type RefuelEnergyType = 'petrol' | 'diesel' | 'electric';
 export type RefuelSortMode = 'closest' | 'cheapest';
 export type TripInputType = 'destination' | 'saved_zone';
@@ -12,6 +13,7 @@ export type VehicleMotRecallStatus = 'Yes' | 'No' | 'Unknown' | 'Unavailable';
 export type VehicleMotTestResult = 'PASSED' | 'FAILED';
 export type VehicleMotOdometerUnit = 'MI' | 'KM';
 export type VehicleMotOdometerResultType = 'READ' | 'UNREADABLE' | 'NO_ODOMETER';
+export type ReminderDeliveryStatus = 'scheduled' | 'suppressed' | 'delivered' | 'failed';
 
 export interface UserProfile {
   id: string;
@@ -41,6 +43,12 @@ export interface SessionState {
   token: string;
   refresh_token?: string;
   expires_at: string;
+}
+
+export interface LocalAuthState {
+  password_hash: string;
+  password_salt: string;
+  password_updated_at: string;
 }
 
 export interface VehicleRecord {
@@ -188,6 +196,11 @@ export interface ParkingSuggestion {
   freshness_at: string;
 }
 
+export interface DegradedNote {
+  code: string;
+  message: string;
+}
+
 export interface TripCheckRecord {
   id: string;
   vehicle_id: string;
@@ -196,10 +209,60 @@ export interface TripCheckRecord {
   saved_zone_id?: string;
   compliance_status: ComplianceStatus;
   charge_amount_label: string;
-  confidence_label: ParkingConfidence;
+  confidence_label: TripCheckConfidence;
   freshness_at: string;
   source_name: string;
   parking_suggestions: ParkingSuggestion[];
+}
+
+export interface ScheduledReminder {
+  id: string;
+  alert_id: string;
+  alert_title: string;
+  scheduled_for: string;
+  delivery_channel: 'push';
+  status: ReminderDeliveryStatus;
+  reason?: string;
+  freshness_at: string;
+  source_name: string;
+}
+
+export interface PushDeviceRecord {
+  id: string;
+  token: string;
+  platform: 'ios' | 'android';
+  label?: string;
+  created_at: string;
+  last_seen_at: string;
+}
+
+export interface ReminderDispatchRecord {
+  id: string;
+  reminder_id: string;
+  scheduled_for: string;
+  provider: 'log' | 'expo';
+  status: 'sent' | 'failed';
+  delivered_at?: string;
+  error?: string;
+  provider_message_id?: string;
+}
+
+export interface DataExportRecord {
+  id: string;
+  created_at: string;
+  file_key: string;
+  file_name: string;
+  mime_type: string;
+  download_url: string;
+  source_name: string;
+}
+
+export interface LocationSuggestion {
+  id: string;
+  label: string;
+  secondary_label?: string;
+  latitude?: number;
+  longitude?: number;
 }
 
 export interface RefuelStationOption {
@@ -250,6 +313,7 @@ export interface DashboardSnapshot {
 
 export interface AppData {
   user: UserProfile;
+  local_auth?: LocalAuthState;
   notification_preferences: NotificationPreferences;
   permission_states: PermissionStates;
   session: SessionState | null;
@@ -258,6 +322,10 @@ export interface AppData {
   service_history: VehicleServiceHistoryEntry[];
   documents: DocumentRecord[];
   alerts: AlertRecord[];
+  scheduled_reminders: ScheduledReminder[];
+  push_devices: PushDeviceRecord[];
+  reminder_dispatches: ReminderDispatchRecord[];
+  data_exports: DataExportRecord[];
   zones: SavedZone[];
   trip_checks: TripCheckRecord[];
 }

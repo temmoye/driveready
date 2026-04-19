@@ -5,7 +5,7 @@ function trimValue(value) {
 }
 
 function defaultDocsBaseUrl() {
-  return 'https://github.com/temmoye/driveready/blob/codex/driveready-review/legal';
+  return 'https://github.com/temmoye/driveready/blob/main/legal';
 }
 
 function legalDocUrl(fileName, explicitValue) {

@@ -112,7 +112,7 @@ function trimValue(value?: string) {
 }
 
 function defaultLegalDocsBaseUrl() {
-  return 'https://github.com/temmoye/driveready/blob/codex/driveready-review/legal';
+  return 'https://github.com/temmoye/driveready/blob/main/legal';
 }
 
 function legalDocUrl(fileName: string, explicit?: string) {

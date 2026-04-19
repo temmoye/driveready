@@ -17,7 +17,7 @@ EXPO_PUBLIC_EXPO_PROJECT_ID=your-eas-project-id
 For App Store metadata and in-app legal links, set either:
 
 ```env
-DRIVEREADY_PUBLIC_DOCS_BASE_URL=https://github.com/temmoye/driveready/blob/codex/driveready-review/legal
+DRIVEREADY_PUBLIC_DOCS_BASE_URL=https://github.com/temmoye/driveready/blob/main/legal
 ```
 
 or explicit URLs:
